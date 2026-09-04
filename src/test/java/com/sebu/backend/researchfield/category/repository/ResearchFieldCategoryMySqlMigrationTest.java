@@ -20,8 +20,10 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -118,19 +120,24 @@ class ResearchFieldCategoryMySqlMigrationTest {
     @Test
     void v31UpgradeMapsOnlyExistingNaturalScienceFields() throws Exception {
         flyway("31").migrate();
-        Map<String, String> naturalScienceAssignmentMap = expectedAssignments(
-            readNaturalScienceAssignments()
+        List<CuratedAssignment> naturalScienceAssignments = readNaturalScienceAssignments();
+        assertThat(naturalScienceAssignments)
+            .hasSize(EXPECTED_NATURAL_SCIENCE_REFERENCE_COUNT);
+        Map<String, Set<String>> naturalScienceAssignmentMap = expectedAssignments(
+            naturalScienceAssignments
         );
         assertThat(naturalScienceAssignmentMap)
-            .hasSize(EXPECTED_NATURAL_SCIENCE_REFERENCE_COUNT)
-            .containsEntry("이미지 처리", "SIGNAL_MEDIA")
-            .containsEntry(REFERENCE_ONLY_NATURAL_SCIENCE_FIELD, "CHEMISTRY_MATERIALS");
+            .containsEntry("이미지 처리", Set.of("SIGNAL_MEDIA"))
+            .containsEntry(
+                REFERENCE_ONLY_NATURAL_SCIENCE_FIELD,
+                Set.of("CHEMISTRY_MATERIALS")
+            );
         List<String> existingNaturalScienceFieldNames = naturalScienceAssignmentMap
             .keySet()
             .stream()
             .filter(name -> !name.equals(REFERENCE_ONLY_NATURAL_SCIENCE_FIELD))
             .toList();
-        Map<String, String> expectedExistingAssignments = new LinkedHashMap<>(
+        Map<String, Set<String>> expectedExistingAssignments = new LinkedHashMap<>(
             canonicalNaturalScienceAssignments(naturalScienceAssignmentMap)
         );
         expectedExistingAssignments.remove(REFERENCE_ONLY_NATURAL_SCIENCE_FIELD);
@@ -180,7 +187,7 @@ class ResearchFieldCategoryMySqlMigrationTest {
             assertThat(count(connection, "SELECT COUNT(*) FROM research_field"))
                 .isEqualTo(fieldCountBeforeUpgrade - 1);
             assertThat(count(connection, "SELECT COUNT(*) FROM research_field_category_mapping"))
-                .isEqualTo(existingNaturalScienceFieldNames.size() - 1);
+                .isEqualTo(mappingCount(expectedExistingAssignments));
             assertMapping(connection, "이미지 처리", "SIGNAL_MEDIA");
             assertMapping(connection, "가사이드 이론", "MATH_STATISTICS");
             assertMapping(connection, "우주론", "PHYSICS_ASTRONOMY");
@@ -340,6 +347,11 @@ class ResearchFieldCategoryMySqlMigrationTest {
             )).isOne();
             assertMapping(connection, "질량분석법", "CHEMISTRY_MATERIALS");
             assertMapping(connection, "질량분석법", "BIOMED_HEALTH");
+            assertThat(findAllMappings(connection))
+                .containsEntry(
+                    "질량분석법",
+                    Set.of("CHEMISTRY_MATERIALS", "BIOMED_HEALTH")
+                );
             assertThat(count(
                 connection,
                 """
@@ -443,19 +455,18 @@ class ResearchFieldCategoryMySqlMigrationTest {
         throws Exception {
         flyway("22").migrate();
         List<CuratedAssignment> baseAssignments = readBaseAssignments();
-        Map<String, String> baseAssignmentMap = expectedAssignments(baseAssignments);
+        assertThat(baseAssignments).hasSize(EXPECTED_BASE_REFERENCE_COUNT);
+        Map<String, Set<String>> baseAssignmentMap = expectedAssignments(baseAssignments);
         assertThat(baseAssignmentMap)
-            .hasSize(EXPECTED_BASE_REFERENCE_COUNT)
-            .containsEntry(REFERENCE_ONLY_BASE_FIELD, "AI_ML");
+            .containsEntry(REFERENCE_ONLY_BASE_FIELD, Set.of("AI_ML"));
         List<String> baseFieldNames = baseAssignmentMap
             .keySet()
             .stream()
             .filter(name -> !name.equals(REFERENCE_ONLY_BASE_FIELD))
             .toList();
-        assertThat(baseFieldNames)
-            .hasSize(EXPECTED_BASE_REFERENCE_COUNT - 1)
-            .doesNotHaveDuplicates();
-        Map<String, String> expectedExistingAssignments = new LinkedHashMap<>(baseAssignmentMap);
+        Map<String, Set<String>> expectedExistingAssignments = new LinkedHashMap<>(
+            baseAssignmentMap
+        );
         expectedExistingAssignments.remove(REFERENCE_ONLY_BASE_FIELD);
 
         long existingSeedFieldId;
@@ -481,7 +492,7 @@ class ResearchFieldCategoryMySqlMigrationTest {
             assertThat(count(connection, "SELECT COUNT(*) FROM research_field"))
                 .isEqualTo(fieldCountBeforeUpgrade);
             assertThat(count(connection, "SELECT COUNT(*) FROM research_field_category_mapping"))
-                .isEqualTo(baseFieldNames.size());
+                .isEqualTo(mappingCount(expectedExistingAssignments));
             assertThat(count(
                 connection,
                 "SELECT COUNT(DISTINCT research_field_id) FROM research_field_category_mapping"
@@ -599,29 +610,24 @@ class ResearchFieldCategoryMySqlMigrationTest {
         return columns;
     }
 
-    private Map<String, String> expectedAssignments(
+    private Map<String, Set<String>> expectedAssignments(
         List<CuratedAssignment> assignments
     ) {
-        Map<String, String> expected = new LinkedHashMap<>();
+        Map<String, Set<String>> expected = new LinkedHashMap<>();
         for (CuratedAssignment assignment : assignments) {
-            String previous = expected.put(
+            expected.computeIfAbsent(
                 assignment.researchFieldName(),
-                assignment.categoryCode()
-            );
-            if (previous != null && !previous.equals(assignment.categoryCode())) {
-                throw new IllegalArgumentException(
-                    "Conflicting categories in CSV: " + assignment.researchFieldName()
-                );
-            }
+                ignored -> new LinkedHashSet<>()
+            ).add(assignment.categoryCode());
         }
         return expected;
     }
 
-    private Map<String, String> canonicalNaturalScienceAssignments(
-        Map<String, String> assignments
+    private Map<String, Set<String>> canonicalNaturalScienceAssignments(
+        Map<String, Set<String>> assignments
     ) {
-        Map<String, String> canonicalAssignments = new LinkedHashMap<>();
-        assignments.forEach((fieldName, categoryCode) -> {
+        Map<String, Set<String>> canonicalAssignments = new LinkedHashMap<>();
+        assignments.forEach((fieldName, categoryCodes) -> {
             if (fieldName.equals(INVALID_NUMBERED_LIST_FIELD)) {
                 return;
             }
@@ -629,18 +635,16 @@ class ResearchFieldCategoryMySqlMigrationTest {
                 fieldName,
                 fieldName
             );
-            String previous = canonicalAssignments.put(canonicalName, categoryCode);
-            if (previous != null && !previous.equals(categoryCode)) {
-                throw new IllegalArgumentException(
-                    "Conflicting categories after correction: " + canonicalName
-                );
-            }
+            canonicalAssignments.computeIfAbsent(
+                canonicalName,
+                ignored -> new LinkedHashSet<>()
+            ).addAll(categoryCodes);
         });
         return canonicalAssignments;
     }
 
-    private Map<String, String> findAllMappings(Connection connection) throws SQLException {
-        Map<String, String> mappings = new LinkedHashMap<>();
+    private Map<String, Set<String>> findAllMappings(Connection connection) throws SQLException {
+        Map<String, Set<String>> mappings = new LinkedHashMap<>();
         try (PreparedStatement statement = connection.prepareStatement(
             """
                 SELECT field.name, category.code
@@ -654,13 +658,19 @@ class ResearchFieldCategoryMySqlMigrationTest {
         ); ResultSet result = statement.executeQuery()) {
             while (result.next()) {
                 String fieldName = result.getString("name");
-                String previous = mappings.put(fieldName, result.getString("code"));
-                if (previous != null) {
-                    throw new SQLException("Multiple categories found for field: " + fieldName);
-                }
+                mappings.computeIfAbsent(
+                    fieldName,
+                    ignored -> new LinkedHashSet<>()
+                ).add(result.getString("code"));
             }
         }
         return mappings;
+    }
+
+    private long mappingCount(Map<String, Set<String>> assignments) {
+        return assignments.values().stream()
+            .mapToLong(Set::size)
+            .sum();
     }
 
     private void insertFields(Connection connection, List<String> names) throws SQLException {
