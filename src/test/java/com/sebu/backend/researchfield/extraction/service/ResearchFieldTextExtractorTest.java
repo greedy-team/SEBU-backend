@@ -70,6 +70,39 @@ class ResearchFieldTextExtractorTest {
     }
 
     @Test
+    void splitsInlineNumberedListsWithoutKeepingTheirMarkers() {
+        List<ResearchFieldCandidateDraft> fields = extractor.extract(
+            "1. 그래핀-고분자 복합재료 개발 2. 원자힘 현미경 연구 "
+                + "3. 고분자 화학 4. 하이드로겔 입자 제조 5. 나노소재"
+        );
+
+        assertThat(fields)
+            .extracting(ResearchFieldCandidateDraft::rawFieldText)
+            .containsExactly(
+                "그래핀-고분자 복합재료 개발",
+                "원자힘 현미경 연구",
+                "고분자 화학",
+                "하이드로겔 입자 제조",
+                "나노소재"
+            );
+    }
+
+    @Test
+    void preservesDecimalAndTechnicalVersionNumbersInsideNumberedFields() {
+        List<ResearchFieldCandidateDraft> fields = extractor.extract(
+            "1. Web 3.0 기반 시스템 2. TLS 1.3 보안 3. 모델 2.5 분석"
+        );
+
+        assertThat(fields)
+            .extracting(ResearchFieldCandidateDraft::rawFieldText)
+            .containsExactly(
+                "Web 3.0 기반 시스템",
+                "TLS 1.3 보안",
+                "모델 2.5 분석"
+            );
+    }
+
+    @Test
     void normalizesUnicodeWhitespaceAndRemovesDuplicatesInSourceOrder() {
         List<ResearchFieldCandidateDraft> fields = extractor.extract(
             "ＡＩ   시스템, AI 시스템, 로보틱스"
