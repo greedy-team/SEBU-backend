@@ -11,6 +11,8 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 
 public interface CommunityPostBookmarkRepository extends JpaRepository<CommunityPostBookmark, CommunityPostBookmarkId> {
+    long countByUser_IdAndPost_DeletedAtIsNull(Long userId);
+
     @EntityGraph(attributePaths = {"post", "post.author"})
     List<CommunityPostBookmark> findByUser_IdAndPost_DeletedAtIsNullOrderByCreatedAtDescPost_IdDesc(
             Long userId

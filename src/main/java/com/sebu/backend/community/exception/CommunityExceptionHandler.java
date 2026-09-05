@@ -1,6 +1,7 @@
 package com.sebu.backend.community.exception;
 
 import com.sebu.backend.auth.exception.AccessTokenInvalidException;
+import com.sebu.backend.bookmark.exception.BookmarkLimitExceededException;
 import com.sebu.backend.global.response.ApiResponse;
 import com.sebu.backend.mypage.moderation.IntroductionModerationUnavailableException;
 import com.sebu.backend.user.exception.UserNotFoundException;
@@ -21,6 +22,18 @@ import java.util.List;
 @Order(Ordered.HIGHEST_PRECEDENCE)
 @RestControllerAdvice(basePackages = "com.sebu.backend.community")
 public class CommunityExceptionHandler {
+
+    @ExceptionHandler(BookmarkLimitExceededException.class)
+    public ResponseEntity<ApiResponse<Void>> handleBookmarkLimitExceeded(
+            BookmarkLimitExceededException exception
+    ) {
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(ApiResponse.failure(
+                        "BOOKMARK_LIMIT_EXCEEDED",
+                        exception.userMessage()
+                ));
+    }
 
     @ExceptionHandler(AccessTokenInvalidException.class)
     public ResponseEntity<ApiResponse<Void>> handleAccessTokenInvalid(

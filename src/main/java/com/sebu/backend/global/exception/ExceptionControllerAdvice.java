@@ -1,6 +1,7 @@
 package com.sebu.backend.global.exception;
 
 import com.sebu.backend.auth.exception.AccessTokenInvalidException;
+import com.sebu.backend.bookmark.exception.BookmarkLimitExceededException;
 import com.sebu.backend.global.response.ApiResponse;
 import com.sebu.backend.laboratory.exception.InvalidLaboratoryPageException;
 import com.sebu.backend.laboratory.exception.InvalidLaboratorySizeException;
@@ -34,6 +35,18 @@ import java.util.List;
 @Order(Ordered.LOWEST_PRECEDENCE)
 @RestControllerAdvice
 public class ExceptionControllerAdvice {
+
+    @ExceptionHandler(BookmarkLimitExceededException.class)
+    public ResponseEntity<ApiResponse<Void>> handleBookmarkLimitExceeded(
+            BookmarkLimitExceededException exception
+    ) {
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(ApiResponse.failure(
+                        "BOOKMARK_LIMIT_EXCEEDED",
+                        exception.userMessage()
+                ));
+    }
 
     @ExceptionHandler(NicknameAlreadyExistsException.class)
     public ResponseEntity<ApiResponse<Void>> handleNicknameAlreadyExists(

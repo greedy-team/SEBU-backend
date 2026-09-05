@@ -24,7 +24,11 @@ app:
       connect-timeout: 5s
       request-timeout: 10s
   rate-limit:
-    max-requests: 30
+    max-requests: 120
+    search-max-requests: 60
+    bookmark-max-requests: 30
+    content-write-max-requests: 10
+    anonymous-ip-multiplier: 5
     window: 1m
     login:
       max-requests: 5

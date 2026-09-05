@@ -2,6 +2,8 @@ package com.sebu.backend.bookmark.service;
 
 import com.sebu.backend.bookmark.domain.Bookmark;
 import com.sebu.backend.bookmark.domain.BookmarkId;
+import com.sebu.backend.bookmark.domain.BookmarkLimitPolicy;
+import com.sebu.backend.bookmark.domain.BookmarkType;
 import com.sebu.backend.bookmark.dto.BookmarkedLaboratoriesResponse;
 import com.sebu.backend.bookmark.repository.BookmarkRepository;
 import com.sebu.backend.laboratory.dto.LaboratoriesResult;
@@ -28,18 +30,28 @@ public class BookmarkService {
     private final AppUserRepository appUserRepository;
     private final LaboratoryRepository laboratoryRepository;
     private final BookmarkRepository bookmarkRepository;
+    private final BookmarkLimitPolicy bookmarkLimitPolicy;
     private final LaboratoryResearchFieldRepository laboratoryResearchFieldRepository;
     private final LaboratorySummaryAssembler laboratorySummaryAssembler;
 
     @Transactional
     public void add(Long userId, Long laboratoryId) {
-        appUserRepository.findById(userId)
+        appUserRepository.findByIdForUpdate(userId)
                 .orElseThrow(UserNotFoundException::new);
 
         laboratoryRepository
                 .findByIdAndDeletedAtIsNull(laboratoryId)
                 .orElseThrow(LaboratoryNotFoundException::new);
 
+        BookmarkId bookmarkId = new BookmarkId(userId, laboratoryId);
+        if (bookmarkRepository.existsById(bookmarkId)) {
+            return;
+        }
+
+        bookmarkLimitPolicy.validateNewBookmark(
+                BookmarkType.LABORATORY,
+                bookmarkRepository.countByUser_IdAndLaboratory_DeletedAtIsNull(userId)
+        );
         bookmarkRepository.insertIgnore(userId, laboratoryId);
     }
 

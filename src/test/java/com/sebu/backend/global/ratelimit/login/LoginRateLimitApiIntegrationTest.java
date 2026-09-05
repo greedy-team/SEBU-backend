@@ -23,7 +23,7 @@ class LoginRateLimitApiIntegrationTest {
         mockMvc.perform(loginRequestFrom("192.0.2.10")).andExpect(status().isBadRequest());
         mockMvc.perform(loginRequestFrom("192.0.2.10"))
             .andExpect(status().isTooManyRequests())
-            .andExpect(header().string("Retry-After", "60"))
+            .andExpect(header().string("Retry-After", "30"))
             .andExpect(jsonPath("$.success").value(false))
             .andExpect(jsonPath("$.error.code").value("LOGIN_RATE_LIMITED"));
 
