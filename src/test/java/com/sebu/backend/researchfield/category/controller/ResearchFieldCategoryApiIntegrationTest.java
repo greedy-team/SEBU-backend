@@ -24,7 +24,7 @@ class ResearchFieldCategoryApiIntegrationTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.error").doesNotExist())
-            .andExpect(jsonPath("$.data.categories.length()").value(21))
+            .andExpect(jsonPath("$.data.categories.length()").value(24))
             .andExpect(jsonPath("$.data.categories[0].code").value("AI_ML"))
             .andExpect(jsonPath("$.data.categories[0].name")
                 .value("인공지능·기계학습"))
@@ -44,6 +44,16 @@ class ResearchFieldCategoryApiIntegrationTest {
             .andExpect(jsonPath("$.data.categories[20].code")
                 .value("CHEMISTRY_MATERIALS"))
             .andExpect(jsonPath("$.data.categories[20].name").value("화학·소재"))
-            .andExpect(jsonPath("$.data.categories[20].displayOrder").value(21));
+            .andExpect(jsonPath("$.data.categories[20].displayOrder").value(21))
+            .andExpect(jsonPath("$.data.categories[21].code").value("FOOD_NUTRITION"))
+            .andExpect(jsonPath("$.data.categories[21].name").value("식품·영양"))
+            .andExpect(jsonPath("$.data.categories[21].displayOrder").value(22))
+            .andExpect(jsonPath("$.data.categories[22].code").value("PLANT_AGRICULTURE"))
+            .andExpect(jsonPath("$.data.categories[22].name").value("식물·농업생명과학"))
+            .andExpect(jsonPath("$.data.categories[22].displayOrder").value(23))
+            .andExpect(jsonPath("$.data.categories[23].code").value("MOLECULAR_BIOTECH"))
+            .andExpect(jsonPath("$.data.categories[23].name")
+                .value("분자·세포생물학·생명공학"))
+            .andExpect(jsonPath("$.data.categories[23].displayOrder").value(24));
     }
 }
