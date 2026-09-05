@@ -13,7 +13,7 @@ import java.util.regex.Pattern;
 
 @Component
 public class ResearchFieldTextExtractor {
-    public static final String RULE_VERSION = "sejong-v1";
+    public static final String RULE_VERSION = "sejong-v2";
 
     private static final int MAX_AUTO_SUGGESTION_LENGTH = 80;
     private static final Pattern FIELD_PREFIX = Pattern.compile(
@@ -95,6 +95,7 @@ public class ResearchFieldTextExtractor {
         List<String> fragments = new ArrayList<>();
         StringBuilder current = new StringBuilder();
         int bracketDepth = 0;
+        int expectedListNumber = 1;
 
         for (int index = 0; index < content.length(); index++) {
             char currentCharacter = content.charAt(index);
@@ -108,6 +109,15 @@ public class ResearchFieldTextExtractor {
                 current.append(currentCharacter);
                 continue;
             }
+            int markerEnd = bracketDepth == 0
+                ? numberedListMarkerEnd(content, index, expectedListNumber)
+                : -1;
+            if (markerEnd >= 0) {
+                appendFragment(fragments, current);
+                expectedListNumber++;
+                index = markerEnd - 1;
+                continue;
+            }
             if (bracketDepth == 0 && isSeparator(content, index, currentCharacter)) {
                 appendFragment(fragments, current);
                 continue;
@@ -116,6 +126,36 @@ public class ResearchFieldTextExtractor {
         }
         appendFragment(fragments, current);
         return fragments;
+    }
+
+    private int numberedListMarkerEnd(
+        String content,
+        int index,
+        int expectedListNumber
+    ) {
+        if (!Character.isDigit(content.charAt(index))
+            || index > 0 && !Character.isWhitespace(content.charAt(index - 1))) {
+            return -1;
+        }
+        int cursor = index;
+        while (cursor < content.length() && Character.isDigit(content.charAt(cursor))) {
+            cursor++;
+        }
+        if (cursor >= content.length() || content.charAt(cursor) != '.') {
+            return -1;
+        }
+        String number = content.substring(index, cursor);
+        if (!number.equals(Integer.toString(expectedListNumber))) {
+            return -1;
+        }
+        cursor++;
+        if (cursor >= content.length() || !Character.isWhitespace(content.charAt(cursor))) {
+            return -1;
+        }
+        while (cursor < content.length() && Character.isWhitespace(content.charAt(cursor))) {
+            cursor++;
+        }
+        return cursor;
     }
 
     private boolean isSeparator(

@@ -20,8 +20,10 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -35,6 +37,19 @@ class ResearchFieldCategoryMySqlMigrationTest {
     private static final int EXPECTED_NATURAL_SCIENCE_REFERENCE_COUNT = 166;
     private static final String REFERENCE_ONLY_BASE_FIELD = "XAI 등";
     private static final String REFERENCE_ONLY_NATURAL_SCIENCE_FIELD = "NMR 분광학";
+    private static final String INVALID_NUMBERED_LIST_FIELD = "1";
+    private static final Map<String, String> NATURAL_SCIENCE_FIELD_NAME_CORRECTIONS = Map.of(
+        "고분자 화학 (고분자 합성) 4",
+        "고분자 화학 (고분자 합성)",
+        "다양한 응용 분야를 위한 그래핀-고분자 복합재료 개발 2",
+        "다양한 응용 분야를 위한 그래핀-고분자 복합재료 개발",
+        "빌량분석법",
+        "질량분석법",
+        "원자력 현미경(AFM)을 이용한 접착력 연구 3",
+        "원자힘 현미경(AFM)을 이용한 접착력 연구",
+        "폐수 중금속 이온 흡착 및 약물 전달을 위한 젤라틴 기반 하이드로겔 입자 제조 5",
+        "폐수 중금속 이온 흡착 및 약물 전달을 위한 젤라틴 기반 하이드로겔 입자 제조"
+    );
     private static final Path BASE_CLASSIFICATION_CSV = Path.of(
         "docs",
         "data",
@@ -105,20 +120,25 @@ class ResearchFieldCategoryMySqlMigrationTest {
     @Test
     void v31UpgradeMapsOnlyExistingNaturalScienceFields() throws Exception {
         flyway("31").migrate();
-        Map<String, String> naturalScienceAssignmentMap = expectedAssignments(
-            readNaturalScienceAssignments()
+        List<CuratedAssignment> naturalScienceAssignments = readNaturalScienceAssignments();
+        assertThat(naturalScienceAssignments)
+            .hasSize(EXPECTED_NATURAL_SCIENCE_REFERENCE_COUNT);
+        Map<String, Set<String>> naturalScienceAssignmentMap = expectedAssignments(
+            naturalScienceAssignments
         );
         assertThat(naturalScienceAssignmentMap)
-            .hasSize(EXPECTED_NATURAL_SCIENCE_REFERENCE_COUNT)
-            .containsEntry("이미지 처리", "SIGNAL_MEDIA")
-            .containsEntry(REFERENCE_ONLY_NATURAL_SCIENCE_FIELD, "CHEMISTRY_MATERIALS");
+            .containsEntry("이미지 처리", Set.of("SIGNAL_MEDIA"))
+            .containsEntry(
+                REFERENCE_ONLY_NATURAL_SCIENCE_FIELD,
+                Set.of("CHEMISTRY_MATERIALS")
+            );
         List<String> existingNaturalScienceFieldNames = naturalScienceAssignmentMap
             .keySet()
             .stream()
             .filter(name -> !name.equals(REFERENCE_ONLY_NATURAL_SCIENCE_FIELD))
             .toList();
-        Map<String, String> expectedExistingAssignments = new LinkedHashMap<>(
-            naturalScienceAssignmentMap
+        Map<String, Set<String>> expectedExistingAssignments = new LinkedHashMap<>(
+            canonicalNaturalScienceAssignments(naturalScienceAssignmentMap)
         );
         expectedExistingAssignments.remove(REFERENCE_ONLY_NATURAL_SCIENCE_FIELD);
 
@@ -165,13 +185,19 @@ class ResearchFieldCategoryMySqlMigrationTest {
             assertThat(count(connection, "SELECT COUNT(*) FROM research_field_category"))
                 .isEqualTo(EXPECTED_CATEGORY_COUNT);
             assertThat(count(connection, "SELECT COUNT(*) FROM research_field"))
-                .isEqualTo(fieldCountBeforeUpgrade);
+                .isEqualTo(fieldCountBeforeUpgrade - 1);
             assertThat(count(connection, "SELECT COUNT(*) FROM research_field_category_mapping"))
-                .isEqualTo(existingNaturalScienceFieldNames.size());
+                .isEqualTo(mappingCount(expectedExistingAssignments));
             assertMapping(connection, "이미지 처리", "SIGNAL_MEDIA");
             assertMapping(connection, "가사이드 이론", "MATH_STATISTICS");
             assertMapping(connection, "우주론", "PHYSICS_ASTRONOMY");
             assertMapping(connection, "고분자 열역학", "CHEMISTRY_MATERIALS");
+            assertMapping(connection, "질량분석법", "CHEMISTRY_MATERIALS");
+            assertThat(count(
+                connection,
+                "SELECT COUNT(*) FROM research_field WHERE name = ?",
+                INVALID_NUMBERED_LIST_FIELD
+            )).isZero();
             assertThat(count(
                 connection,
                 "SELECT COUNT(*) FROM research_field WHERE name = ?",
@@ -192,23 +218,255 @@ class ResearchFieldCategoryMySqlMigrationTest {
     }
 
     @Test
+    void v33UpgradeCorrectsNamesMergesDuplicatesAndRejectsNumberArtifacts()
+        throws Exception {
+        flyway("33").migrate();
+
+        long laboratoryId;
+        long misspelledFieldId;
+        long canonicalFieldId;
+        long trailingNumberFieldId;
+        long numberArtifactFieldId;
+        long misspelledCandidateId;
+        long trailingNumberCandidateId;
+        long numberArtifactCandidateId;
+        long validCandidateWithInvalidPromotionId;
+        try (Connection connection = connection()) {
+            laboratoryId = insertLaboratoryFixture(connection);
+            misspelledFieldId = insertAndReturnId(
+                connection,
+                "INSERT INTO research_field (name) VALUES (?)",
+                "빌량분석법"
+            );
+            canonicalFieldId = insertAndReturnId(
+                connection,
+                "INSERT INTO research_field (name) VALUES (?)",
+                "질량분석법"
+            );
+            trailingNumberFieldId = insertAndReturnId(
+                connection,
+                "INSERT INTO research_field (name) VALUES (?)",
+                "고분자 화학 (고분자 합성) 4"
+            );
+            numberArtifactFieldId = insertAndReturnId(
+                connection,
+                "INSERT INTO research_field (name) VALUES (?)",
+                INVALID_NUMBERED_LIST_FIELD
+            );
+
+            insertLaboratoryFieldLink(connection, laboratoryId, misspelledFieldId);
+            insertLaboratoryFieldLink(connection, laboratoryId, canonicalFieldId);
+            insertLaboratoryFieldLink(connection, laboratoryId, trailingNumberFieldId);
+            insertLaboratoryFieldLink(connection, laboratoryId, numberArtifactFieldId);
+            insertCategoryMapping(connection, misspelledFieldId, "CHEMISTRY_MATERIALS");
+            insertCategoryMapping(connection, canonicalFieldId, "CHEMISTRY_MATERIALS");
+            insertCategoryMapping(connection, canonicalFieldId, "BIOMED_HEALTH");
+            insertCategoryMapping(connection, trailingNumberFieldId, "CHEMISTRY_MATERIALS");
+            insertCategoryMapping(connection, numberArtifactFieldId, "CHEMISTRY_MATERIALS");
+
+            misspelledCandidateId = insertPromotedCandidate(
+                connection,
+                laboratoryId,
+                "a".repeat(64),
+                "빌량분석법",
+                misspelledFieldId,
+                0
+            );
+            trailingNumberCandidateId = insertPromotedCandidate(
+                connection,
+                laboratoryId,
+                "b".repeat(64),
+                "고분자 화학 (고분자 합성) 4",
+                trailingNumberFieldId,
+                1
+            );
+            numberArtifactCandidateId = insertPromotedCandidate(
+                connection,
+                laboratoryId,
+                "c".repeat(64),
+                INVALID_NUMBERED_LIST_FIELD,
+                numberArtifactFieldId,
+                2
+            );
+            validCandidateWithInvalidPromotionId = insertPromotedCandidate(
+                connection,
+                laboratoryId,
+                "e".repeat(64),
+                "검수된 유효 연구 분야",
+                numberArtifactFieldId,
+                3
+            );
+            assertThat(executeUpdate(
+                connection,
+                """
+                    UPDATE laboratory_research_field_candidate
+                    SET review_note = '기존 검수 메모',
+                        reviewed_by = 'reviewer-before-v34',
+                        reviewed_at = '2026-09-01 12:34:56',
+                        review_revision = 7,
+                        promoted_reviewed_at = '2026-09-01 12:34:56',
+                        promoted_review_revision = 7
+                    WHERE id = ?
+                    """,
+                validCandidateWithInvalidPromotionId
+            )).isOne();
+        }
+
+        flyway(null).migrate();
+
+        try (Connection connection = connection()) {
+            assertThat(count(
+                connection,
+                "SELECT COUNT(*) FROM research_field WHERE id = ?",
+                misspelledFieldId
+            )).isZero();
+            assertThat(findFieldId(connection, "질량분석법")).isEqualTo(canonicalFieldId);
+            assertThat(count(
+                connection,
+                """
+                    SELECT COUNT(*)
+                    FROM laboratory_research_field
+                    WHERE laboratory_id = ?
+                      AND research_field_id = ?
+                    """,
+                laboratoryId,
+                canonicalFieldId
+            )).isOne();
+            assertThat(count(
+                connection,
+                """
+                    SELECT COUNT(*)
+                    FROM laboratory_research_field_candidate
+                    WHERE id = ?
+                      AND candidate_name = '질량분석법'
+                      AND raw_field_text = '빌량분석법'
+                      AND promoted_research_field_id = ?
+                    """,
+                misspelledCandidateId,
+                canonicalFieldId
+            )).isOne();
+            assertMapping(connection, "질량분석법", "CHEMISTRY_MATERIALS");
+            assertMapping(connection, "질량분석법", "BIOMED_HEALTH");
+            assertThat(findAllMappings(connection))
+                .containsEntry(
+                    "질량분석법",
+                    Set.of("CHEMISTRY_MATERIALS", "BIOMED_HEALTH")
+                );
+            assertThat(count(
+                connection,
+                """
+                    SELECT COUNT(*)
+                    FROM research_field_category_mapping
+                    WHERE research_field_id = ?
+                    """,
+                canonicalFieldId
+            )).isEqualTo(2L);
+
+            assertThat(findFieldId(connection, "고분자 화학 (고분자 합성)"))
+                .isEqualTo(trailingNumberFieldId);
+            assertThat(count(
+                connection,
+                "SELECT COUNT(*) FROM research_field WHERE name = ?",
+                "고분자 화학 (고분자 합성) 4"
+            )).isZero();
+            assertThat(count(
+                connection,
+                """
+                    SELECT COUNT(*)
+                    FROM laboratory_research_field_candidate
+                    WHERE id = ?
+                      AND candidate_name = '고분자 화학 (고분자 합성)'
+                      AND promoted_research_field_id = ?
+                    """,
+                trailingNumberCandidateId,
+                trailingNumberFieldId
+            )).isOne();
+            assertMapping(
+                connection,
+                "고분자 화학 (고분자 합성)",
+                "CHEMISTRY_MATERIALS"
+            );
+
+            assertThat(count(
+                connection,
+                "SELECT COUNT(*) FROM research_field WHERE id = ?",
+                numberArtifactFieldId
+            )).isZero();
+            assertThat(count(
+                connection,
+                """
+                    SELECT COUNT(*)
+                    FROM laboratory_research_field
+                    WHERE research_field_id = ?
+                    """,
+                numberArtifactFieldId
+            )).isZero();
+            assertThat(count(
+                connection,
+                """
+                    SELECT COUNT(*)
+                    FROM research_field_category_mapping
+                    WHERE research_field_id = ?
+                    """,
+                numberArtifactFieldId
+            )).isZero();
+            assertThat(count(
+                connection,
+                """
+                    SELECT COUNT(*)
+                    FROM laboratory_research_field_candidate
+                    WHERE id = ?
+                      AND raw_field_text = '1'
+                      AND candidate_name IS NULL
+                      AND review_status = 'REJECTED'
+                      AND reviewed_by = 'flyway-v34'
+                      AND promoted_research_field_id IS NULL
+                      AND promoted_at IS NULL
+                      AND promoted_reviewed_at IS NULL
+                      AND promoted_review_revision IS NULL
+                    """,
+                numberArtifactCandidateId
+            )).isOne();
+            assertThat(count(
+                connection,
+                """
+                    SELECT COUNT(*)
+                    FROM laboratory_research_field_candidate
+                    WHERE id = ?
+                      AND raw_field_text = '검수된 유효 연구 분야'
+                      AND candidate_name = '검수된 유효 연구 분야'
+                      AND review_status = 'APPROVED'
+                      AND review_note = '기존 검수 메모'
+                      AND reviewed_by = 'reviewer-before-v34'
+                      AND reviewed_at = '2026-09-01 12:34:56'
+                      AND review_revision = 7
+                      AND promoted_research_field_id IS NULL
+                      AND promoted_at IS NULL
+                      AND promoted_reviewed_at IS NULL
+                      AND promoted_review_revision IS NULL
+                    """,
+                validCandidateWithInvalidPromotionId
+            )).isOne();
+        }
+    }
+
+    @Test
     void v22UpgradeMapsExistingCuratedFieldsWithoutCreatingReferenceOnlyFields()
         throws Exception {
         flyway("22").migrate();
         List<CuratedAssignment> baseAssignments = readBaseAssignments();
-        Map<String, String> baseAssignmentMap = expectedAssignments(baseAssignments);
+        assertThat(baseAssignments).hasSize(EXPECTED_BASE_REFERENCE_COUNT);
+        Map<String, Set<String>> baseAssignmentMap = expectedAssignments(baseAssignments);
         assertThat(baseAssignmentMap)
-            .hasSize(EXPECTED_BASE_REFERENCE_COUNT)
-            .containsEntry(REFERENCE_ONLY_BASE_FIELD, "AI_ML");
+            .containsEntry(REFERENCE_ONLY_BASE_FIELD, Set.of("AI_ML"));
         List<String> baseFieldNames = baseAssignmentMap
             .keySet()
             .stream()
             .filter(name -> !name.equals(REFERENCE_ONLY_BASE_FIELD))
             .toList();
-        assertThat(baseFieldNames)
-            .hasSize(EXPECTED_BASE_REFERENCE_COUNT - 1)
-            .doesNotHaveDuplicates();
-        Map<String, String> expectedExistingAssignments = new LinkedHashMap<>(baseAssignmentMap);
+        Map<String, Set<String>> expectedExistingAssignments = new LinkedHashMap<>(
+            baseAssignmentMap
+        );
         expectedExistingAssignments.remove(REFERENCE_ONLY_BASE_FIELD);
 
         long existingSeedFieldId;
@@ -234,7 +492,7 @@ class ResearchFieldCategoryMySqlMigrationTest {
             assertThat(count(connection, "SELECT COUNT(*) FROM research_field"))
                 .isEqualTo(fieldCountBeforeUpgrade);
             assertThat(count(connection, "SELECT COUNT(*) FROM research_field_category_mapping"))
-                .isEqualTo(baseFieldNames.size());
+                .isEqualTo(mappingCount(expectedExistingAssignments));
             assertThat(count(
                 connection,
                 "SELECT COUNT(DISTINCT research_field_id) FROM research_field_category_mapping"
@@ -352,26 +610,41 @@ class ResearchFieldCategoryMySqlMigrationTest {
         return columns;
     }
 
-    private Map<String, String> expectedAssignments(
+    private Map<String, Set<String>> expectedAssignments(
         List<CuratedAssignment> assignments
     ) {
-        Map<String, String> expected = new LinkedHashMap<>();
+        Map<String, Set<String>> expected = new LinkedHashMap<>();
         for (CuratedAssignment assignment : assignments) {
-            String previous = expected.put(
+            expected.computeIfAbsent(
                 assignment.researchFieldName(),
-                assignment.categoryCode()
-            );
-            if (previous != null && !previous.equals(assignment.categoryCode())) {
-                throw new IllegalArgumentException(
-                    "Conflicting categories in CSV: " + assignment.researchFieldName()
-                );
-            }
+                ignored -> new LinkedHashSet<>()
+            ).add(assignment.categoryCode());
         }
         return expected;
     }
 
-    private Map<String, String> findAllMappings(Connection connection) throws SQLException {
-        Map<String, String> mappings = new LinkedHashMap<>();
+    private Map<String, Set<String>> canonicalNaturalScienceAssignments(
+        Map<String, Set<String>> assignments
+    ) {
+        Map<String, Set<String>> canonicalAssignments = new LinkedHashMap<>();
+        assignments.forEach((fieldName, categoryCodes) -> {
+            if (fieldName.equals(INVALID_NUMBERED_LIST_FIELD)) {
+                return;
+            }
+            String canonicalName = NATURAL_SCIENCE_FIELD_NAME_CORRECTIONS.getOrDefault(
+                fieldName,
+                fieldName
+            );
+            canonicalAssignments.computeIfAbsent(
+                canonicalName,
+                ignored -> new LinkedHashSet<>()
+            ).addAll(categoryCodes);
+        });
+        return canonicalAssignments;
+    }
+
+    private Map<String, Set<String>> findAllMappings(Connection connection) throws SQLException {
+        Map<String, Set<String>> mappings = new LinkedHashMap<>();
         try (PreparedStatement statement = connection.prepareStatement(
             """
                 SELECT field.name, category.code
@@ -385,13 +658,19 @@ class ResearchFieldCategoryMySqlMigrationTest {
         ); ResultSet result = statement.executeQuery()) {
             while (result.next()) {
                 String fieldName = result.getString("name");
-                String previous = mappings.put(fieldName, result.getString("code"));
-                if (previous != null) {
-                    throw new SQLException("Multiple categories found for field: " + fieldName);
-                }
+                mappings.computeIfAbsent(
+                    fieldName,
+                    ignored -> new LinkedHashSet<>()
+                ).add(result.getString("code"));
             }
         }
         return mappings;
+    }
+
+    private long mappingCount(Map<String, Set<String>> assignments) {
+        return assignments.values().stream()
+            .mapToLong(Set::size)
+            .sum();
     }
 
     private void insertFields(Connection connection, List<String> names) throws SQLException {
@@ -404,6 +683,121 @@ class ResearchFieldCategoryMySqlMigrationTest {
             }
             assertThat(statement.executeBatch()).hasSize(names.size());
         }
+    }
+
+    private long insertLaboratoryFixture(Connection connection) throws SQLException {
+        long collegeId = insertAndReturnId(
+            connection,
+            "INSERT INTO college (name) VALUES (?)",
+            "V34 마이그레이션 테스트 단과대"
+        );
+        long departmentId = insertAndReturnId(
+            connection,
+            "INSERT INTO department (college_id, name) VALUES (?, ?)",
+            collegeId,
+            "V34 마이그레이션 테스트 학과"
+        );
+        long professorId = insertAndReturnId(
+            connection,
+            "INSERT INTO professor (department_id, name) VALUES (?, ?)",
+            departmentId,
+            "V34 마이그레이션 테스트 교수"
+        );
+        return insertAndReturnId(
+            connection,
+            """
+                INSERT INTO laboratory (
+                    professor_id,
+                    department_id,
+                    name,
+                    recruitment_status,
+                    name_source
+                ) VALUES (?, ?, ?, 'UNKNOWN', 'GENERATED')
+                """,
+            professorId,
+            departmentId,
+            "V34 마이그레이션 테스트 연구실"
+        );
+    }
+
+    private void insertLaboratoryFieldLink(
+        Connection connection,
+        long laboratoryId,
+        long researchFieldId
+    ) throws SQLException {
+        assertThat(executeUpdate(
+            connection,
+            """
+                INSERT INTO laboratory_research_field (laboratory_id, research_field_id)
+                VALUES (?, ?)
+                """,
+            laboratoryId,
+            researchFieldId
+        )).isOne();
+    }
+
+    private void insertCategoryMapping(
+        Connection connection,
+        long researchFieldId,
+        String categoryCode
+    ) throws SQLException {
+        assertThat(executeUpdate(
+            connection,
+            """
+                INSERT INTO research_field_category_mapping (research_field_id, category_id)
+                SELECT ?, category.id
+                FROM research_field_category category
+                WHERE category.code = ?
+                """,
+            researchFieldId,
+            categoryCode
+        )).isOne();
+    }
+
+    private long insertPromotedCandidate(
+        Connection connection,
+        long laboratoryId,
+        String sourceFieldKey,
+        String candidateName,
+        long promotedResearchFieldId,
+        int sourceOrder
+    ) throws SQLException {
+        return insertAndReturnId(
+            connection,
+            """
+                INSERT INTO laboratory_research_field_candidate (
+                    laboratory_id,
+                    source_field_key,
+                    source_description_hash,
+                    raw_field_text,
+                    candidate_name,
+                    extraction_method,
+                    source_order,
+                    extraction_rule_version,
+                    is_stale,
+                    review_status,
+                    reviewed_by,
+                    reviewed_at,
+                    review_revision,
+                    promoted_research_field_id,
+                    promoted_at,
+                    promoted_reviewed_at,
+                    promoted_review_revision,
+                    extracted_at
+                ) VALUES (
+                    ?, ?, ?, ?, ?, 'DELIMITED', ?, 'sejong-v1', FALSE,
+                    'APPROVED', 'migration-test', CURRENT_TIMESTAMP, 1, ?,
+                    CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 1, CURRENT_TIMESTAMP
+                )
+                """,
+            laboratoryId,
+            sourceFieldKey,
+            "d".repeat(64),
+            candidateName,
+            candidateName,
+            sourceOrder,
+            promotedResearchFieldId
+        );
     }
 
     private Flyway flyway(String target) {
