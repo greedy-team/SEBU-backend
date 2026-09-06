@@ -76,8 +76,8 @@ class ResearchFieldCategoryMySqlMigrationTest {
     }
 
     @Test
-    void blankDatabaseCreatesCategoriesWithoutInventingResearchFields() throws Exception {
-        flyway(null).migrate();
+    void blankDatabaseAtV34CreatesCategoriesWithoutInventingResearchFields() throws Exception {
+        flyway("34").migrate();
 
         try (Connection connection = connection()) {
             assertThat(count(connection, "SELECT COUNT(*) FROM research_field_category"))
@@ -177,7 +177,7 @@ class ResearchFieldCategoryMySqlMigrationTest {
                 .isOne();
         }
 
-        flyway(null).migrate();
+        flyway("34").migrate();
 
         try (Connection connection = connection()) {
             assertThat(findFieldId(connection, "이미지 처리"))
@@ -312,7 +312,7 @@ class ResearchFieldCategoryMySqlMigrationTest {
             )).isOne();
         }
 
-        flyway(null).migrate();
+        flyway("34").migrate();
 
         try (Connection connection = connection()) {
             assertThat(count(
@@ -483,7 +483,7 @@ class ResearchFieldCategoryMySqlMigrationTest {
             fieldCountBeforeUpgrade = count(connection, "SELECT COUNT(*) FROM research_field");
         }
 
-        flyway(null).migrate();
+        flyway("34").migrate();
 
         try (Connection connection = connection()) {
             assertThat(findFieldId(connection, "인공지능")).isEqualTo(existingSeedFieldId);
