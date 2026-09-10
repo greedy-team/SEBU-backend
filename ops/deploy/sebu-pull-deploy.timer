@@ -1,0 +1,12 @@
+[Unit]
+Description=Check SEBU develop image approximately every two minutes
+
+[Timer]
+OnBootSec=90s
+OnUnitInactiveSec=2min
+AccuracySec=5s
+RandomizedDelaySec=10s
+Unit=sebu-pull-deploy.service
+
+[Install]
+WantedBy=timers.target

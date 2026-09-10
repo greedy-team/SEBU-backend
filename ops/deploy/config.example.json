@@ -1,0 +1,17 @@
+{
+  "image": "ghcr.io/greedy-team/sebu-backend",
+  "tag": "develop",
+  "source": "https://github.com/greedy-team/SEBU-backend",
+  "container": "sebu-backend",
+  "mysql_container": "sebu-mysql",
+  "mysql_volume": "sebu-mysql-data",
+  "database": "sebu",
+  "network": "sebu-network",
+  "env_file": "/etc/sebu-deploy/backend.env",
+  "state_dir": "/var/lib/sebu-deploy",
+  "memory_mb": 768,
+  "port": 8080,
+  "health_timeout": 300,
+  "min_free_mb": 2048,
+  "public_health_url": "https://sebu-dev-api.duckdns.org/api/v1/laboratories"
+}

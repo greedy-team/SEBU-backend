@@ -16,13 +16,14 @@ permissions:
 
 concurrency:
   group: backend-ci-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  # Do not cancel a push while it is publishing the deployment pointer.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   test:
     name: Build and test
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
 
     steps:
       - name: Check out repository
@@ -40,29 +41,71 @@ jobs:
       - name: Grant execute permission for Gradle Wrapper
         run: chmod +x gradlew
 
+      - name: Verify pull deployment scripts
+        shell: bash
+        run: |
+          python3 -m unittest discover -s ops/deploy/tests -v
+          for script in ops/deploy/*.sh; do bash -n "$script"; done
+
       - name: Build and test
         run: ./gradlew clean test --no-daemon
 
       - name: Build runtime container
         run: docker build --tag sebu-backend:ci .
 
-      - name: Start runtime container and smoke test
+      - name: Smoke test prod image with disposable MySQL 8.0
+        run: bash ops/deploy/smoke-prod.sh sebu-backend:ci
+
+  publish:
+    name: Publish private develop image
+    needs: test
+    if: github.ref == 'refs/heads/develop' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Check out tested commit
+        uses: actions/checkout@v4
+
+      - name: Refuse an existing public package
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python3 ops/deploy/check-package-private.py --allow-missing
+
+      - name: Build image with commit and migration identity
         shell: bash
         run: |
           set -euo pipefail
-          container_id=$(docker run --detach \
-            --publish 18080:8080 \
-            --env SPRING_PROFILES_ACTIVE=local \
-            --env JWT_SECRET_BASE64="$(openssl rand -base64 32)" \
-            sebu-backend:ci)
-          trap 'docker rm --force "$container_id" > /dev/null 2>&1 || true' EXIT
+          migrations=$(python3 ops/deploy/deploy.py fingerprint)
+          docker build --platform linux/amd64 \
+            --label "org.opencontainers.image.source=https://github.com/greedy-team/SEBU-backend" \
+            --label "org.opencontainers.image.revision=$GITHUB_SHA" \
+            --label "io.sebu.deployment-channel=develop" \
+            --label "io.sebu.migrations-sha256=$migrations" \
+            --tag "ghcr.io/greedy-team/sebu-backend:sha-$GITHUB_SHA" .
 
-          for attempt in $(seq 1 30); do
-            if curl --fail --silent http://127.0.0.1:18080/api/v1/laboratories > /dev/null; then
-              exit 0
-            fi
-            sleep 2
-          done
+      - name: Validate exact publish image with MySQL 8.0
+        run: bash ops/deploy/smoke-prod.sh "ghcr.io/greedy-team/sebu-backend:sha-$GITHUB_SHA"
 
-          docker logs "$container_id"
-          exit 1
+      - name: Publish private image, then advance develop pointer
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          image=ghcr.io/greedy-team/sebu-backend
+          python3 ops/deploy/check-package-private.py --allow-missing
+          printf '%s' "$GH_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
+          trap 'docker logout ghcr.io >/dev/null 2>&1 || true' EXIT
+          docker push "$image:sha-$GITHUB_SHA"
+          python3 ops/deploy/check-package-private.py
+          current_develop=$(git ls-remote origin refs/heads/develop | cut -f1)
+          if [[ "$current_develop" != "$GITHUB_SHA" ]]; then
+            echo 'A newer develop commit exists. SHA image retained; deployment pointer not changed.'
+            exit 0
+          fi
+          docker tag "$image:sha-$GITHUB_SHA" "$image:develop"
+          docker push "$image:develop"
+          echo "Private image published for commit $GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
