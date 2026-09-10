@@ -3,14 +3,15 @@ package com.sebu.backend.global.auth;
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
 import com.sebu.backend.auth.config.AuthCookieProperties;
 import com.sebu.backend.auth.config.AuthTransportProperties;
+import com.sebu.backend.auth.config.AuthCsrfProperties;
 import com.sebu.backend.auth.config.TokenProperties;
-import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.ObjectPostProcessor;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -27,7 +28,9 @@ import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.security.oauth2.server.resource.web.BearerTokenResolver;
-import org.springframework.security.oauth2.server.resource.web.DefaultBearerTokenResolver;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfFilter;
+import org.springframework.security.web.authentication.session.NullAuthenticatedSessionStrategy;
 import org.springframework.security.web.SecurityFilterChain;
 
 import javax.crypto.SecretKey;
@@ -44,11 +47,10 @@ import static org.springframework.security.config.Customizer.withDefaults;
 @EnableConfigurationProperties({
         TokenProperties.class,
         AuthCookieProperties.class,
-        AuthTransportProperties.class
+        AuthTransportProperties.class,
+        AuthCsrfProperties.class
 })
 public class SecurityConfiguration {
-
-    private static final String AUTH_API_PATH = "/api/v1/auth";
 
     private static final OAuth2Error EXPIRED_TOKEN_ERROR =
             new OAuth2Error(
@@ -72,7 +74,10 @@ public class SecurityConfiguration {
             HttpSecurity http,
             JwtAuthenticationEntryPoint authenticationEntryPoint,
             BearerTokenResolver bearerTokenResolver,
-            AuthTransportProperties transportProperties
+            AuthTransportProperties transportProperties,
+            AuthCsrfProperties csrfProperties,
+            CookieCsrfTokenRepository csrfTokenRepository,
+            ApiAccessDeniedHandler accessDeniedHandler
     ) throws Exception {
 
         if (transportProperties.requireHttps()) {
@@ -80,7 +85,21 @@ public class SecurityConfiguration {
         }
 
         http
-                .csrf(AbstractHttpConfigurer::disable)
+                .csrf(csrf -> csrf.csrfTokenRepository(csrfTokenRepository)
+                    .csrfTokenRequestHandler(new SpaCsrfTokenRequestHandler())
+                    // JWT authentication happens on every request. Only the JSON login/logout
+                    // controllers rotate CSRF, not routine authentication of an existing cookie.
+                    .sessionAuthenticationStrategy(new NullAuthenticatedSessionStrategy())
+                    .withObjectPostProcessor(new ObjectPostProcessor<CsrfFilter>() {
+                        @Override
+                        public <O extends CsrfFilter> O postProcess(O filter) {
+                            // Resource-server auto-configuration exempts bearer-resolved requests.
+                            // Our bearer resolver reads ambient cookies, so NO unsafe request is exempt.
+                            filter.setRequireCsrfProtectionMatcher(CsrfFilter.DEFAULT_CSRF_MATCHER);
+                            return filter;
+                        }
+                    }))
+                .addFilterBefore(new TrustedOriginFilter(csrfProperties, accessDeniedHandler), CsrfFilter.class)
 
                 .sessionManagement(
                         session ->
@@ -101,6 +120,7 @@ public class SecurityConfiguration {
                         ).permitAll()
 
                         // 인증 API는 로그인하지 않은 사용자도 접근 가능
+                        .requestMatchers(GET, "/api/v1/auth/csrf").permitAll()
                         .requestMatchers(
                                 POST,
                                 "/api/v1/auth/sejong/login",
@@ -138,6 +158,7 @@ public class SecurityConfiguration {
                                 exceptions.authenticationEntryPoint(
                                         authenticationEntryPoint
                                 )
+                                .accessDeniedHandler(accessDeniedHandler)
                 )
 
                 .oauth2ResourceServer(
@@ -153,7 +174,7 @@ public class SecurityConfiguration {
                                 )
                                 .authenticationEntryPoint(
                                         authenticationEntryPoint
-                                )
+                                ).accessDeniedHandler(accessDeniedHandler)
                 )
 
                 .httpBasic(AbstractHttpConfigurer::disable)
@@ -165,28 +186,14 @@ public class SecurityConfiguration {
 
     @Bean
     BearerTokenResolver bearerTokenResolver() {
-        DefaultBearerTokenResolver delegate =
-                new DefaultBearerTokenResolver();
-
-        return request ->
-                isAuthApi(request)
-                        ? null
-                        : delegate.resolve(request);
+        return new CookieAccessTokenResolver();
     }
 
-    private boolean isAuthApi(
-            HttpServletRequest request
-    ) {
-        String requestPath =
-                request.getRequestURI()
-                        .substring(
-                                request.getContextPath().length()
-                        );
-
-        return requestPath.equals(AUTH_API_PATH)
-                || requestPath.startsWith(
-                AUTH_API_PATH + "/"
-        );
+    @Bean
+    CookieCsrfTokenRepository csrfTokenRepository(AuthCookieProperties properties) {
+        CookieCsrfTokenRepository repository = CookieCsrfTokenRepository.withHttpOnlyFalse();
+        repository.setCookieCustomizer(cookie -> cookie.path("/").secure(properties.secure()).sameSite("Lax"));
+        return repository;
     }
 
     @Bean

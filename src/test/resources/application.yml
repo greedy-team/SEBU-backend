@@ -20,6 +20,12 @@ app:
       jwt-secret-base64: MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg5MDE=
       access-token-expiration: 30m
       refresh-token-expiration: 14d
+      absolute-session-expiration: 30d
+    csrf:
+      allowed-origins:
+        - https://sebu-frontend.vercel.app
+    retention:
+      purge-cron: "-"
     cookie:
       secure: true
     sejong:

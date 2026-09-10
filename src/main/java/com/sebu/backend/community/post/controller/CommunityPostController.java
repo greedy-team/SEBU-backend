@@ -71,7 +71,7 @@ public class CommunityPostController {
             summary = "게시글 작성",
             description = "로그인한 사용자가 새 게시글을 작성합니다."
     )
-    @SecurityRequirement(name = "bearerAuth")
+    @SecurityRequirement(name = "cookieAuth")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(
             responseCode = "201",
             description = "게시글 작성 성공",
@@ -90,7 +90,7 @@ public class CommunityPostController {
             summary = "게시글 수정",
             description = "로그인한 사용자가 자신이 작성한 게시글을 수정합니다."
     )
-    @SecurityRequirement(name = "bearerAuth")
+    @SecurityRequirement(name = "cookieAuth")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(
             responseCode = "403",
             ref = "#/components/responses/Forbidden"
@@ -107,7 +107,7 @@ public class CommunityPostController {
             summary = "게시글 삭제",
             description = "로그인한 사용자가 자신이 작성한 게시글을 삭제합니다."
     )
-    @SecurityRequirement(name = "bearerAuth")
+    @SecurityRequirement(name = "cookieAuth")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(
             responseCode = "403",
             ref = "#/components/responses/Forbidden"

@@ -6,12 +6,25 @@ spring:
   jpa:
     open-in-view: false
 
+springdoc:
+  swagger-ui:
+    csrf:
+      enabled: true
+
 app:
   auth:
     token:
       jwt-secret-base64: ${JWT_SECRET_BASE64}
       access-token-expiration: 30m
       refresh-token-expiration: 14d
+      absolute-session-expiration: 30d
+    csrf:
+      allowed-origins:
+        - https://sebu-frontend.vercel.app
+    retention:
+      purge-cron: "0 10 3 * * *"
+      batch-size: 500
+      max-batches: 100
     cookie:
       secure: true
     sejong:

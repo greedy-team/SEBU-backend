@@ -14,6 +14,7 @@ erDiagram
     RESEARCH_FIELD ||--o{ LABORATORY_RESEARCH_FIELD : classifies
     DEPARTMENT o|--o{ APP_USER : majors_in
     APP_USER ||--o{ BOOKMARK : creates
+    APP_USER ||--o{ REFRESH_TOKEN : authenticates
     LABORATORY ||--o{ BOOKMARK : receives
 ```
 
@@ -43,6 +44,8 @@ erDiagram
 - GPA 구간은 `GTE_3_0`, `GTE_3_5`, `GTE_4_0`만 허용하고, 미선택 상태는 `NULL`로 표현한다.
 - 자기소개는 최대 500자이며 승인된 내용과 검수 시각·정책·제공자 버전을 같은 트랜잭션에서 저장한다.
 - 회원 탈퇴 상태는 `app_user.deleted_at`으로 기록한다.
+- `refresh_token`은 토큰 해시, 미사용 만료 시각, 폐기 시각을 저장한다. `session_id`는 같은 로그인에서 회전한 토큰을 묶고, `absolute_expires_at`은 최초 로그인부터 30일로 고정한다. 별도 서버 세션 테이블은 사용하지 않는다.
+- Refresh는 미사용 14일과 절대 30일 중 먼저 도래하는 시각에 만료된다. 명시적 로그아웃은 현재 로그인 묶음을, 회원 탈퇴는 사용자의 모든 묶음을 폐기한다. 인증 계약과 정리 정책은 [쿠키 인증 문서](cookie-authentication.md)를 참고한다.
 - `bookmarkCount`는 저장하지 않고 `bookmark`를 집계하며, `(laboratory_id)` 보조 인덱스를 사용한다.
 - 마이페이지의 최신 북마크 조회는 `(user_id, created_at DESC, laboratory_id DESC)` 인덱스를 사용한다.
 - 단과대·학과·교수 참조 삭제는 제한하고, 연구실 물리 삭제 시 연결 데이터와 북마크는 연쇄 삭제한다.

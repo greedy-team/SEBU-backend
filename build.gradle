@@ -52,4 +52,9 @@ dependencies {
 
 tasks.named('test') {
 	useJUnitPlatform()
+	if (project.hasProperty('excludeDocker')) {
+		exclude '**/*MySql*', '**/BookmarkConcurrencyIntegrationTest*', '**/ProdContainerHealthcheckIntegrationTest*'
+	}
+	maxParallelForks = 1
+	systemProperty 'spring.test.context.cache.maxSize', '3'
 }

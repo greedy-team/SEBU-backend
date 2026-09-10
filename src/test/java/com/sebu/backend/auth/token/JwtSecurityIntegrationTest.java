@@ -1,6 +1,8 @@
 package com.sebu.backend.auth.token;
 
 import com.sebu.backend.auth.config.TokenProperties;
+import com.sebu.backend.auth.controller.AuthCookieFactory;
+import jakarta.servlet.http.Cookie;
 import com.sebu.backend.user.domain.AppUser;
 import com.sebu.backend.user.repository.AppUserRepository;
 import org.junit.jupiter.api.Test;
@@ -39,10 +41,10 @@ class JwtSecurityIntegrationTest {
     AppUserRepository appUserRepository;
 
     @Test
-    void authenticatesBearerTokenAndExposesCurrentUserId() throws Exception {
+    void authenticatesCookieAndExposesCurrentUserId() throws Exception {
         AppUser user = appUserRepository.save(AppUser.sejong("jwt-user"));
         mockMvc.perform(get("/api/v1/me")
-                .header("Authorization", "Bearer " + accessTokenService.issue(user.getId())))
+                .cookie(new Cookie(AuthCookieFactory.ACCESS_COOKIE, accessTokenService.issue(user.getId()))))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.data.id").value(user.getId()))
@@ -76,7 +78,7 @@ class JwtSecurityIntegrationTest {
         );
 
         mockMvc.perform(get("/api/v1/me")
-                .header("Authorization", "Bearer " + expiredIssuer.issue(user.getId())))
+                .cookie(new Cookie(AuthCookieFactory.ACCESS_COOKIE, expiredIssuer.issue(user.getId()))))
             .andExpect(status().isUnauthorized())
             .andExpect(jsonPath("$.success").value(false))
             .andExpect(jsonPath("$.error.code").value("ACCESS_TOKEN_EXPIRED"));
@@ -85,9 +87,34 @@ class JwtSecurityIntegrationTest {
     @Test
     void returnsInvalidErrorForMalformedAccessToken() throws Exception {
         mockMvc.perform(get("/api/v1/me")
-                .header("Authorization", "Bearer malformed-token"))
+                .cookie(new Cookie(AuthCookieFactory.ACCESS_COOKIE, "malformed-token")))
             .andExpect(status().isUnauthorized())
             .andExpect(jsonPath("$.success").value(false))
             .andExpect(jsonPath("$.error.code").value("ACCESS_TOKEN_INVALID"));
+    }
+
+    @Test
+    void doesNotAcceptBearerHeaderOrQueryParameterAsAuthentication() throws Exception {
+        AppUser user = appUserRepository.save(AppUser.sejong("header-user"));
+        String token = accessTokenService.issue(user.getId());
+        mockMvc.perform(get("/api/v1/me").header("Authorization", "Bearer " + token))
+            .andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/v1/me").param("access_token", token))
+            .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void rejectsDuplicateAndOversizedAccessCookiesWithoutEchoingTheirValues() throws Exception {
+        AppUser user = appUserRepository.save(AppUser.sejong("ambiguous-cookie-user"));
+        String validToken = accessTokenService.issue(user.getId());
+        mockMvc.perform(get("/api/v1/me").cookie(
+                new Cookie(AuthCookieFactory.ACCESS_COOKIE, validToken),
+                new Cookie(AuthCookieFactory.ACCESS_COOKIE, "untrusted-duplicate")))
+            .andExpect(status().isUnauthorized())
+            .andExpect(jsonPath("$.error.code").value("ACCESS_TOKEN_INVALID"));
+        mockMvc.perform(get("/api/v1/me")
+                .cookie(new Cookie(AuthCookieFactory.ACCESS_COOKIE, "x".repeat(2049))))
+            .andExpect(status().isUnauthorized())
+            .andExpect(jsonPath("$.error.message").value("유효하지 않은 인증 토큰입니다."));
     }
 }

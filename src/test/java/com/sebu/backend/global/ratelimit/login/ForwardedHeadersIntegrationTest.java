@@ -47,6 +47,9 @@ class ForwardedHeadersIntegrationTest {
             .header("X-Forwarded-For", clientIp)
             .header("X-Forwarded-Proto", "https")
             .contentType(MediaType.APPLICATION_JSON)
+            .header("Origin", "https://sebu-frontend.vercel.app")
+            .header("Cookie", "XSRF-TOKEN=forwarded-header-test-csrf")
+            .header("X-XSRF-TOKEN", "forwarded-header-test-csrf")
             .body("{}")
             .exchange((request, response) -> response.getStatusCode());
     }

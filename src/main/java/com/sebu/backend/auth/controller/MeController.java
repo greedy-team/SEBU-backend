@@ -23,14 +23,14 @@ public class MeController {
     private final CurrentUserService currentUserService;
 
     @Operation(summary = "내 정보 조회", description = "로그인한 사용자의 기본 정보를 조회합니다.")
-    @SecurityRequirement(name = "bearerAuth")
+    @SecurityRequirement(name = "cookieAuth")
     @GetMapping
     public ApiResponse<MeResponse> me() {
         return ApiResponse.success(MeResponse.from(currentUserService.getCurrentUser()));
     }
 
     @Operation(summary = "내 학년 수정", description = "로그인한 사용자의 학년 정보를 수정합니다.")
-    @SecurityRequirement(name = "bearerAuth")
+    @SecurityRequirement(name = "cookieAuth")
     @PatchMapping("/profile")
     public ApiResponse<MeResponse> updateProfile(@Valid @RequestBody UpdateGradeRequest request) {
         return ApiResponse.success(MeResponse.from(currentUserService.updateGrade(request.grade())));

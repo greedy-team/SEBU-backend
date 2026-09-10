@@ -17,5 +17,9 @@ public interface AppUserRepository extends JpaRepository<AppUser, Long> {
 
     Optional<AppUser> findByProviderAndProviderUserId(AuthProvider provider, String providerUserId);
 
+    @Query("select user.id from AppUser user where user.provider = :provider and user.providerUserId = :providerUserId")
+    Optional<Long> findIdByProviderIdentity(@Param("provider") AuthProvider provider,
+                                           @Param("providerUserId") String providerUserId);
+
     boolean existsByNicknameNormalizedAndIdNot(String nicknameNormalized, Long id);
 }
