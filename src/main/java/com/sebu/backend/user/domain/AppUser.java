@@ -10,6 +10,7 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
@@ -26,6 +27,10 @@ import java.util.Objects;
 @Entity
 @Table(
         name = "app_user",
+        indexes = @Index(
+                name = "idx_app_user_withdrawal_anonymization",
+                columnList = "anonymized_at, deleted_at, id"
+        ),
         uniqueConstraints = {
                 @UniqueConstraint(
                         name = "uk_app_user_provider_identity",
@@ -96,6 +101,9 @@ public class AppUser extends BaseTimeEntity {
 
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
+
+    @Column(name = "anonymized_at")
+    private LocalDateTime anonymizedAt;
 
     @Version
     @Column(nullable = false)
@@ -245,13 +253,50 @@ public class AppUser extends BaseTimeEntity {
         }
     }
 
-    public void withdraw() {
+    public void withdraw(LocalDateTime withdrawnAt) {
         if (this.deletedAt == null) {
-            this.deletedAt = LocalDateTime.now();
+            this.deletedAt = Objects.requireNonNull(withdrawnAt, "WITHDRAWN_AT_REQUIRED");
         }
+    }
+
+    public void recover() {
+        if (deletedAt == null || anonymizedAt != null) {
+            throw new IllegalStateException("ACCOUNT_NOT_RECOVERABLE");
+        }
+        deletedAt = null;
+    }
+
+    public void anonymize(LocalDateTime completedAt) {
+        if (deletedAt == null) {
+            throw new IllegalStateException("ACTIVE_ACCOUNT_CANNOT_BE_ANONYMIZED");
+        }
+        if (anonymizedAt != null) {
+            return;
+        }
+        email = null;
+        provider = null;
+        providerUserId = null;
+        profileCompleted = false;
+        name = null;
+        nickname = null;
+        nicknameNormalized = null;
+        grade = null;
+        majorDepartment = null;
+        sejongDepartmentName = null;
+        gpaBand = null;
+        introduction = "";
+        introductionModeratedAt = null;
+        introductionPolicyVersion = null;
+        introductionProviderVersion = null;
+        profileUpdatedAt = null;
+        anonymizedAt = Objects.requireNonNull(completedAt, "ANONYMIZED_AT_REQUIRED");
     }
 
     public boolean isDeleted() {
         return this.deletedAt != null;
+    }
+
+    public boolean isAnonymized() {
+        return anonymizedAt != null;
     }
 }

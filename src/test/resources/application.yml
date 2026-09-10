@@ -26,6 +26,8 @@ app:
         - https://sebu-frontend.vercel.app
     retention:
       purge-cron: "-"
+    account:
+      anonymization-cron: "-"
     cookie:
       secure: true
     sejong:

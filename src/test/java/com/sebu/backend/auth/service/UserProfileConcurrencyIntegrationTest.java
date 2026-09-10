@@ -163,7 +163,7 @@ class UserProfileConcurrencyIntegrationTest {
         ExecutorService executor = Executors.newSingleThreadExecutor();
         try {
             Future<AuthSessionService.LoginSession> loginResult = executor.submit(
-                () -> authService.loginWithSejong("21009991", "password")
+                () -> (AuthSessionService.LoginSession) authService.loginWithSejong("21009991", "password")
             );
 
             assertThat(loginLoaded.await(5, TimeUnit.SECONDS)).isTrue();

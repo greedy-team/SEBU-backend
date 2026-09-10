@@ -125,7 +125,8 @@ public class SecurityConfiguration {
                                 POST,
                                 "/api/v1/auth/sejong/login",
                                 "/api/v1/auth/refresh",
-                                "/api/v1/auth/logout"
+                                "/api/v1/auth/logout",
+                                "/api/v1/auth/recovery"
                         ).permitAll()
 
                         // 공개 GET API

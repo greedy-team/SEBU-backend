@@ -1,30 +1,36 @@
 package com.sebu.backend.auth.service;
 
 import com.sebu.backend.auth.config.TokenProperties;
+import com.sebu.backend.auth.domain.AccountRecoveryToken;
 import com.sebu.backend.auth.domain.RefreshToken;
-import com.sebu.backend.auth.exception.RefreshTokenInvalidException;
-import com.sebu.backend.auth.exception.AuthSessionExpiredException;
 import com.sebu.backend.auth.exception.AccessTokenInvalidException;
+import com.sebu.backend.auth.exception.AuthSessionExpiredException;
+import com.sebu.backend.auth.exception.RecoveryTokenInvalidException;
+import com.sebu.backend.auth.exception.RefreshTokenInvalidException;
 import com.sebu.backend.auth.port.SejongUserProfile;
+import com.sebu.backend.auth.repository.AccountRecoveryTokenRepository;
 import com.sebu.backend.auth.repository.RefreshTokenRepository;
 import com.sebu.backend.auth.token.JwtAccessTokenService;
+import com.sebu.backend.auth.token.RecoveryTokenGenerator;
 import com.sebu.backend.auth.token.RefreshTokenGenerator;
 import com.sebu.backend.department.domain.Department;
 import com.sebu.backend.user.domain.AppUser;
 import com.sebu.backend.user.domain.AuthProvider;
 import com.sebu.backend.user.repository.AppUserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.sebu.backend.user.service.AccountService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class AuthSessionService {
     private final AppUserRepository appUserRepository;
     private final RefreshTokenRepository refreshTokenRepository;
@@ -32,87 +38,114 @@ public class AuthSessionService {
     private final JwtAccessTokenService accessTokenService;
     private final TokenProperties properties;
     private final SejongDepartmentResolver departmentResolver;
+    private final AccountRecoveryTokenRepository recoveryTokenRepository;
+    private final RecoveryTokenGenerator recoveryTokenGenerator;
+    private final AccountRecoveryPolicy recoveryPolicy;
+    private final AccountService accountService;
     private final Clock clock;
-
-    @Autowired
-    public AuthSessionService(
-        AppUserRepository appUserRepository,
-        RefreshTokenRepository refreshTokenRepository,
-        RefreshTokenGenerator refreshTokenGenerator,
-        JwtAccessTokenService accessTokenService,
-        TokenProperties properties,
-        SejongDepartmentResolver departmentResolver
-    ) {
-        this(
-            appUserRepository,
-            refreshTokenRepository,
-            refreshTokenGenerator,
-            accessTokenService,
-            properties,
-            departmentResolver,
-            Clock.systemUTC()
-        );
-    }
-
-    AuthSessionService(
-        AppUserRepository appUserRepository,
-        RefreshTokenRepository refreshTokenRepository,
-        RefreshTokenGenerator refreshTokenGenerator,
-        JwtAccessTokenService accessTokenService,
-        TokenProperties properties,
-        SejongDepartmentResolver departmentResolver,
-        Clock clock
-    ) {
-        this.appUserRepository = appUserRepository;
-        this.refreshTokenRepository = refreshTokenRepository;
-        this.refreshTokenGenerator = refreshTokenGenerator;
-        this.accessTokenService = accessTokenService;
-        this.properties = properties;
-        this.departmentResolver = departmentResolver;
-        this.clock = clock;
-    }
 
     @Transactional
     public LoginSession start(SejongUserProfile profile) {
-        AppUser user = findUserForUpdate(profile.studentId()).orElse(null);
-        boolean newUser = user == null;
-        LocalDateTime now = now();
-        Department department = departmentResolver.resolve(profile.departmentName());
-        if (newUser) {
-            user = appUserRepository.save(AppUser.sejong(
-                profile.studentId(),
-                profile.name(),
-                profile.departmentName(),
-                department,
-                now
-            ));
-        } else {
-            requireActiveUser(user);
-            user.applySejongProfile(
-                profile.name(),
-                profile.departmentName(),
-                department,
-                now
-            );
+        LoginOutcome outcome = startOutcome(profile, true);
+        if (outcome instanceof LoginSession session) {
+            return session;
         }
-        return issueLoginSession(user, newUser, now);
+        throw new AccessTokenInvalidException();
+    }
+
+    @Transactional
+    public LoginOutcome login(SejongUserProfile profile) {
+        return startOutcome(profile, true);
+    }
+
+    private LoginOutcome startOutcome(SejongUserProfile profile, boolean createWhenMissing) {
+        AppUser user = findUserForUpdate(profile.studentId()).orElse(null);
+        LocalDateTime now = now();
+        if (user == null) {
+            return createWhenMissing ? createUserSession(profile, now) : null;
+        }
+        if (!user.isDeleted()) {
+            syncSchoolProfile(user, profile, now);
+            return issueLoginSession(user, false, now);
+        }
+
+        return switch (recoveryPolicy.phase(user.getDeletedAt(), now)) {
+            case COOLDOWN -> RecoveryCooldown.INSTANCE;
+            case RECOVERABLE -> issueRecoveryChallenge(user, now);
+            case EXPIRED -> {
+                accountService.anonymizeExpired(user.getId(), now);
+                yield createUserSession(profile, now);
+            }
+        };
+    }
+
+    private LoginSession createUserSession(SejongUserProfile profile, LocalDateTime now) {
+        Department department = departmentResolver.resolve(profile.departmentName());
+        AppUser user = appUserRepository.save(AppUser.sejong(
+            profile.studentId(),
+            profile.name(),
+            profile.departmentName(),
+            department,
+            now
+        ));
+        return issueLoginSession(user, true, now);
+    }
+
+    private void syncSchoolProfile(AppUser user, SejongUserProfile profile, LocalDateTime now) {
+        Department department = departmentResolver.resolve(profile.departmentName());
+        user.applySejongProfile(
+            profile.name(),
+            profile.departmentName(),
+            department,
+            now
+        );
+    }
+
+    private RecoveryChallenge issueRecoveryChallenge(AppUser user, LocalDateTime now) {
+        recoveryTokenRepository.deleteAllByUserId(user.getId());
+        var material = recoveryTokenGenerator.generate();
+        LocalDateTime expiresAt = recoveryPolicy.recoveryTokenExpiresAt(user.getDeletedAt(), now);
+        recoveryTokenRepository.save(new AccountRecoveryToken(user, material.tokenHash(), expiresAt, now));
+        return new RecoveryChallenge(
+            material.rawToken(),
+            Duration.between(now, expiresAt).toSeconds(),
+            recoveryPolicy.recoverableUntil(user.getDeletedAt()).toInstant(ZoneOffset.UTC)
+        );
+    }
+
+    @Transactional
+    public LoginSession recover(String rawRecoveryToken) {
+        if (!hasValidTokenShape(rawRecoveryToken)) {
+            throw new RecoveryTokenInvalidException();
+        }
+        String tokenHash = recoveryTokenGenerator.hash(rawRecoveryToken);
+        Long userId = recoveryTokenRepository.findUserIdByTokenHash(tokenHash)
+            .orElseThrow(RecoveryTokenInvalidException::new);
+        AppUser user = appUserRepository.findByIdForUpdate(userId)
+            .filter(AppUser::isDeleted)
+            .filter(candidate -> !candidate.isAnonymized())
+            .orElseThrow(RecoveryTokenInvalidException::new);
+        AccountRecoveryToken token = recoveryTokenRepository.findByTokenHashForUpdate(tokenHash)
+            .orElseThrow(RecoveryTokenInvalidException::new);
+        LocalDateTime now = now();
+        if (!token.isUsableAt(now)
+            || recoveryPolicy.phase(user.getDeletedAt(), now) != AccountRecoveryPolicy.RecoveryPhase.RECOVERABLE) {
+            throw new RecoveryTokenInvalidException();
+        }
+        user.recover();
+        recoveryTokenRepository.deleteAllByUserId(userId);
+        return issueLoginSession(user, false, now);
     }
 
     @Transactional
     public Optional<LoginSession> startExisting(SejongUserProfile profile) {
-        LocalDateTime now = now();
-        Department department = departmentResolver.resolve(profile.departmentName());
-        return findUserForUpdate(profile.studentId())
-            .map(user -> {
-                requireActiveUser(user);
-                user.applySejongProfile(
-                    profile.name(),
-                    profile.departmentName(),
-                    department,
-                    now
-                );
-                return issueLoginSession(user, false, now);
-            });
+        LoginOutcome outcome = startOutcome(profile, false);
+        return outcome instanceof LoginSession session ? Optional.of(session) : Optional.empty();
+    }
+
+    @Transactional
+    public Optional<LoginOutcome> loginExisting(SejongUserProfile profile) {
+        return Optional.ofNullable(startOutcome(profile, false));
     }
 
     @Transactional
@@ -165,14 +198,6 @@ public class AuthSessionService {
                 }));
     }
 
-    @Transactional
-    public void revokeAllByUserId(Long userId) {
-        LocalDateTime now = now();
-
-        appUserRepository.findByIdForUpdate(userId).ifPresent(user ->
-            refreshTokenRepository.findAllUnrevokedForUpdate(userId).forEach(token -> token.revoke(now)));
-    }
-
     private LoginSession issueLoginSession(AppUser user, boolean newUser, LocalDateTime issuedAt) {
         var material = refreshTokenGenerator.generate();
         RefreshToken refreshToken = refreshTokenRepository.save(RefreshToken.start(user, material.tokenHash(),
@@ -194,12 +219,6 @@ public class AuthSessionService {
             .flatMap(appUserRepository::findByIdForUpdate);
     }
 
-    private void requireActiveUser(AppUser user) {
-        if (user.isDeleted()) {
-            throw new AccessTokenInvalidException();
-        }
-    }
-
     private boolean hasValidTokenShape(String token) {
         return token != null && token.matches("[A-Za-z0-9_-]{43}");
     }
@@ -208,7 +227,10 @@ public class AuthSessionService {
         return LocalDateTime.ofInstant(clock.instant(), ZoneOffset.UTC).truncatedTo(ChronoUnit.SECONDS);
     }
 
-    public static final class LoginSession {
+    public sealed interface LoginOutcome permits LoginSession, RecoveryChallenge, RecoveryCooldown {
+    }
+
+    public static final class LoginSession implements LoginOutcome {
         private final String accessToken;
         private final long expiresIn;
         private final String refreshToken;
@@ -268,6 +290,40 @@ public class AuthSessionService {
             return "LoginSession[userId=" + userId + ", newUser=" + newUser
                 + ", profileCompleted=" + profileCompleted + ", tokens=REDACTED]";
         }
+    }
+
+    public static final class RecoveryChallenge implements LoginOutcome {
+        private final String recoveryToken;
+        private final long recoveryExpiresIn;
+        private final java.time.Instant recoverableUntil;
+
+        private RecoveryChallenge(String recoveryToken, long recoveryExpiresIn, java.time.Instant recoverableUntil) {
+            this.recoveryToken = recoveryToken;
+            this.recoveryExpiresIn = recoveryExpiresIn;
+            this.recoverableUntil = recoverableUntil;
+        }
+
+        public String recoveryToken() {
+            return recoveryToken;
+        }
+
+        public long recoveryExpiresIn() {
+            return recoveryExpiresIn;
+        }
+
+        public java.time.Instant recoverableUntil() {
+            return recoverableUntil;
+        }
+
+        @Override
+        public String toString() {
+            return "RecoveryChallenge[recoveryExpiresIn=" + recoveryExpiresIn
+                + ", recoverableUntil=" + recoverableUntil + ", token=REDACTED]";
+        }
+    }
+
+    public enum RecoveryCooldown implements LoginOutcome {
+        INSTANCE
     }
 
     public static final class RefreshSession {

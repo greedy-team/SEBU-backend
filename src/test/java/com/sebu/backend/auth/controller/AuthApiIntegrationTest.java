@@ -90,6 +90,7 @@ class AuthApiIntegrationTest {
             .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.data.accessToken").doesNotExist())
             .andExpect(jsonPath("$.data.tokenType").doesNotExist())
+            .andExpect(jsonPath("$.data.loginStatus").value("AUTHENTICATED"))
             .andExpect(jsonPath("$.data.expiresIn").value(1800))
             .andExpect(jsonPath("$.data.user.isNewUser").value(true))
             .andExpect(jsonPath("$.data.user.profileCompleted").value(false))

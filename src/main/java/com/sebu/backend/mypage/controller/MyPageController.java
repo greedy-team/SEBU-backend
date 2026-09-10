@@ -1,13 +1,9 @@
 package com.sebu.backend.mypage.controller;
 
-import com.sebu.backend.auth.exception.AccessTokenInvalidException;
 import com.sebu.backend.auth.controller.AuthCookieFactory;
-import com.sebu.backend.global.auth.CsrfCookieSupport;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.CacheControl;
+import com.sebu.backend.auth.exception.AccessTokenInvalidException;
 import com.sebu.backend.global.auth.CurrentUserProvider;
+import com.sebu.backend.global.auth.CsrfCookieSupport;
 import com.sebu.backend.global.response.ApiResponse;
 import com.sebu.backend.mypage.dto.MyPageResponse;
 import com.sebu.backend.mypage.dto.ProfileResponse;
@@ -18,8 +14,12 @@ import com.sebu.backend.user.service.AccountService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.CacheControl;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -92,7 +92,10 @@ public class MyPageController {
         csrfCookieSupport.renew(request, response);
 
         return ResponseEntity.noContent().cacheControl(CacheControl.noStore())
-            .header(HttpHeaders.SET_COOKIE, cookieFactory.deleteAccess().toString(), cookieFactory.deleteRefresh().toString())
+            .header(HttpHeaders.SET_COOKIE,
+                cookieFactory.deleteAccess().toString(),
+                cookieFactory.deleteRefresh().toString(),
+                cookieFactory.deleteRecovery().toString())
             .build();
     }
 }

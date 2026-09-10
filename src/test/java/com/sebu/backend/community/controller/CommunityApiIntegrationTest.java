@@ -542,7 +542,7 @@ class CommunityApiIntegrationTest {
         likeRepository.save(new CommunityPostLike(withdrawnUser, withdrawnReactionPost));
         bookmarkRepository.save(new CommunityPostBookmark(withdrawnUser, withdrawnReactionPost));
         bookmarkRepository.save(new CommunityPostBookmark(activeUser, activeReactionPost));
-        withdrawnUser.withdraw();
+        withdrawnUser.withdraw(java.time.LocalDateTime.now());
         appUserRepository.flush();
         likeRepository.flush();
         bookmarkRepository.flush();
@@ -556,6 +556,12 @@ class CommunityApiIntegrationTest {
                         .param("size", "2"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.posts[0].id").value(activeReactionPost.getId()));
+
+        appUserRepository.findById(withdrawnUser.getId()).orElseThrow().recover();
+        appUserRepository.flush();
+        mockMvc.perform(get("/api/v1/posts/{postId}", withdrawnReactionPost.getId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.post.likeCount").value(1));
     }
 
     @Test
@@ -675,12 +681,14 @@ class CommunityApiIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.posts[0].author.id").value(anonymousAuthor.getId()))
                 .andExpect(jsonPath("$.data.posts[0].author.nickname").value("익명"))
+                .andExpect(jsonPath("$.data.posts[0].author.status").value("ACTIVE"))
                 .andExpect(content().string(not(containsString(realName))));
 
         mockMvc.perform(get("/api/v1/posts/{postId}/comments", post.getId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.comments[0].author.id").value(anonymousAuthor.getId()))
                 .andExpect(jsonPath("$.data.comments[0].author.nickname").value("익명"))
+                .andExpect(jsonPath("$.data.comments[0].author.status").value("ACTIVE"))
                 .andExpect(content().string(not(containsString(realName))));
 
         mockMvc.perform(get("/api/v1/users/{userId}/community-profile", anonymousAuthor.getId()))
@@ -688,6 +696,59 @@ class CommunityApiIntegrationTest {
                 .andExpect(jsonPath("$.data.profile.nickname").value("익명"))
                 .andExpect(jsonPath("$.data.profile.name").doesNotExist())
                 .andExpect(content().string(not(containsString(realName))));
+    }
+
+    @Test
+    void withdrawnPostAndCommentAuthorsAreMaskedWithoutBreakingInternalOwnership() throws Exception {
+        AppUser withdrawnAuthor = userWithNickname(
+                "withdrawn-author",
+                "탈퇴작성자실명",
+                "탈퇴작성자닉네임"
+        );
+        CommunityPost post = savePost(
+                withdrawnAuthor,
+                CommunityPostCategory.FREE,
+                "탈퇴 작성자 글",
+                "탈퇴 작성자 본문"
+        );
+        commentRepository.saveAndFlush(new CommunityComment(post, withdrawnAuthor, "탈퇴 작성자 댓글"));
+
+        withdrawnAuthor.withdraw(LocalDateTime.now());
+        appUserRepository.flush();
+
+        MvcResult postsResult = mockMvc.perform(get("/api/v1/posts").param("keyword", "탈퇴 작성자 글"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.posts[0].author.id").doesNotExist())
+                .andExpect(jsonPath("$.data.posts[0].author.nickname").doesNotExist())
+                .andExpect(jsonPath("$.data.posts[0].author.status").value("WITHDRAW"))
+                .andExpect(content().string(not(containsString("탈퇴작성자닉네임"))))
+                .andReturn();
+
+        MvcResult commentsResult = mockMvc.perform(get("/api/v1/posts/{postId}/comments", post.getId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.comments[0].author.id").doesNotExist())
+                .andExpect(jsonPath("$.data.comments[0].author.nickname").doesNotExist())
+                .andExpect(jsonPath("$.data.comments[0].author.status").value("WITHDRAW"))
+                .andReturn();
+
+        assertNullAuthorFields(objectMapper.readTree(postsResult.getResponse().getContentAsString())
+                .at("/data/posts/0/author"));
+        assertNullAuthorFields(objectMapper.readTree(commentsResult.getResponse().getContentAsString())
+                .at("/data/comments/0/author"));
+
+        org.assertj.core.api.Assertions.assertThat(
+                postRepository.findById(post.getId()).orElseThrow().getAuthor().getId())
+                .isEqualTo(withdrawnAuthor.getId());
+        mockMvc.perform(get("/api/v1/users/{userId}/community-profile", withdrawnAuthor.getId()))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error.code").value("USER_NOT_FOUND"));
+    }
+
+    private void assertNullAuthorFields(JsonNode author) {
+        org.assertj.core.api.Assertions.assertThat(author.has("id")).isTrue();
+        org.assertj.core.api.Assertions.assertThat(author.get("id").isNull()).isTrue();
+        org.assertj.core.api.Assertions.assertThat(author.has("nickname")).isTrue();
+        org.assertj.core.api.Assertions.assertThat(author.get("nickname").isNull()).isTrue();
     }
 
     private AppUser userWithNickname(String key, String realName, String nickname) {

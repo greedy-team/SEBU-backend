@@ -2,14 +2,17 @@ package com.sebu.backend.auth.controller;
 
 import com.sebu.backend.auth.exception.AccessTokenInvalidException;
 import com.sebu.backend.auth.exception.AuthSessionConflictException;
-import com.sebu.backend.auth.exception.InvalidLoginRequestException;
 import com.sebu.backend.auth.exception.InvalidGradeException;
+import com.sebu.backend.auth.exception.InvalidLoginRequestException;
+import com.sebu.backend.auth.exception.RecoveryTokenInvalidException;
 import com.sebu.backend.auth.exception.RefreshTokenInvalidException;
 import com.sebu.backend.auth.port.SejongAuthenticationException;
 import com.sebu.backend.global.response.ApiResponse;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -19,8 +22,10 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @Order(Ordered.HIGHEST_PRECEDENCE)
 @RestControllerAdvice(assignableTypes = {AuthController.class, MeController.class})
+@RequiredArgsConstructor
 public class AuthExceptionHandler {
     private static final String PROFILE_PATH = "/api/v1/me/profile";
+    private final AuthCookieFactory cookieFactory;
 
     @ExceptionHandler(InvalidLoginRequestException.class)
     public ResponseEntity<ApiResponse<Void>> handleInvalidLoginRequest(InvalidLoginRequestException exception) {
@@ -83,6 +88,17 @@ public class AuthExceptionHandler {
             "REFRESH_TOKEN_INVALID",
             "로그인이 만료되었습니다. 다시 로그인해주세요."
         );
+    }
+
+    @ExceptionHandler(RecoveryTokenInvalidException.class)
+    public ResponseEntity<ApiResponse<Void>> handleInvalidRecoveryToken(RecoveryTokenInvalidException exception) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+            .header(HttpHeaders.CACHE_CONTROL, "private, no-store")
+            .header(HttpHeaders.SET_COOKIE, cookieFactory.deleteRecovery().toString())
+            .body(ApiResponse.failure(
+                "RECOVERY_TOKEN_INVALID",
+                "유효하지 않거나 만료된 복구 요청입니다. 다시 로그인해주세요."
+            ));
     }
 
     @ExceptionHandler(AuthSessionConflictException.class)

@@ -1,7 +1,7 @@
 package com.sebu.backend.auth.service;
 
-import com.sebu.backend.auth.exception.InvalidLoginRequestException;
 import com.sebu.backend.auth.exception.AuthSessionConflictException;
+import com.sebu.backend.auth.exception.InvalidLoginRequestException;
 import com.sebu.backend.auth.port.SejongAuthenticationException;
 import com.sebu.backend.auth.port.SejongAuthenticator;
 import com.sebu.backend.auth.port.SejongUserProfile;
@@ -20,7 +20,7 @@ public class AuthService {
     private final SejongAuthenticator sejongAuthenticator;
     private final AuthSessionService authSessionService;
 
-    public AuthSessionService.LoginSession loginWithSejong(String studentId, String password) {
+    public AuthSessionService.LoginOutcome loginWithSejong(String studentId, String password) {
         if (!isValidStudentId(studentId) || !isValidPassword(password)) {
             throw new InvalidLoginRequestException();
         }
@@ -30,10 +30,10 @@ public class AuthService {
             throw SejongAuthenticationException.identityMismatch();
         }
         try {
-            return authSessionService.start(profile);
+            return authSessionService.login(profile);
         } catch (DataIntegrityViolationException | ObjectOptimisticLockingFailureException exception) {
             try {
-                return authSessionService.startExisting(profile)
+                return authSessionService.loginExisting(profile)
                     .orElseThrow(() -> exception);
             } catch (ObjectOptimisticLockingFailureException retryConflict) {
                 throw new AuthSessionConflictException();

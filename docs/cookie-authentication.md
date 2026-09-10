@@ -11,9 +11,10 @@ Access/Refresh 원문은 JSON 응답과 프론트 저장소에 넣지 않고 Htt
 | --- | --- | --- | --- |
 | `access_token` | true | `/api/v1` | 기본 30분, 로그인 절대 만료 이내 |
 | `refresh_token` | true | `/api/v1/auth` | 마지막 로그인/갱신부터 14일, 로그인 절대 만료 이내 |
-| `XSRF-TOKEN` | false | `/` | 세션 쿠키, 로그인·로그아웃·탈퇴 때 교체 |
+| `recovery_token` | true | `/api/v1/auth/recovery` | 최대 5분, 계정 복구 기한 이내 |
+| `XSRF-TOKEN` | false | `/` | 세션 쿠키, 로그인·복구·로그아웃·탈퇴 때 교체 |
 
-세 쿠키 모두 `SameSite=Lax`, Domain 미지정이며 HTTPS 서버에서는 Secure를 사용한다. local 프로필만 HTTP 테스트를 위해 Secure=false다.
+인증 관련 쿠키는 모두 `SameSite=Lax`, Domain 미지정이며 HTTPS 서버에서는 Secure를 사용한다. local 프로필만 HTTP 테스트를 위해 Secure=false다.
 `session_id`는 로그인 묶음 식별자일 뿐 인증 자격증명이 아니며, 클라이언트에 전달하지 않는다.
 
 ## API
@@ -21,16 +22,18 @@ Access/Refresh 원문은 JSON 응답과 프론트 저장소에 넣지 않고 Htt
 | 요청 | 입력 | 성공 응답 |
 | --- | --- | --- |
 | `GET /api/v1/auth/csrf` | 인증 불필요 | 204, 필요한 경우 XSRF-TOKEN 쿠키 발급 |
-| `POST /api/v1/auth/sejong/login` | 기존 학번·비밀번호 JSON + CSRF | 200, 두 인증 쿠키와 새 CSRF 쿠키 |
+| `POST /api/v1/auth/sejong/login` | 기존 학번·비밀번호 JSON + CSRF | 200 로그인 완료 또는 복구 확인 필요, 대기 중이면 409 |
+| `POST /api/v1/auth/recovery` | Recovery 쿠키 + CSRF, 바디 불필요 | 200, 복구 후 두 인증 쿠키와 새 CSRF 쿠키 |
 | `POST /api/v1/auth/refresh` | Refresh 쿠키 + CSRF, 바디 불필요 | 200, 두 인증 쿠키 갱신 |
-| `POST /api/v1/auth/logout` | Refresh 쿠키 + CSRF, 바디 불필요 | 200, 현재 로그인 묶음 폐기 및 두 인증 쿠키 삭제 |
+| `POST /api/v1/auth/logout` | Refresh 쿠키 + CSRF, 바디 불필요 | 200, 현재 로그인 묶음 폐기 및 인증·복구 쿠키 삭제 |
 | `GET /api/v1/me` | Access 쿠키 | 기존 내 정보 응답, 토큰 발급 없음 |
-| `DELETE /api/v1/users/me` | Access 쿠키 + CSRF | 204, 탈퇴·모든 로그인 묶음 폐기·인증 쿠키 삭제 |
+| `DELETE /api/v1/users/me` | Access 쿠키 + CSRF | 204, 탈퇴·모든 Refresh 행 물리 삭제·인증/복구 쿠키 삭제 |
 
 로그인 응답의 data는 다음과 같다. `accessToken`, `refreshToken`, `tokenType`은 반환하지 않는다.
 
 ```json
 {
+  "loginStatus": "AUTHENTICATED",
   "expiresIn": 1800,
   "user": { "id": 1, "isNewUser": false, "profileCompleted": false }
 }
@@ -44,7 +47,7 @@ Refresh 응답 data는 `{ "expiresIn": 1800 }`이다. 절대 만료 직전에는
 
 1. 로그인 전 `/auth/csrf`를 호출한다. 응답 바디는 없으며 쿠키를 읽는다.
 2. 모든 POST/PUT/PATCH/DELETE에서 현재 `XSRF-TOKEN` 값을 `X-XSRF-TOKEN` 헤더로 전송한다.
-3. 로그인·로그아웃·탈퇴 뒤에는 새 쿠키 값을 읽는다. 이전 값을 메모리에 고정하지 않는다.
+3. 로그인·복구·로그아웃·탈퇴 뒤에는 새 쿠키 값을 읽는다. 이전 값을 메모리에 고정하지 않는다.
 4. Origin을 허용 목록과 정확히 비교한다. Origin이 없으면 Referer의 출처를 확인하고, 둘 다 없거나 `Origin: null`이면 거부한다.
 5. Spring 리소스 서버의 Bearer 요청 CSRF 자동 예외를 제거했다. **Access 쿠키가 있는 요청도 CSRF가 필수**다. GET/HEAD/OPTIONS/TRACE는 상태 변경을 하지 않아야 한다.
 
@@ -71,9 +74,9 @@ Swagger는 `/auth/csrf`를 먼저 실행하고 로그인한다. 토큰을 Bearer
 최초 로그인 시 절대 만료를 30일 뒤로 고정한다. 갱신 시 `min(현재 + 14일, 절대 만료)`로 Refresh 만료를 정하며, Access도 절대 만료를 넘지 않는다.
 미사용 시간은 모든 페이지 클릭이 아니라 **로그인/Refresh 성공 시각** 기준이다.
 갱신마다 토큰 원문은 바꾸며 DB에는 SHA-256 해시만 저장한다. 사용한 토큰을 다시 보내면 거절하지만, 그 이유만으로 후속 토큰을 자동 폐기하지 않는다.
-명시적 로그아웃은 해당 `session_id`의 토큰을 모두 폐기한다. 갱신 전 토큰으로 로그아웃해도 후속 토큰이 폐기된다. 다른 기기의 독립 로그인은 유지한다.
+명시적 로그아웃은 해당 `session_id`의 토큰을 모두 폐기한다. 갱신 전 토큰으로 로그아웃해도 후속 토큰이 폐기된다. 다른 기기의 독립 로그인은 유지한다. 회원 탈퇴는 사용자의 Refresh Token 행을 모두 즉시 물리 삭제한다.
 기존 사용자 행 → Refresh 행 순서로 잠그므로 갱신·로그아웃·탈퇴가 직렬화된다. 일반 API 요청에 새 세션 DB 조회를 추가하지 않는다.
-로그아웃·탈퇴에서는 아직 폐기되지 않은 토큰만 조회해 처리하며, 이미 폐기된 이력은 다시 메모리에 적재하지 않는다.
+로그아웃에서는 아직 폐기되지 않은 현재 로그인 묶음만 조회한다. 탈퇴에서는 이력을 포함한 해당 사용자의 Refresh 행 전체를 벌크 삭제한다.
 Refresh 확인 뒤 JWT 발급 사이에 절대 만료를 지나도 401 `REFRESH_TOKEN_INVALID`를 반환하고 해당 갱신 트랜잭션은 롤백한다.
 
 기존 토큰 이력은 로그아웃의 묶음 식별을 위해 절대 만료까지 보존한다. 미사용으로 만료됐다고 즉시 삭제하지는 않는다.
@@ -82,7 +85,7 @@ Refresh 확인 뒤 JWT 발급 사이에 절대 만료를 지나도 401 `REFRESH_
 
 ## 마이그레이션 및 배포
 
-`V37`은 기존 refresh_token에 session_id와 absolute_expires_at을 추가한다. 새 테이블은 만들지 않는다.
+`V37`은 기존 refresh_token에 session_id와 absolute_expires_at을 추가한다. `V38`은 `app_user.anonymized_at`과 해시 기반 `account_recovery_token` 테이블을 추가한다.
 구형 토큰은 최초 로그인 시각을 복원할 수 없으므로 기존 행은 남기되 폐기 상태로 전환한다. 기존 사용자 데이터는 보존한다.
 프론트·백엔드를 함께 전환하며 기존 사용자는 한 번 다시 로그인해야 한다. 구형 Bearer 방식은 병행 지원하지 않는다.
 이미 적용한 V14~V36을 수정하거나 V37의 체크섬을 다시 바꾸어 배포하지 않는다. 운영 전진 수정은 새 버전으로 한다.
@@ -94,6 +97,8 @@ Refresh 확인 뒤 JWT 발급 사이에 절대 만료를 지나도 401 `REFRESH_
 - 갱신 응답을 받지 못하면 재로그인이 필요할 수 있다.
 - 로그아웃 후 외부에 복사된 Access JWT는 남은 수명 동안 유효할 수 있다. JWT 차단 목록/요청별 로그인 상태 조회는 추가하지 않았다.
 - HttpOnly는 JavaScript의 토큰 읽기를 제한하지만 XSS에 의한 요청 대행까지 막지는 못한다.
+
+회원 탈퇴·복구의 시간 경계, 작성자 마스킹, 데이터 보존 정책은 [회원 탈퇴 및 계정 복구 계약](account-withdrawal-recovery.md)을 참고한다.
 
 ## 테스트 명령 (Windows, JDK 21)
 

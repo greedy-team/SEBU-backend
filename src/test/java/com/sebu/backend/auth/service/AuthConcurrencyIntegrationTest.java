@@ -1,7 +1,8 @@
 package com.sebu.backend.auth.service;
 
-import com.sebu.backend.auth.exception.RefreshTokenInvalidException;
 import com.sebu.backend.auth.exception.AuthSessionExpiredException;
+import com.sebu.backend.auth.exception.RecoveryTokenInvalidException;
+import com.sebu.backend.auth.exception.RefreshTokenInvalidException;
 import com.sebu.backend.auth.port.SejongAuthenticator;
 import com.sebu.backend.auth.port.SejongUserProfile;
 import com.sebu.backend.auth.repository.RefreshTokenRepository;
@@ -9,20 +10,23 @@ import com.sebu.backend.auth.token.JwtAccessTokenService;
 import com.sebu.backend.auth.token.RefreshTokenGenerator;
 import com.sebu.backend.user.repository.AppUserRepository;
 import com.sebu.backend.user.service.AccountService;
-import org.junit.jupiter.api.BeforeEach;
+import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.support.TransactionTemplate;
-import jakarta.servlet.http.Cookie;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.ExecutorService;
@@ -30,13 +34,13 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import static com.sebu.backend.support.CookieApiRequests.post;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
-import static com.sebu.backend.support.CookieApiRequests.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
@@ -55,6 +59,7 @@ class AuthConcurrencyIntegrationTest {
     @Autowired AccountService accountService;
     @Autowired MockMvc mockMvc;
     @Autowired TransactionTemplate transactionTemplate;
+    @Autowired JdbcTemplate jdbcTemplate;
     @Autowired RefreshTokenGenerator tokenGenerator;
     @MockitoSpyBean JwtAccessTokenService accessTokenService;
 
@@ -86,10 +91,10 @@ class AuthConcurrencyIntegrationTest {
         ExecutorService executor = Executors.newFixedThreadPool(2);
         try {
             Future<AuthSessionService.LoginSession> first = executor.submit(
-                () -> authService.loginWithSejong("21000007", "password")
+                () -> (AuthSessionService.LoginSession) authService.loginWithSejong("21000007", "password")
             );
             Future<AuthSessionService.LoginSession> second = executor.submit(
-                () -> authService.loginWithSejong("21000007", "password")
+                () -> (AuthSessionService.LoginSession) authService.loginWithSejong("21000007", "password")
             );
 
             List<AuthSessionService.LoginSession> sessions = List.of(
@@ -182,8 +187,7 @@ class AuthConcurrencyIntegrationTest {
             Object result = refresh.get(60, TimeUnit.SECONDS);
             withdrawal.get(60, TimeUnit.SECONDS);
             assertThat(appUserRepository.findById(login.userId()).orElseThrow().isDeleted()).isTrue();
-            assertThat(refreshTokenRepository.findAllByUser_Id(login.userId()))
-                .allSatisfy(token -> assertThat(token.getRevokedAt()).isNotNull());
+            assertThat(refreshTokenRepository.findAllByUser_Id(login.userId())).isEmpty();
             if (result instanceof AuthSessionService.RefreshSession issued) {
                 org.assertj.core.api.Assertions.assertThatThrownBy(() -> authSessionService.refresh(issued.refreshToken()))
                     .isInstanceOf(RefreshTokenInvalidException.class);
@@ -227,8 +231,47 @@ class AuthConcurrencyIntegrationTest {
         assertThat(authSessionService.refresh(independent.refreshToken())).isNotNull();
 
         accountService.withdraw(login.userId());
-        assertThat(refreshTokenRepository.findAllByUser_Id(login.userId()))
-            .allSatisfy(token -> assertThat(token.getRevokedAt()).isNotNull());
+        assertThat(refreshTokenRepository.findAllByUser_Id(login.userId())).isEmpty();
+    }
+
+    @Test
+    void onlyOneConcurrentRecoveryCanUseTheSameToken() throws Exception {
+        var profile = new SejongUserProfile("recovery-race-user", "홍길동", "컴퓨터공학과");
+        var login = authSessionService.start(profile);
+        accountService.withdraw(login.userId());
+        jdbcTemplate.update(
+            "UPDATE app_user SET deleted_at = ? WHERE id = ?",
+            LocalDateTime.now(ZoneOffset.UTC).minusHours(2),
+            login.userId()
+        );
+        var challenge = (AuthSessionService.RecoveryChallenge) authSessionService.login(profile);
+
+        var barrier = new CyclicBarrier(2);
+        ExecutorService executor = Executors.newFixedThreadPool(2);
+        try {
+            Future<Object> first = executor.submit(() -> recoverAfterBarrier(barrier, challenge.recoveryToken()));
+            Future<Object> second = executor.submit(() -> recoverAfterBarrier(barrier, challenge.recoveryToken()));
+            List<Object> results = List.of(
+                first.get(10, TimeUnit.SECONDS),
+                second.get(10, TimeUnit.SECONDS)
+            );
+
+            assertThat(results).filteredOn(AuthSessionService.LoginSession.class::isInstance).hasSize(1);
+            assertThat(results).filteredOn(RecoveryTokenInvalidException.class::isInstance).hasSize(1);
+            assertThat(appUserRepository.findById(login.userId()).orElseThrow().isDeleted()).isFalse();
+            assertThat(refreshTokenRepository.countByUser_Id(login.userId())).isOne();
+        } finally {
+            executor.shutdownNow();
+        }
+    }
+
+    private Object recoverAfterBarrier(CyclicBarrier barrier, String recoveryToken) throws Exception {
+        barrier.await(5, TimeUnit.SECONDS);
+        try {
+            return authSessionService.recover(recoveryToken);
+        } catch (RecoveryTokenInvalidException exception) {
+            return exception;
+        }
     }
 
     @Test

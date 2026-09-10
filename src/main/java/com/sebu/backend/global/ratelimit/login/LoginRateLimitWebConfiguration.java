@@ -15,6 +15,6 @@ public class LoginRateLimitWebConfiguration implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(interceptor)
-            .addPathPatterns("/api/v1/auth/sejong/login");
+            .addPathPatterns("/api/v1/auth/sejong/login", "/api/v1/auth/recovery");
     }
 }

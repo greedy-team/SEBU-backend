@@ -11,7 +11,8 @@ import java.util.Set;
 
 public final class CookieAccessTokenResolver implements BearerTokenResolver {
     private static final Set<String> ANONYMOUS_AUTH_POSTS = Set.of(
-        "/api/v1/auth/sejong/login", "/api/v1/auth/refresh", "/api/v1/auth/logout");
+        "/api/v1/auth/sejong/login", "/api/v1/auth/refresh", "/api/v1/auth/logout",
+        "/api/v1/auth/recovery");
 
     @Override
     public String resolve(HttpServletRequest request) {
@@ -21,7 +22,7 @@ public final class CookieAccessTokenResolver implements BearerTokenResolver {
         }
         if (("POST".equals(request.getMethod()) && ANONYMOUS_AUTH_POSTS.contains(path))
             || ("GET".equals(request.getMethod()) && "/api/v1/auth/csrf".equals(path))) {
-            return null; // An expired access cookie must not prevent refresh, login or logout.
+            return null; // An expired access cookie must not prevent anonymous authentication endpoints.
         }
         Cookie[] cookies = request.getCookies();
         String token = null;

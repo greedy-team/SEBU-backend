@@ -11,6 +11,10 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 
 public interface CommunityPostBookmarkRepository extends JpaRepository<CommunityPostBookmark, CommunityPostBookmarkId> {
+    @Modifying
+    @Query("delete from CommunityPostBookmark bookmark where bookmark.user.id = :userId")
+    int deleteAllByUserId(@Param("userId") Long userId);
+
     long countByUser_IdAndPost_DeletedAtIsNull(Long userId);
 
     @EntityGraph(attributePaths = {"post", "post.author"})

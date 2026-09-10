@@ -12,7 +12,7 @@ public record ApiResponse<T>(
         return new ApiResponse<>(true, data, null);
     }
 
-    public static ApiResponse<Void> failure(
+    public static <T> ApiResponse<T> failure(
             String code,
             String message
     ) {
@@ -28,7 +28,7 @@ public record ApiResponse<T>(
         );
     }
 
-    public static ApiResponse<Void> failure(
+    public static <T> ApiResponse<T> failure(
             String code,
             String message,
             List<FieldError> fieldErrors,

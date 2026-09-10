@@ -11,6 +11,10 @@ import java.util.List;
 
 public interface BookmarkRepository extends JpaRepository<Bookmark, BookmarkId> {
 
+    @Modifying
+    @Query("delete from Bookmark bookmark where bookmark.user.id = :userId")
+    int deleteAllByUserId(@Param("userId") Long userId);
+
     long countByUser_IdAndLaboratory_DeletedAtIsNull(Long userId);
 
     @Modifying(flushAutomatically = true)

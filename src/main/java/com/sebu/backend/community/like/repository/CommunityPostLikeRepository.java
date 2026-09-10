@@ -12,6 +12,10 @@ import java.util.List;
 
 public interface CommunityPostLikeRepository extends JpaRepository<CommunityPostLike, CommunityPostLikeId> {
     @Modifying
+    @Query("delete from CommunityPostLike communityLike where communityLike.user.id = :userId")
+    int deleteAllByUserId(@Param("userId") Long userId);
+
+    @Modifying
     @Query(value = "INSERT IGNORE INTO community_post_like (user_id, post_id) VALUES (:userId, :postId)", nativeQuery = true)
     int insertIgnore(@Param("userId") Long userId, @Param("postId") Long postId);
 

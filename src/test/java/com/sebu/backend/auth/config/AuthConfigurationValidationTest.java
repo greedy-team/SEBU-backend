@@ -40,6 +40,25 @@ class AuthConfigurationValidationTest {
     }
 
     @ParameterizedTest
+    @CsvSource({
+        "recovery-window,0d", "minimum-recovery-cooldown,0m",
+        "access-token-safety-margin,0s", "recovery-token-expiration,-1m"
+    })
+    void rejectsInvalidAccountLifecycleDurations(String property, String value) {
+        runner.withPropertyValues("app.auth.account." + property + "=" + value)
+            .run(context -> assertThat(context).hasFailed());
+    }
+
+    @Test
+    void rejectsRecoveryTokenLifetimeLongerThanRecoveryWindow() {
+        runner.withPropertyValues(
+                "app.auth.account.recovery-window=5m",
+                "app.auth.account.recovery-token-expiration=6m"
+            )
+            .run(context -> assertThat(context).hasFailed());
+    }
+
+    @ParameterizedTest
     @ValueSource(strings = {
         "*", "https://*.vercel.app", "https://example.com/path",
         "https://user@example.com", "https://example.com?query=value", "null"
@@ -50,7 +69,11 @@ class AuthConfigurationValidationTest {
     }
 
     @Configuration(proxyBeanMethods = false)
-    @EnableConfigurationProperties({TokenProperties.class, AuthCsrfProperties.class})
+    @EnableConfigurationProperties({
+        TokenProperties.class,
+        AuthCsrfProperties.class,
+        AccountLifecycleProperties.class
+    })
     static class PropertiesConfiguration {
     }
 }

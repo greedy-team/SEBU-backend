@@ -1,7 +1,9 @@
 package com.sebu.backend.mypage.service;
 
+import com.sebu.backend.auth.domain.AccountRecoveryToken;
 import com.sebu.backend.auth.domain.RefreshToken;
 import com.sebu.backend.auth.exception.RefreshTokenInvalidException;
+import com.sebu.backend.auth.repository.AccountRecoveryTokenRepository;
 import com.sebu.backend.auth.repository.RefreshTokenRepository;
 import com.sebu.backend.auth.port.SejongUserProfile;
 import com.sebu.backend.auth.service.AuthSessionService;
@@ -32,10 +34,13 @@ class AccountServiceTest {
     RefreshTokenRepository refreshTokenRepository;
 
     @Autowired
+    AccountRecoveryTokenRepository recoveryTokenRepository;
+
+    @Autowired
     AuthSessionService authSessionService;
 
     @Test
-    void 회원_탈퇴시_사용자의_모든_refreshToken이_폐기된다() {
+    void 회원_탈퇴시_사용자의_모든_refreshToken이_즉시_삭제된다() {
         // given
         AppUser user = appUserRepository.save(
                 new AppUser("withdraw-token@example.com")
@@ -46,7 +51,7 @@ class AccountServiceTest {
         String hash1 = "a".repeat(64);
         String hash2 = "b".repeat(64);
 
-        RefreshToken token1 = refreshTokenRepository.save(
+        refreshTokenRepository.save(
                 new RefreshToken(
                         user,
                         hash1,
@@ -55,7 +60,14 @@ class AccountServiceTest {
                 )
         );
 
-        RefreshToken token2 = refreshTokenRepository.save(
+        recoveryTokenRepository.save(new AccountRecoveryToken(
+                user,
+                "c".repeat(64),
+                now.plusMinutes(5),
+                now
+        ));
+
+        refreshTokenRepository.save(
                 new RefreshToken(
                         user,
                         hash2,
@@ -73,14 +85,8 @@ class AccountServiceTest {
 
         assertThat(withdrawnUser.getDeletedAt()).isNotNull();
 
-        RefreshToken savedToken1 = refreshTokenRepository.findById(token1.getId())
-                .orElseThrow();
-
-        RefreshToken savedToken2 = refreshTokenRepository.findById(token2.getId())
-                .orElseThrow();
-
-        assertThat(savedToken1.getRevokedAt()).isNotNull();
-        assertThat(savedToken2.getRevokedAt()).isNotNull();
+        assertThat(refreshTokenRepository.countByUser_Id(user.getId())).isZero();
+        assertThat(recoveryTokenRepository.countByUser_Id(user.getId())).isZero();
     }
 
     @Test

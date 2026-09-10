@@ -32,12 +32,12 @@ class AuthServiceTest {
         SejongUserProfile profile = new SejongUserProfile("21012345", "홍길동", "컴퓨터공학과");
         when(sejongAuthenticator.authenticate("21012345", "password"))
             .thenReturn(profile);
-        when(authSessionService.start(profile))
+        when(authSessionService.login(profile))
             .thenReturn(mock(AuthSessionService.LoginSession.class));
 
         authService.loginWithSejong("21012345", "password");
 
-        verify(authSessionService).start(profile);
+        verify(authSessionService).login(profile);
     }
 
     @Test
@@ -82,6 +82,6 @@ class AuthServiceTest {
         authService.loginWithSejong("21012345", password);
 
         verify(sejongAuthenticator).authenticate("21012345", password);
-        verify(authSessionService).start(profile);
+        verify(authSessionService).login(profile);
     }
 }
