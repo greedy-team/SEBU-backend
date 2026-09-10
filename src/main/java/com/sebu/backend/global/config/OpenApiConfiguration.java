@@ -22,6 +22,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.method.HandlerMethod;
 
 import java.util.Arrays;
@@ -29,7 +31,7 @@ import java.util.Arrays;
 @Configuration(proxyBeanMethods = false)
 public class OpenApiConfiguration {
 
-    public static final String SECURITY_SCHEME_NAME = "bearerAuth";
+    public static final String SECURITY_SCHEME_NAME = "cookieAuth";
 
     private static final String ERROR_SCHEMA_NAME = "ErrorApiResponse";
     private static final String BAD_REQUEST_RESPONSE = "BadRequest";
@@ -67,8 +69,19 @@ public class OpenApiConfiguration {
                     || hasPathVariable) {
                 addResponseIfAbsent(responses, "400", BAD_REQUEST_RESPONSE);
             }
-            if (requiresBearerAuth(handlerMethod)) {
+            if (requiresAuthentication(handlerMethod)) {
                 addResponseIfAbsent(responses, "401", UNAUTHORIZED_RESPONSE);
+            }
+            RequestMapping mapping = AnnotatedElementUtils.findMergedAnnotation(handlerMethod.getMethod(), RequestMapping.class);
+            if (mapping != null && Arrays.stream(mapping.method()).anyMatch(method ->
+                    method == RequestMethod.POST || method == RequestMethod.PUT
+                        || method == RequestMethod.PATCH || method == RequestMethod.DELETE)) {
+                addResponseIfAbsent(responses, "403", FORBIDDEN_RESPONSE);
+                if (operation.getSecurity() == null || operation.getSecurity().isEmpty()) {
+                    operation.addSecurityItem(new io.swagger.v3.oas.models.security.SecurityRequirement().addList("csrfHeader"));
+                } else {
+                    operation.getSecurity().forEach(requirement -> requirement.addList("csrfHeader"));
+                }
             }
             if (hasPathVariable) {
                 addResponseIfAbsent(responses, "404", NOT_FOUND_RESPONSE);
@@ -104,12 +117,16 @@ public class OpenApiConfiguration {
                         .addSecuritySchemes(
                                 SECURITY_SCHEME_NAME,
                                 new SecurityScheme()
-                                        .name(SECURITY_SCHEME_NAME)
-                                        .type(SecurityScheme.Type.HTTP)
-                                        .scheme("bearer")
-                                        .bearerFormat("JWT")
-                                        .description("로그인 응답으로 발급받은 Access Token을 입력합니다.")
-                        );
+                                        .name("access_token")
+                                        .type(SecurityScheme.Type.APIKEY)
+                                        .in(SecurityScheme.In.COOKIE)
+                                        .description("로그인으로 발급된 HttpOnly 쿠키를 브라우저가 전송합니다. Authorization 헤더는 사용하지 않습니다.")
+                        )
+                .addSecuritySchemes("csrfHeader", new SecurityScheme().name("X-XSRF-TOKEN")
+                    .type(SecurityScheme.Type.APIKEY).in(SecurityScheme.In.HEADER)
+                    .description("GET /api/v1/auth/csrf 후 XSRF-TOKEN 쿠키 값을 전달합니다. 로그인·로그아웃 뒤에는 새 쿠키를 읽습니다."))
+                .addSecuritySchemes("refreshCookie", new SecurityScheme().name("refresh_token")
+                    .type(SecurityScheme.Type.APIKEY).in(SecurityScheme.In.COOKIE));
     }
 
     private Schema<?> errorResponseSchema() {
@@ -144,7 +161,7 @@ public class OpenApiConfiguration {
                 ));
     }
 
-    private boolean requiresBearerAuth(HandlerMethod handlerMethod) {
+    private boolean requiresAuthentication(HandlerMethod handlerMethod) {
         return AnnotatedElementUtils.hasAnnotation(
                 handlerMethod.getMethod(),
                 SecurityRequirement.class

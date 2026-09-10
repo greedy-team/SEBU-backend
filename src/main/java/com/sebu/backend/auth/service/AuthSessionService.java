@@ -3,6 +3,8 @@ package com.sebu.backend.auth.service;
 import com.sebu.backend.auth.config.TokenProperties;
 import com.sebu.backend.auth.domain.RefreshToken;
 import com.sebu.backend.auth.exception.RefreshTokenInvalidException;
+import com.sebu.backend.auth.exception.AuthSessionExpiredException;
+import com.sebu.backend.auth.exception.AccessTokenInvalidException;
 import com.sebu.backend.auth.port.SejongUserProfile;
 import com.sebu.backend.auth.repository.RefreshTokenRepository;
 import com.sebu.backend.auth.token.JwtAccessTokenService;
@@ -18,6 +20,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Clock;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 
 @Service
@@ -70,9 +74,7 @@ public class AuthSessionService {
 
     @Transactional
     public LoginSession start(SejongUserProfile profile) {
-        AppUser user = appUserRepository
-            .findByProviderAndProviderUserId(AuthProvider.SEJONG, profile.studentId())
-            .orElse(null);
+        AppUser user = findUserForUpdate(profile.studentId()).orElse(null);
         boolean newUser = user == null;
         LocalDateTime now = now();
         Department department = departmentResolver.resolve(profile.departmentName());
@@ -85,6 +87,7 @@ public class AuthSessionService {
                 now
             ));
         } else {
+            requireActiveUser(user);
             user.applySejongProfile(
                 profile.name(),
                 profile.departmentName(),
@@ -99,8 +102,9 @@ public class AuthSessionService {
     public Optional<LoginSession> startExisting(SejongUserProfile profile) {
         LocalDateTime now = now();
         Department department = departmentResolver.resolve(profile.departmentName());
-        return appUserRepository.findByProviderAndProviderUserId(AuthProvider.SEJONG, profile.studentId())
+        return findUserForUpdate(profile.studentId())
             .map(user -> {
+                requireActiveUser(user);
                 user.applySejongProfile(
                     profile.name(),
                     profile.departmentName(),
@@ -113,10 +117,15 @@ public class AuthSessionService {
 
     @Transactional
     public RefreshSession refresh(String rawRefreshToken) {
-        if (rawRefreshToken == null || rawRefreshToken.isBlank()) {
+        if (!hasValidTokenShape(rawRefreshToken)) {
             throw new RefreshTokenInvalidException();
         }
         String tokenHash = refreshTokenGenerator.hash(rawRefreshToken);
+        Long userId = refreshTokenRepository.findUserIdByTokenHash(tokenHash)
+            .orElseThrow(RefreshTokenInvalidException::new);
+        AppUser user = appUserRepository.findByIdForUpdate(userId)
+            .filter(candidate -> !candidate.isDeleted())
+            .orElseThrow(RefreshTokenInvalidException::new);
         RefreshToken currentToken = refreshTokenRepository.findByTokenHashForUpdate(tokenHash)
             .orElseThrow(RefreshTokenInvalidException::new);
         LocalDateTime now = now();
@@ -124,75 +133,86 @@ public class AuthSessionService {
             throw new RefreshTokenInvalidException();
         }
 
-        currentToken.revoke(now);
-        IssuedRefreshToken newRefreshToken = issueRefreshToken(currentToken.getUser(), now);
+        var material = refreshTokenGenerator.generate();
+        RefreshToken next = currentToken.rotate(material.tokenHash(), now, properties.refreshTokenExpiration());
+        refreshTokenRepository.save(next);
+        JwtAccessTokenService.IssuedAccessToken access;
+        try {
+            access = accessTokenService.issueUntil(user.getId(), next.getAbsoluteExpiresAt().toInstant(ZoneOffset.UTC));
+        } catch (AuthSessionExpiredException exception) {
+            // Expiry can pass after the locked Refresh check. Roll back rotation and keep the 401 contract.
+            throw new RefreshTokenInvalidException();
+        }
         return new RefreshSession(
-            accessTokenService.issue(currentToken.getUser().getId()),
-            accessTokenService.expiresInSeconds(),
-            newRefreshToken.rawToken()
+            access.value(), access.expiresIn(), material.rawToken(),
+            Duration.between(now, next.getExpiresAt()).toSeconds()
         );
     }
 
     @Transactional
     public void logout(String rawRefreshToken) {
-        if (rawRefreshToken == null || rawRefreshToken.isBlank()) {
+        if (!hasValidTokenShape(rawRefreshToken)) {
             return;
         }
         String tokenHash = refreshTokenGenerator.hash(rawRefreshToken);
-        refreshTokenRepository.findByTokenHashForUpdate(tokenHash)
-            .ifPresent(token -> token.revoke(now()));
+        refreshTokenRepository.findUserIdByTokenHash(tokenHash)
+            .flatMap(appUserRepository::findByIdForUpdate)
+            .ifPresent(user -> refreshTokenRepository.findByTokenHashForUpdate(tokenHash)
+                .ifPresent(token -> {
+                    LocalDateTime now = now();
+                    refreshTokenRepository.findUnrevokedSessionForUpdate(user.getId(), token.getSessionId())
+                        .forEach(member -> member.revoke(now));
+                }));
     }
 
     @Transactional
     public void revokeAllByUserId(Long userId) {
         LocalDateTime now = now();
 
-        refreshTokenRepository.findAllByUser_Id(userId)
-                .forEach(token -> {
-                    if (token.isUsableAt(now)) {
-                        token.revoke(now);
-                    }
-                });
+        appUserRepository.findByIdForUpdate(userId).ifPresent(user ->
+            refreshTokenRepository.findAllUnrevokedForUpdate(userId).forEach(token -> token.revoke(now)));
     }
 
     private LoginSession issueLoginSession(AppUser user, boolean newUser, LocalDateTime issuedAt) {
-        IssuedRefreshToken refreshToken = issueRefreshToken(user, issuedAt);
+        var material = refreshTokenGenerator.generate();
+        RefreshToken refreshToken = refreshTokenRepository.save(RefreshToken.start(user, material.tokenHash(),
+            issuedAt, properties.refreshTokenExpiration(), properties.absoluteSessionExpiration()));
+        var access = accessTokenService.issueUntil(user.getId(), refreshToken.getAbsoluteExpiresAt().toInstant(ZoneOffset.UTC));
         return new LoginSession(
-            accessTokenService.issue(user.getId()),
-            accessTokenService.expiresInSeconds(),
-            refreshToken.rawToken(),
+            access.value(),
+            access.expiresIn(),
+            material.rawToken(),
+            Duration.between(issuedAt, refreshToken.getExpiresAt()).toSeconds(),
             user.getId(),
             newUser,
             user.isProfileCompleted()
         );
     }
 
-    private IssuedRefreshToken issueRefreshToken(AppUser user, LocalDateTime issuedAt) {
-        RefreshTokenGenerator.RefreshTokenMaterial material = refreshTokenGenerator.generate();
-        refreshTokenRepository.save(new RefreshToken(
-            user,
-            material.tokenHash(),
-            issuedAt.plus(properties.refreshTokenExpiration()),
-            issuedAt
-        ));
-        return new IssuedRefreshToken(material.rawToken());
+    private Optional<AppUser> findUserForUpdate(String studentId) {
+        return appUserRepository.findIdByProviderIdentity(AuthProvider.SEJONG, studentId)
+            .flatMap(appUserRepository::findByIdForUpdate);
+    }
+
+    private void requireActiveUser(AppUser user) {
+        if (user.isDeleted()) {
+            throw new AccessTokenInvalidException();
+        }
+    }
+
+    private boolean hasValidTokenShape(String token) {
+        return token != null && token.matches("[A-Za-z0-9_-]{43}");
     }
 
     private LocalDateTime now() {
-        return LocalDateTime.ofInstant(clock.instant(), ZoneOffset.UTC);
-    }
-
-    private record IssuedRefreshToken(String rawToken) {
-        @Override
-        public String toString() {
-            return "IssuedRefreshToken[REDACTED]";
-        }
+        return LocalDateTime.ofInstant(clock.instant(), ZoneOffset.UTC).truncatedTo(ChronoUnit.SECONDS);
     }
 
     public static final class LoginSession {
         private final String accessToken;
         private final long expiresIn;
         private final String refreshToken;
+        private final long refreshExpiresIn;
         private final Long userId;
         private final boolean newUser;
         private final boolean profileCompleted;
@@ -201,6 +221,7 @@ public class AuthSessionService {
             String accessToken,
             long expiresIn,
             String refreshToken,
+            long refreshExpiresIn,
             Long userId,
             boolean newUser,
             boolean profileCompleted
@@ -208,6 +229,7 @@ public class AuthSessionService {
             this.accessToken = accessToken;
             this.expiresIn = expiresIn;
             this.refreshToken = refreshToken;
+            this.refreshExpiresIn = refreshExpiresIn;
             this.userId = userId;
             this.newUser = newUser;
             this.profileCompleted = profileCompleted;
@@ -223,6 +245,10 @@ public class AuthSessionService {
 
         public String refreshToken() {
             return refreshToken;
+        }
+
+        public long refreshExpiresIn() {
+            return refreshExpiresIn;
         }
 
         public Long userId() {
@@ -248,11 +274,13 @@ public class AuthSessionService {
         private final String accessToken;
         private final long expiresIn;
         private final String refreshToken;
+        private final long refreshExpiresIn;
 
-        private RefreshSession(String accessToken, long expiresIn, String refreshToken) {
+        private RefreshSession(String accessToken, long expiresIn, String refreshToken, long refreshExpiresIn) {
             this.accessToken = accessToken;
             this.expiresIn = expiresIn;
             this.refreshToken = refreshToken;
+            this.refreshExpiresIn = refreshExpiresIn;
         }
 
         public String accessToken() {
@@ -265,6 +293,10 @@ public class AuthSessionService {
 
         public String refreshToken() {
             return refreshToken;
+        }
+
+        public long refreshExpiresIn() {
+            return refreshExpiresIn;
         }
 
         @Override

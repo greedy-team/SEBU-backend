@@ -14,11 +14,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 @ActiveProfiles("local")
 class RefreshTokenCookieLocalProfileIntegrationTest {
     @Autowired
-    RefreshTokenCookieFactory cookieFactory;
+    AuthCookieFactory cookieFactory;
 
     @Test
     void createsNonSecureRefreshCookieForLocalHttpProfile() {
-        assertThat(cookieFactory.create("local-refresh-token").isSecure()).isFalse();
-        assertThat(cookieFactory.delete().isSecure()).isFalse();
+        assertThat(cookieFactory.refresh("local-refresh-token", 60).isSecure()).isFalse();
+        assertThat(cookieFactory.access("local-access-token", 60).isSecure()).isFalse();
+        assertThat(cookieFactory.deleteRefresh().isSecure()).isFalse();
+        assertThat(cookieFactory.deleteAccess().isSecure()).isFalse();
     }
 }

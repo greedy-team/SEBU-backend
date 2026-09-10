@@ -15,7 +15,7 @@ import org.springframework.stereotype.Service;
 public class AuthService {
     private static final String STUDENT_ID_PATTERN = "\\d{8}";
     private static final int MIN_PASSWORD_LENGTH = 8;
-    private static final int MAX_PASSWORD_LENGTH = 128;
+    private static final int MAX_PASSWORD_LENGTH = 64;
 
     private final SejongAuthenticator sejongAuthenticator;
     private final AuthSessionService authSessionService;

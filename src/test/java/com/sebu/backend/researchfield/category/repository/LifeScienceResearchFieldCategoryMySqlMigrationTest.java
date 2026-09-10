@@ -156,7 +156,9 @@ class LifeScienceResearchFieldCategoryMySqlMigrationTest {
             fieldsBefore = findFields(connection);
         }
 
-        assertThat(flyway(null).migrate().migrationsExecuted).isEqualTo(2);
+        // Apply the two category migrations, then any newer unrelated migrations as well.
+        assertThat(flyway("36").migrate().migrationsExecuted).isEqualTo(2);
+        flyway(null).migrate();
 
         try (Connection connection = dataSource.getConnection()) {
             assertLatestCategories(connection);

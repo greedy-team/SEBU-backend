@@ -31,7 +31,7 @@ public class BookmarkController {
             summary = "북마크한 연구실 목록 조회",
             description = "로그인한 사용자가 북마크한 연구실 목록을 조회합니다."
     )
-    @SecurityRequirement(name = "bearerAuth")
+    @SecurityRequirement(name = "cookieAuth")
     @GetMapping("/api/v1/users/me/bookmarked-laboratories")
     public ResponseEntity<ApiResponse<BookmarkedLaboratoriesResponse>>
     getBookmarkedLaboratories() {
@@ -50,7 +50,7 @@ public class BookmarkController {
             summary = "연구실 북마크 추가",
             description = "로그인한 사용자가 연구실을 북마크에 추가합니다."
     )
-    @SecurityRequirement(name = "bearerAuth")
+    @SecurityRequirement(name = "cookieAuth")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(
             responseCode = "204",
             description = "연구실 북마크 추가 성공"
@@ -71,7 +71,7 @@ public class BookmarkController {
             summary = "연구실 북마크 삭제",
             description = "로그인한 사용자가 연구실 북마크를 삭제합니다."
     )
-    @SecurityRequirement(name = "bearerAuth")
+    @SecurityRequirement(name = "cookieAuth")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(
             responseCode = "204",
             description = "연구실 북마크 삭제 성공"

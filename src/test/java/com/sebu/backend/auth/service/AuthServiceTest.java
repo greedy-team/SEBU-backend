@@ -68,8 +68,20 @@ class AuthServiceTest {
             .isInstanceOf(InvalidLoginRequestException.class);
         assertThatThrownBy(() -> authService.loginWithSejong("21012345", "short"))
             .isInstanceOf(InvalidLoginRequestException.class);
-        assertThatThrownBy(() -> authService.loginWithSejong("21012345", "x".repeat(129)))
+        assertThatThrownBy(() -> authService.loginWithSejong("21012345", "x".repeat(65)))
             .isInstanceOf(InvalidLoginRequestException.class);
         verifyNoInteractions(sejongAuthenticator, authSessionService);
+    }
+
+    @Test
+    void acceptsTheExistingApiMaximumPasswordLengthWithoutChangingItsValue() {
+        String password = "x".repeat(64);
+        var profile = new SejongUserProfile("21012345", "홍길동", "컴퓨터공학과");
+        when(sejongAuthenticator.authenticate("21012345", password)).thenReturn(profile);
+
+        authService.loginWithSejong("21012345", password);
+
+        verify(sejongAuthenticator).authenticate("21012345", password);
+        verify(authSessionService).start(profile);
     }
 }

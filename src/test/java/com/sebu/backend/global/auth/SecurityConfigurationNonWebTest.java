@@ -17,6 +17,8 @@ class SecurityConfigurationNonWebTest {
                 + "MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=",
             "app.auth.token.access-token-expiration=30m",
             "app.auth.token.refresh-token-expiration=14d",
+            "app.auth.token.absolute-session-expiration=30d",
+            "app.auth.csrf.allowed-origins=https://sebu-frontend.vercel.app",
             "app.auth.cookie.secure=true"
         );
 

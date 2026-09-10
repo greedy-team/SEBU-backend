@@ -1,6 +1,12 @@
 package com.sebu.backend.mypage.controller;
 
 import com.sebu.backend.auth.exception.AccessTokenInvalidException;
+import com.sebu.backend.auth.controller.AuthCookieFactory;
+import com.sebu.backend.global.auth.CsrfCookieSupport;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.CacheControl;
 import com.sebu.backend.global.auth.CurrentUserProvider;
 import com.sebu.backend.global.response.ApiResponse;
 import com.sebu.backend.mypage.dto.MyPageResponse;
@@ -32,10 +38,12 @@ public class MyPageController {
     private final CurrentUserProvider currentUserProvider;
     private final ProfileService profileService;
     private final AccountService accountService;
+    private final AuthCookieFactory cookieFactory;
+    private final CsrfCookieSupport csrfCookieSupport;
 
 
     @Operation(summary = "마이페이지 조회", description = "로그인한 사용자의 마이페이지 정보를 조회합니다.")
-    @SecurityRequirement(name = "bearerAuth")
+    @SecurityRequirement(name = "cookieAuth")
     @GetMapping("/mypage")
     public ResponseEntity<ApiResponse<MyPageResponse>> getMyPage(){
         Long userId = currentUserProvider.currentUserId()
@@ -49,7 +57,7 @@ public class MyPageController {
     }
 
     @Operation(summary = "프로필 수정", description = "로그인한 사용자의 프로필 정보를 수정합니다.")
-    @SecurityRequirement(name = "bearerAuth")
+    @SecurityRequirement(name = "cookieAuth")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(
             responseCode = "409",
             ref = "#/components/responses/Conflict"
@@ -70,18 +78,21 @@ public class MyPageController {
     }
 
     @Operation(summary = "회원 탈퇴", description = "로그인한 사용자의 계정을 탈퇴 처리합니다.")
-    @SecurityRequirement(name = "bearerAuth")
+    @SecurityRequirement(name = "cookieAuth")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(
             responseCode = "204",
             description = "회원 탈퇴 성공"
     )
     @DeleteMapping
-    public ResponseEntity<Void> withdraw() {
+    public ResponseEntity<Void> withdraw(HttpServletRequest request, HttpServletResponse response) {
         Long userId = currentUserProvider.currentUserId()
                 .orElseThrow(AccessTokenInvalidException::new);
 
         accountService.withdraw(userId);
+        csrfCookieSupport.renew(request, response);
 
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.noContent().cacheControl(CacheControl.noStore())
+            .header(HttpHeaders.SET_COOKIE, cookieFactory.deleteAccess().toString(), cookieFactory.deleteRefresh().toString())
+            .build();
     }
 }

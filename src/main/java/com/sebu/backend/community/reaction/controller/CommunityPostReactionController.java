@@ -31,7 +31,7 @@ public class CommunityPostReactionController {
             summary = "게시글 좋아요 추가",
             description = "로그인한 사용자가 게시글에 좋아요를 추가합니다."
     )
-    @SecurityRequirement(name = "bearerAuth")
+    @SecurityRequirement(name = "cookieAuth")
     @PutMapping("/likes")
     public ApiResponse<PostLikeResponse> like(@PathVariable Long postId) {
         return ApiResponse.success(reactionService.like(requireCurrentUser(), postId));
@@ -41,7 +41,7 @@ public class CommunityPostReactionController {
             summary = "게시글 좋아요 취소",
             description = "로그인한 사용자가 게시글의 좋아요를 취소합니다."
     )
-    @SecurityRequirement(name = "bearerAuth")
+    @SecurityRequirement(name = "cookieAuth")
     @DeleteMapping("/likes")
     public ApiResponse<PostLikeResponse> unlike(@PathVariable Long postId) {
         return ApiResponse.success(reactionService.unlike(requireCurrentUser(), postId));
@@ -51,7 +51,7 @@ public class CommunityPostReactionController {
             summary = "게시글 북마크 추가",
             description = "로그인한 사용자가 게시글을 북마크에 추가합니다."
     )
-    @SecurityRequirement(name = "bearerAuth")
+    @SecurityRequirement(name = "cookieAuth")
     @PutMapping("/bookmarks")
     public ApiResponse<PostBookmarkResponse> bookmark(@PathVariable Long postId) {
         return ApiResponse.success(reactionService.bookmark(requireCurrentUser(), postId));
@@ -61,7 +61,7 @@ public class CommunityPostReactionController {
             summary = "게시글 북마크 삭제",
             description = "로그인한 사용자가 게시글 북마크를 삭제합니다."
     )
-    @SecurityRequirement(name = "bearerAuth")
+    @SecurityRequirement(name = "cookieAuth")
     @DeleteMapping("/bookmarks")
     public ApiResponse<PostBookmarkResponse> unbookmark(@PathVariable Long postId) {
         return ApiResponse.success(reactionService.unbookmark(requireCurrentUser(), postId));

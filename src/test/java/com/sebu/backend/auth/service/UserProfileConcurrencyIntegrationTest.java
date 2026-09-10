@@ -3,7 +3,6 @@ package com.sebu.backend.auth.service;
 import com.sebu.backend.auth.port.SejongAuthenticator;
 import com.sebu.backend.auth.port.SejongUserProfile;
 import com.sebu.backend.auth.repository.RefreshTokenRepository;
-import com.sebu.backend.auth.token.RefreshTokenGenerator;
 import com.sebu.backend.college.domain.College;
 import com.sebu.backend.college.repository.CollegeRepository;
 import com.sebu.backend.department.domain.Department;
@@ -39,9 +38,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.mockingDetails;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static com.sebu.backend.support.CookieApiRequests.put;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -50,7 +50,7 @@ class UserProfileConcurrencyIntegrationTest {
     @Autowired AuthService authService;
     @Autowired AuthSessionService authSessionService;
     @Autowired ProfileService profileService;
-    @Autowired AppUserRepository appUserRepository;
+    @MockitoSpyBean AppUserRepository appUserRepository;
     @Autowired RefreshTokenRepository refreshTokenRepository;
     @Autowired CollegeRepository collegeRepository;
     @Autowired DepartmentRepository departmentRepository;
@@ -58,7 +58,6 @@ class UserProfileConcurrencyIntegrationTest {
 
     @MockitoBean SejongAuthenticator sejongAuthenticator;
     @MockitoBean IntroductionModerator introductionModerator;
-    @MockitoSpyBean RefreshTokenGenerator refreshTokenGenerator;
 
     @BeforeEach
     void setUp() {
@@ -138,7 +137,7 @@ class UserProfileConcurrencyIntegrationTest {
     }
 
     @Test
-    void loginRetriesOnceAndPreservesAProfileCommittedAfterItsInitialRead() throws Exception {
+    void loginPreservesAProfileCommittedBeforeItAcquiresTheUserLock() throws Exception {
         Department initialDepartment = department("재시도초기대학", "재시도초기학과");
         Department changedDepartment = department("재시도변경대학", "재시도변경학과");
         var initialLogin = authSessionService.start(profile(
@@ -150,6 +149,7 @@ class UserProfileConcurrencyIntegrationTest {
         CountDownLatch loginLoaded = new CountDownLatch(1);
         CountDownLatch allowLoginCommit = new CountDownLatch(1);
         AtomicBoolean blockOnce = new AtomicBoolean(true);
+        var repositoryDelegate = mockingDetails(appUserRepository).getMockCreationSettings().getDefaultAnswer();
         doAnswer(invocation -> {
             if (blockOnce.compareAndSet(true, false)) {
                 loginLoaded.countDown();
@@ -157,8 +157,8 @@ class UserProfileConcurrencyIntegrationTest {
                     throw new IllegalStateException("LOGIN_NOT_RELEASED");
                 }
             }
-            return invocation.callRealMethod();
-        }).when(refreshTokenGenerator).generate();
+            return repositoryDelegate.answer(invocation);
+        }).when(appUserRepository).findByIdForUpdate(initialLogin.userId());
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
         try {

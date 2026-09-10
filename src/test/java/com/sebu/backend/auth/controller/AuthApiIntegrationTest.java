@@ -40,8 +40,8 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static com.sebu.backend.support.CookieApiRequests.post;
+import static com.sebu.backend.support.CookieApiRequests.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -88,19 +88,19 @@ class AuthApiIntegrationTest {
         mockMvc.perform(loginRequest("21012345", "password"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.success").value(true))
-            .andExpect(jsonPath("$.data.accessToken").isNotEmpty())
-            .andExpect(jsonPath("$.data.tokenType").value("Bearer"))
+            .andExpect(jsonPath("$.data.accessToken").doesNotExist())
+            .andExpect(jsonPath("$.data.tokenType").doesNotExist())
             .andExpect(jsonPath("$.data.expiresIn").value(1800))
             .andExpect(jsonPath("$.data.user.isNewUser").value(true))
             .andExpect(jsonPath("$.data.user.profileCompleted").value(false))
-            .andExpect(header().string(HttpHeaders.SET_COOKIE, allOf(
+            .andExpect(header().stringValues(HttpHeaders.SET_COOKIE, org.hamcrest.Matchers.hasItem(allOf(
                 containsString("refresh_token="),
                 containsString("Path=/api/v1/auth"),
                 containsString("Max-Age=1209600"),
                 containsString("Secure"),
                 containsString("HttpOnly"),
                 containsString("SameSite=Lax")
-            )));
+            ))));
 
         assertThat(appUserRepository.findByProviderAndProviderUserId(AuthProvider.SEJONG, "21012345"))
             .isPresent();
@@ -177,10 +177,10 @@ class AuthApiIntegrationTest {
         clearInvocations(sejongAuthenticator);
 
         MvcResult refresh = mockMvc.perform(post("/api/v1/auth/refresh")
-                .cookie(new Cookie(RefreshTokenCookieFactory.COOKIE_NAME, previousToken)))
+                .cookie(new Cookie(AuthCookieFactory.REFRESH_COOKIE, previousToken)))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.data.accessToken").isNotEmpty())
-            .andExpect(jsonPath("$.data.tokenType").value("Bearer"))
+            .andExpect(jsonPath("$.data.accessToken").doesNotExist())
+            .andExpect(jsonPath("$.data.tokenType").doesNotExist())
             .andExpect(jsonPath("$.data.expiresIn").value(1800))
             .andReturn();
 
@@ -189,35 +189,35 @@ class AuthApiIntegrationTest {
         verifyNoInteractions(sejongAuthenticator);
 
         mockMvc.perform(post("/api/v1/auth/refresh")
-                .cookie(new Cookie(RefreshTokenCookieFactory.COOKIE_NAME, previousToken)))
+                .cookie(new Cookie(AuthCookieFactory.REFRESH_COOKIE, previousToken)))
             .andExpect(status().isUnauthorized())
             .andExpect(jsonPath("$.error.code").value("REFRESH_TOKEN_INVALID"));
     }
 
     @Test
-    void refreshesWithValidCookieEvenWhenExpiredAccessTokenHeaderIsPresent() throws Exception {
+    void refreshesWithValidCookieEvenWhenExpiredAccessCookieIsPresent() throws Exception {
         MvcResult login = mockMvc.perform(loginRequest("21000004", "password"))
             .andExpect(status().isOk())
             .andReturn();
 
         mockMvc.perform(post("/api/v1/auth/refresh")
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + expiredAccessToken())
-                .cookie(new Cookie(RefreshTokenCookieFactory.COOKIE_NAME, refreshTokenFrom(login))))
+                .cookie(new Cookie(AuthCookieFactory.ACCESS_COOKIE, expiredAccessToken()))
+                .cookie(new Cookie(AuthCookieFactory.REFRESH_COOKIE, refreshTokenFrom(login))))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.data.accessToken").isNotEmpty());
+            .andExpect(jsonPath("$.data.accessToken").doesNotExist());
     }
 
     @Test
-    void refreshesWithValidCookieEvenWhenInvalidAccessTokenHeaderIsPresent() throws Exception {
+    void refreshesWithValidCookieEvenWhenInvalidAccessCookieIsPresent() throws Exception {
         MvcResult login = mockMvc.perform(loginRequest("21000005", "password"))
             .andExpect(status().isOk())
             .andReturn();
 
         mockMvc.perform(post("/api/v1/auth/refresh")
-                .header(HttpHeaders.AUTHORIZATION, "Bearer invalid-access-token")
-                .cookie(new Cookie(RefreshTokenCookieFactory.COOKIE_NAME, refreshTokenFrom(login))))
+                .cookie(new Cookie(AuthCookieFactory.ACCESS_COOKIE, "invalid-access-token"))
+                .cookie(new Cookie(AuthCookieFactory.REFRESH_COOKIE, refreshTokenFrom(login))))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.data.accessToken").isNotEmpty());
+            .andExpect(jsonPath("$.data.accessToken").doesNotExist());
     }
 
     @Test
@@ -239,26 +239,26 @@ class AuthApiIntegrationTest {
         String secondToken = refreshTokenFrom(secondLogin);
 
         mockMvc.perform(post("/api/v1/auth/logout")
-                .cookie(new Cookie(RefreshTokenCookieFactory.COOKIE_NAME, firstToken)))
+                .cookie(new Cookie(AuthCookieFactory.REFRESH_COOKIE, firstToken)))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.data.message").value("로그아웃되었습니다."))
-            .andExpect(header().string(HttpHeaders.SET_COOKIE, allOf(
+            .andExpect(header().stringValues(HttpHeaders.SET_COOKIE, org.hamcrest.Matchers.hasItem(allOf(
                 containsString("refresh_token="),
                 containsString("Max-Age=0"),
                 containsString("Path=/api/v1/auth"),
                 containsString("Secure"),
                 containsString("HttpOnly"),
                 containsString("SameSite=Lax")
-            )));
+            ))));
 
         mockMvc.perform(post("/api/v1/auth/refresh")
-                .cookie(new Cookie(RefreshTokenCookieFactory.COOKIE_NAME, firstToken)))
+                .cookie(new Cookie(AuthCookieFactory.REFRESH_COOKIE, firstToken)))
             .andExpect(status().isUnauthorized());
         mockMvc.perform(post("/api/v1/auth/logout")
-                .cookie(new Cookie(RefreshTokenCookieFactory.COOKIE_NAME, firstToken)))
+                .cookie(new Cookie(AuthCookieFactory.REFRESH_COOKIE, firstToken)))
             .andExpect(status().isOk());
         mockMvc.perform(post("/api/v1/auth/refresh")
-                .cookie(new Cookie(RefreshTokenCookieFactory.COOKIE_NAME, secondToken)))
+                .cookie(new Cookie(AuthCookieFactory.REFRESH_COOKIE, secondToken)))
             .andExpect(status().isOk());
     }
 
@@ -267,7 +267,7 @@ class AuthApiIntegrationTest {
         mockMvc.perform(post("/api/v1/auth/logout"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.data.message").value("로그아웃되었습니다."))
-            .andExpect(header().string(HttpHeaders.SET_COOKIE, containsString("Max-Age=0")));
+            .andExpect(header().stringValues(HttpHeaders.SET_COOKIE, org.hamcrest.Matchers.hasItem(containsString("Max-Age=0"))));
     }
 
     @Test
@@ -275,11 +275,10 @@ class AuthApiIntegrationTest {
         MvcResult login = mockMvc.perform(loginRequest("21012345", "known-fake-password-for-log-test"))
             .andExpect(status().isOk())
             .andReturn();
-        String accessToken = objectMapper.readTree(login.getResponse().getContentAsString())
-            .path("data").path("accessToken").asText();
+        String accessToken = login.getResponse().getCookie(AuthCookieFactory.ACCESS_COOKIE).getValue();
 
         mockMvc.perform(patch("/api/v1/me/profile")
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+                .cookie(new Cookie(AuthCookieFactory.ACCESS_COOKIE, accessToken))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"grade\":3}"))
             .andExpect(status().isOk())
@@ -294,26 +293,26 @@ class AuthApiIntegrationTest {
         mockMvc.perform(loginRequest("21012345", "known-fake-password-for-log-test"))
             .andExpect(status().isOk());
         mockMvc.perform(get("/api/v1/me")
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken))
+                .cookie(new Cookie(AuthCookieFactory.ACCESS_COOKIE, accessToken)))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.data.grade").value(3));
 
         mockMvc.perform(patch("/api/v1/me/profile")
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+                .cookie(new Cookie(AuthCookieFactory.ACCESS_COOKIE, accessToken))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"grade\":5}"))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.error.code").value("INVALID_GRADE"));
 
         mockMvc.perform(patch("/api/v1/me/profile")
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+                .cookie(new Cookie(AuthCookieFactory.ACCESS_COOKIE, accessToken))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{}"))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.error.code").value("INVALID_GRADE"));
 
         mockMvc.perform(patch("/api/v1/me/profile")
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+                .cookie(new Cookie(AuthCookieFactory.ACCESS_COOKIE, accessToken))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("not-json"))
             .andExpect(status().isBadRequest())
@@ -351,8 +350,9 @@ class AuthApiIntegrationTest {
     }
 
     private String refreshTokenFrom(MvcResult result) {
-        String setCookie = result.getResponse().getHeader(HttpHeaders.SET_COOKIE);
-        String prefix = RefreshTokenCookieFactory.COOKIE_NAME + "=";
+        String setCookie = result.getResponse().getHeaders(HttpHeaders.SET_COOKIE).stream()
+            .filter(value -> value.startsWith(AuthCookieFactory.REFRESH_COOKIE + "=")).findFirst().orElseThrow();
+        String prefix = AuthCookieFactory.REFRESH_COOKIE + "=";
         int start = setCookie.indexOf(prefix) + prefix.length();
         int end = setCookie.indexOf(';', start);
         return setCookie.substring(start, end);

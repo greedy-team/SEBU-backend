@@ -57,7 +57,7 @@ public class CommunityCommentController {
             summary = "댓글 작성",
             description = "로그인한 사용자가 게시글에 새 댓글을 작성합니다."
     )
-    @SecurityRequirement(name = "bearerAuth")
+    @SecurityRequirement(name = "cookieAuth")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(
             responseCode = "201",
             description = "댓글 작성 성공",
@@ -80,7 +80,7 @@ public class CommunityCommentController {
             summary = "댓글 수정",
             description = "로그인한 사용자가 자신이 작성한 댓글을 수정합니다."
     )
-    @SecurityRequirement(name = "bearerAuth")
+    @SecurityRequirement(name = "cookieAuth")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(
             responseCode = "403",
             ref = "#/components/responses/Forbidden"
@@ -103,7 +103,7 @@ public class CommunityCommentController {
             summary = "댓글 삭제",
             description = "로그인한 사용자가 자신이 작성한 댓글을 삭제합니다."
     )
-    @SecurityRequirement(name = "bearerAuth")
+    @SecurityRequirement(name = "cookieAuth")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(
             responseCode = "403",
             ref = "#/components/responses/Forbidden"

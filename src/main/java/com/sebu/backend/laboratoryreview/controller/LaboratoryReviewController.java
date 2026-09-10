@@ -41,7 +41,7 @@ public class LaboratoryReviewController {
             summary = "연구실 리뷰 등록",
             description = "인증한 사용자가 연구실에 리뷰를 등록합니다."
     )
-    @SecurityRequirement(name = "bearerAuth")
+    @SecurityRequirement(name = "cookieAuth")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(
             responseCode = "201",
             description = "연구실 리뷰 등록 성공",
@@ -118,7 +118,7 @@ public class LaboratoryReviewController {
             summary = "내 연구실 리뷰 조회",
             description = "인증한 사용자가 해당 연구실에 작성한 리뷰를 조회합니다."
     )
-    @SecurityRequirement(name = "bearerAuth")
+    @SecurityRequirement(name = "cookieAuth")
     @GetMapping("/{laboratoryId}/reviews/me")
     public ApiResponse<LaboratoryReviewMeResponse> getMyReview(
             @PathVariable Long laboratoryId
@@ -143,7 +143,7 @@ public class LaboratoryReviewController {
             summary = "연구실 리뷰 수정",
             description = "인증한 사용자가 자신이 작성한 연구실 리뷰를 수정합니다."
     )
-    @SecurityRequirement(name = "bearerAuth")
+    @SecurityRequirement(name = "cookieAuth")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(
             responseCode = "403",
             ref = "#/components/responses/Forbidden"
@@ -176,7 +176,7 @@ public class LaboratoryReviewController {
             summary = "연구실 리뷰 삭제",
             description = "인증한 사용자가 자신이 작성한 연구실 리뷰를 삭제합니다."
     )
-    @SecurityRequirement(name = "bearerAuth")
+    @SecurityRequirement(name = "cookieAuth")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(
             responseCode = "403",
             ref = "#/components/responses/Forbidden"

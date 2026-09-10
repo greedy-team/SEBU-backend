@@ -16,7 +16,7 @@ public class AccountService {
 
     @Transactional
     public void withdraw(Long userId) {
-        AppUser user = appUserRepository.findById(userId)
+        AppUser user = appUserRepository.findByIdForUpdate(userId)
                 .orElseThrow(() ->
                         new IllegalArgumentException("USER_NOT_FOUND"));
 
