@@ -10,9 +10,12 @@ import java.util.Collection;
 import java.util.List;
 
 public interface LaboratoryDepartmentRepository
-    extends JpaRepository<LaboratoryDepartment, LaboratoryDepartmentId> {
+        extends JpaRepository<LaboratoryDepartment, LaboratoryDepartmentId> {
 
-    boolean existsByLaboratory_IdAndDepartment_Id(Long laboratoryId, Long departmentId);
+    boolean existsByLaboratory_IdAndDepartment_Id(
+            Long laboratoryId,
+            Long departmentId
+    );
 
     @Query("""
         select case when count(affiliation) > 0 then true else false end
@@ -24,9 +27,9 @@ public interface LaboratoryDepartmentRepository
           and (:excludedLaboratoryId is null or laboratory.id <> :excludedLaboratoryId)
         """)
     boolean existsActiveLaboratoryName(
-        @Param("departmentId") Long departmentId,
-        @Param("name") String name,
-        @Param("excludedLaboratoryId") Long excludedLaboratoryId
+            @Param("departmentId") Long departmentId,
+            @Param("name") String name,
+            @Param("excludedLaboratoryId") Long excludedLaboratoryId
     );
 
     @Query("""
@@ -45,6 +48,16 @@ public interface LaboratoryDepartmentRepository
                  department.id
         """)
     List<LaboratoryAffiliationProjection> findAffiliationsByLaboratoryIds(
-        @Param("laboratoryIds") Collection<Long> laboratoryIds
+            @Param("laboratoryIds") Collection<Long> laboratoryIds
     );
+
+    @Query("""
+        select d.college.id as collegeId,
+               count(distinct ld.laboratory.id) as laboratoryCount
+        from LaboratoryDepartment ld
+        join ld.department d
+        where ld.laboratory.deletedAt is null
+        group by d.college.id
+        """)
+    List<CollegeLaboratoryCountProjection> countActiveLaboratoriesByCollege();
 }
