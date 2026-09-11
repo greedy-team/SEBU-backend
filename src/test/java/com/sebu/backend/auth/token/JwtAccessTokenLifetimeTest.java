@@ -26,12 +26,12 @@ class JwtAccessTokenLifetimeTest {
         TokenProperties properties = new TokenProperties("test-only", Duration.ofMinutes(30),
             Duration.ofDays(14), Duration.ofDays(30));
         var service = new JwtAccessTokenService(encoder, properties, Clock.fixed(now, ZoneOffset.UTC));
-        var issued = service.issueUntil(1L, now.plusSeconds(10));
+        var issued = service.issueUntil(1L, 0L, now.plusSeconds(10));
         ArgumentCaptor<JwtEncoderParameters> captured = ArgumentCaptor.forClass(JwtEncoderParameters.class);
         verify(encoder).encode(captured.capture());
         assertThat(captured.getValue().getClaims().getExpiresAt()).isEqualTo(now.plusSeconds(10));
         assertThat(issued.expiresIn()).isEqualTo(10);
         assertThat(issued.toString()).doesNotContain(issued.value());
-        assertThatThrownBy(() -> service.issueUntil(1L, now)).isInstanceOf(AuthSessionExpiredException.class);
+        assertThatThrownBy(() -> service.issueUntil(1L, 0L, now)).isInstanceOf(AuthSessionExpiredException.class);
     }
 }

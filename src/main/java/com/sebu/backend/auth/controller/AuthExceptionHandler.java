@@ -114,8 +114,8 @@ public class AuthExceptionHandler {
     public ResponseEntity<ApiResponse<Void>> handleInvalidAccessToken(AccessTokenInvalidException exception) {
         return failure(
             HttpStatus.UNAUTHORIZED,
-            "ACCESS_TOKEN_INVALID",
-            "유효하지 않은 인증 토큰입니다."
+            AccessTokenInvalidException.CODE,
+            AccessTokenInvalidException.USER_MESSAGE
         );
     }
 

@@ -35,8 +35,8 @@ class AuthSessionServiceIntegrationTest {
 
     @Test
     void createsUserOnceAndKeepsIndependentRefreshTokensForMultipleLogins() {
-        AuthSessionService.LoginSession first = authSessionService.start(profile("21012345"));
-        AuthSessionService.LoginSession second = authSessionService.start(profile("21012345"));
+        AuthSessionService.LoginSession first = (AuthSessionService.LoginSession) authSessionService.login(profile("21012345"));
+        AuthSessionService.LoginSession second = (AuthSessionService.LoginSession) authSessionService.login(profile("21012345"));
 
         assertThat(first.isNewUser()).isTrue();
         assertThat(second.isNewUser()).isFalse();
@@ -54,7 +54,7 @@ class AuthSessionServiceIntegrationTest {
 
     @Test
     void rotatesRefreshTokenAndRejectsReusingThePreviousToken() {
-        AuthSessionService.LoginSession login = authSessionService.start(profile("rotation-user"));
+        AuthSessionService.LoginSession login = (AuthSessionService.LoginSession) authSessionService.login(profile("rotation-user"));
         String previousHash = refreshTokenGenerator.hash(login.refreshToken());
 
         AuthSessionService.RefreshSession refreshed = authSessionService.refresh(login.refreshToken());

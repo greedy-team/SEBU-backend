@@ -10,7 +10,7 @@ import com.sebu.backend.mypage.dto.ProfileResponse;
 import com.sebu.backend.mypage.dto.ProfileUpdateRequest;
 import com.sebu.backend.mypage.service.MyPageService;
 import com.sebu.backend.mypage.service.ProfileService;
-import com.sebu.backend.user.service.AccountService;
+import com.sebu.backend.account.service.AccountLifecycleService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -37,7 +37,7 @@ public class MyPageController {
     private final MyPageService myPageService;
     private final CurrentUserProvider currentUserProvider;
     private final ProfileService profileService;
-    private final AccountService accountService;
+    private final AccountLifecycleService accountLifecycleService;
     private final AuthCookieFactory cookieFactory;
     private final CsrfCookieSupport csrfCookieSupport;
 
@@ -88,7 +88,7 @@ public class MyPageController {
         Long userId = currentUserProvider.currentUserId()
                 .orElseThrow(AccessTokenInvalidException::new);
 
-        accountService.withdraw(userId);
+        accountLifecycleService.withdraw(userId);
         csrfCookieSupport.renew(request, response);
 
         return ResponseEntity.noContent().cacheControl(CacheControl.noStore())

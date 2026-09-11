@@ -1,9 +1,11 @@
 package com.sebu.backend.laboratoryreview.repository;
 
 import com.sebu.backend.laboratoryreview.domain.LaboratoryReview;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -24,10 +26,17 @@ public interface LaboratoryReviewRepository
             Long authorId
     );
 
-    Optional<LaboratoryReview>
-    findByIdAndLaboratoryIdAndDeletedAtIsNull(
-            Long reviewId,
-            Long laboratoryId
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("""
+        select review
+        from LaboratoryReview review
+        where review.id = :reviewId
+          and review.laboratory.id = :laboratoryId
+          and review.deletedAt is null
+        """)
+    Optional<LaboratoryReview> findForUpdate(
+            @Param("reviewId") Long reviewId,
+            @Param("laboratoryId") Long laboratoryId
     );
 
     Page<LaboratoryReview>

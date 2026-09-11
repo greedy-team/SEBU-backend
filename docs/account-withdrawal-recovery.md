@@ -2,7 +2,7 @@
 
 ## 핵심 정책
 
-- 회원 탈퇴는 `app_user.deleted_at`을 기록하고, 해당 사용자의 Refresh Token과 복구 토큰을 같은 트랜잭션에서 즉시 물리 삭제한다.
+- 회원 탈퇴는 `app_user.deleted_at`을 기록하고 `auth_version`을 증가시키며, 해당 사용자의 Refresh Token과 복구 토큰을 같은 트랜잭션에서 즉시 물리 삭제한다.
 - 탈퇴 직후부터 공개 작성자 응답은 `{ "id": null, "nickname": null, "status": "WITHDRAW" }`로 마스킹한다.
 - 게시글·댓글·연구실 후기와 내부 `author_id`는 유지한다. 학번을 포함한 인증 식별자는 외부 DTO에 포함하지 않는다.
 - 개인정보와 좋아요·북마크는 탈퇴 후 30일 동안 복구를 위해 보관한다. 집계 쿼리는 `user.deleted_at IS NULL` 조건으로 탈퇴 사용자의 반응을 즉시 제외한다.
@@ -13,16 +13,9 @@
 
 ## 복구 가능 시간
 
-복구 대기시간은 다음처럼 정한다.
+복구 대기시간은 `minimumRecoveryCooldown`으로 정하며 기본값은 1시간이다. 대기시간 이후부터 `deleted_at + 30일` 미만까지 복구할 수 있고, `deleted_at + 30일` 이상이면 만료다.
 
-```text
-effectiveRecoveryCooldown
-= max(minimumRecoveryCooldown, accessTokenExpiration + accessTokenSafetyMargin)
-```
-
-기본값은 최소 1시간, Access Token 수명 30분, 안전 여유 1분이므로 실제 대기시간은 1시간이다. 대기시간 이후부터 `deleted_at + 30일` 미만까지 복구할 수 있다. `deleted_at + 30일` 이상이면 만료다.
-
-이 정책은 별도의 `auth_version` 없이 탈퇴 전에 발급된 Access Token이 자연 만료된 뒤에만 복구를 허용하기 위한 것이다. 운영에서 Access Token 수명을 줄이더라도 기존 토큰이 모두 만료될 때까지는 기존 복구 대기시간을 줄이지 않는다.
+Access Token에는 발급 당시의 `authVersion`을 넣고 보호 API마다 `app_user.auth_version`과 비교한다. 탈퇴 시 DB 값을 증가시키고 복구할 때 되돌리지 않으므로 탈퇴 전에 발급된 Access Token은 복구 후에도 다시 유효해지지 않는다. 따라서 복구 대기시간은 Access Token 만료시간에 의존하는 보안 장치가 아니라 탈퇴 직후 실수와 반복 요청을 줄이기 위한 정책이다.
 
 ## API
 
@@ -36,7 +29,7 @@ Cookie: access_token=...
 X-XSRF-TOKEN: ...
 ```
 
-성공하면 `204 No Content`를 반환하고 `access_token`, `refresh_token`, `recovery_token` 쿠키를 삭제한다. 서버에서는 사용자 행을 잠근 뒤 `deleted_at` 기록과 Refresh/Recovery Token 행 삭제를 하나의 트랜잭션으로 처리한다.
+성공하면 `204 No Content`를 반환하고 `access_token`, `refresh_token`, `recovery_token` 쿠키를 삭제한다. 서버에서는 사용자 행을 잠근 뒤 `deleted_at` 기록, `auth_version` 증가, Refresh/Recovery Token 행 삭제를 하나의 트랜잭션으로 처리한다.
 
 ### 세종대학교 로그인
 
@@ -124,7 +117,7 @@ FE는 작성자 상태를 `id` 비교로 추론하지 않고 `status`로 판단�
 
 ## 30일 경과 처리
 
-한국시간 매일 03:20에 UTC 기준 시각으로 만료 복구 토큰을 먼저 삭제하고, 다음 조건의 계정을 배치 처리한다.
+만료 복구 토큰 삭제와 계정 익명화는 한 작업의 실패가 다른 작업을 막지 않도록 분리한다. 한국시간 매일 03:15에 만료 복구 토큰을 삭제하고, 03:20에 UTC 기준 시각으로 다음 조건의 계정을 배치 처리한다.
 
 ```text
 deleted_at <= now - 30일 AND anonymized_at IS NULL
@@ -136,4 +129,4 @@ deleted_at <= now - 30일 AND anonymized_at IS NULL
 - `refresh_token`, `account_recovery_token`
 - 연구실 북마크, 게시글 북마크, 게시글 좋아요
 
-설정 키는 `app.auth.account.recovery-window`, `minimum-recovery-cooldown`, `access-token-safety-margin`, `recovery-token-expiration`, `anonymization-cron`, `batch-size`, `max-batches`다. 한 번 적용된 Flyway 파일은 수정하지 않고 후속 스키마 변경은 새 버전 마이그레이션으로 추가한다.
+설정 키는 `app.auth.account.recovery-window`, `minimum-recovery-cooldown`, `recovery-token-expiration`, `recovery-token-cleanup-cron`, `anonymization-cron`, `batch-size`, `max-batches`다. 복구 토큰 수명은 설정 오류가 있어도 5분을 넘길 수 없다. 한 번 적용된 Flyway 파일은 수정하지 않고 후속 스키마 변경은 새 버전 마이그레이션으로 추가한다.

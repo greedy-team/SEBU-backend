@@ -64,7 +64,7 @@ class AuthenticationMySqlMigrationTest {
         ); var statement = connection.createStatement()) {
             try (var result = statement.executeQuery("""
                 SELECT email, provider, provider_user_id, profile_completed, sejong_department_name,
-                       nickname, version, anonymized_at
+                       nickname, version, auth_version, anonymized_at
                 FROM app_user
                 WHERE email = 'legacy@example.com'
                 """)) {
@@ -76,6 +76,7 @@ class AuthenticationMySqlMigrationTest {
                 assertThat(result.getString("sejong_department_name")).isNull();
                 assertThat(result.getString("nickname")).isNull();
                 assertThat(result.getLong("version")).isZero();
+                assertThat(result.getLong("auth_version")).isZero();
                 assertThat(result.getTimestamp("anonymized_at")).isNull();
             }
 

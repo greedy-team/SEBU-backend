@@ -136,8 +136,8 @@ public class ExceptionControllerAdvice {
         return ResponseEntity
                 .status(HttpStatus.UNAUTHORIZED)
                 .body(ApiResponse.failure(
-                        "ACCESS_TOKEN_INVALID",
-                        "유효하지 않은 Access Token입니다."
+                        AccessTokenInvalidException.CODE,
+                        AccessTokenInvalidException.USER_MESSAGE
                 ));
     }
 

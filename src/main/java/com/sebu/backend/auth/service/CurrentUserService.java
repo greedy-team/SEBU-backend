@@ -3,6 +3,7 @@ package com.sebu.backend.auth.service;
 import com.sebu.backend.auth.exception.AccessTokenInvalidException;
 import com.sebu.backend.auth.exception.InvalidGradeException;
 import com.sebu.backend.global.auth.CurrentUserProvider;
+import com.sebu.backend.global.auth.ActiveUserCommandGuard;
 import com.sebu.backend.user.domain.AppUser;
 import com.sebu.backend.user.repository.AppUserRepository;
 import com.sebu.backend.user.exception.ProfileUpdateConflictException;
@@ -19,6 +20,7 @@ import java.time.ZoneOffset;
 public class CurrentUserService {
     private final CurrentUserProvider currentUserProvider;
     private final AppUserRepository appUserRepository;
+    private final ActiveUserCommandGuard activeUserGuard;
 
     @Transactional(readOnly = true)
     public CurrentUser getCurrentUser() {
@@ -36,8 +38,7 @@ public class CurrentUserService {
         }
         Long userId = currentUserProvider.currentUserId()
             .orElseThrow(AccessTokenInvalidException::new);
-        AppUser user = appUserRepository.findById(userId)
-            .orElseThrow(AccessTokenInvalidException::new);
+        AppUser user = activeUserGuard.lock(userId);
         user.updateGrade(grade, LocalDateTime.now(ZoneOffset.UTC));
         try {
             appUserRepository.flush();

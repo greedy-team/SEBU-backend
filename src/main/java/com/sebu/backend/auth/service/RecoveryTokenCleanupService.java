@@ -1,6 +1,6 @@
 package com.sebu.backend.auth.service;
 
-import com.sebu.backend.auth.config.AccountLifecycleProperties;
+import com.sebu.backend.account.config.AccountLifecycleProperties;
 import com.sebu.backend.auth.repository.AccountRecoveryTokenRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -21,6 +21,7 @@ public class RecoveryTokenCleanupService {
         if (ids.isEmpty()) {
             return 0;
         }
-        return repository.deleteExpiredIds(ids, now);
+        repository.deleteExpiredIds(ids, now);
+        return ids.size();
     }
 }

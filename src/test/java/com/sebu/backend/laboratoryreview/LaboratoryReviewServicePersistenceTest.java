@@ -13,8 +13,8 @@ import com.sebu.backend.laboratoryreview.dto.LaboratoryReviewUpdateRequest;
 import com.sebu.backend.laboratoryreview.exception.LaboratoryReviewAlreadyExistsException;
 import com.sebu.backend.laboratoryreview.repository.LaboratoryReviewRepository;
 import com.sebu.backend.laboratoryreview.service.LaboratoryReviewService;
+import com.sebu.backend.global.auth.ActiveUserCommandGuard;
 import com.sebu.backend.user.domain.AppUser;
-import com.sebu.backend.user.repository.AppUserRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InOrder;
@@ -45,7 +45,7 @@ class LaboratoryReviewServicePersistenceTest {
     LaboratoryRepository laboratoryRepository;
 
     @Mock
-    AppUserRepository appUserRepository;
+    ActiveUserCommandGuard activeUserGuard;
 
     @InjectMocks
     LaboratoryReviewService laboratoryReviewService;
@@ -88,10 +88,10 @@ class LaboratoryReviewServicePersistenceTest {
         LaboratoryReview review = mock(LaboratoryReview.class);
         LocalDateTime updatedAt = LocalDateTime.of(2026, 9, 1, 12, 0);
 
-        when(laboratoryRepository.findById(1L))
+        when(laboratoryRepository.findByIdForUpdate(1L))
                 .thenReturn(Optional.of(laboratory));
         when(laboratoryReviewRepository
-                .findByIdAndLaboratoryIdAndDeletedAtIsNull(3L, 1L))
+                .findForUpdate(3L, 1L))
                 .thenReturn(Optional.of(review));
         when(review.isWrittenBy(2L)).thenReturn(true);
         when(review.getId()).thenReturn(3L);
@@ -129,10 +129,9 @@ class LaboratoryReviewServicePersistenceTest {
         Laboratory laboratory = mock(Laboratory.class);
         AppUser author = mock(AppUser.class);
 
-        when(laboratoryRepository.findById(1L))
+        when(laboratoryRepository.findByIdForUpdate(1L))
                 .thenReturn(Optional.of(laboratory));
-        when(appUserRepository.findById(2L))
-                .thenReturn(Optional.of(author));
+        when(activeUserGuard.lock(2L)).thenReturn(author);
         when(laboratoryReviewRepository
                 .existsByLaboratoryIdAndAuthorIdAndDeletedAtIsNull(1L, 2L))
                 .thenReturn(false);

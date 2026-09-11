@@ -28,8 +28,8 @@ app:
     account:
       recovery-window: 30d
       minimum-recovery-cooldown: 1h
-      access-token-safety-margin: 1m
       recovery-token-expiration: 5m
+      recovery-token-cleanup-cron: "0 15 3 * * *"
       anonymization-cron: "0 20 3 * * *"
       batch-size: 500
       max-batches: 100

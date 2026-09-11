@@ -105,6 +105,9 @@ public class AppUser extends BaseTimeEntity {
     @Column(name = "anonymized_at")
     private LocalDateTime anonymizedAt;
 
+    @Column(name = "auth_version", nullable = false)
+    private long authVersion;
+
     @Version
     @Column(nullable = false)
     private long version;
@@ -256,6 +259,7 @@ public class AppUser extends BaseTimeEntity {
     public void withdraw(LocalDateTime withdrawnAt) {
         if (this.deletedAt == null) {
             this.deletedAt = Objects.requireNonNull(withdrawnAt, "WITHDRAWN_AT_REQUIRED");
+            this.authVersion = Math.incrementExact(this.authVersion);
         }
     }
 

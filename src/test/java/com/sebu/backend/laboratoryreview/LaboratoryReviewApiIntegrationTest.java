@@ -2,6 +2,7 @@ package com.sebu.backend.laboratoryreview;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sebu.backend.account.service.AccountLifecycleService;
 import com.sebu.backend.college.domain.College;
 import com.sebu.backend.department.domain.Department;
 import com.sebu.backend.laboratory.domain.Laboratory;
@@ -53,6 +54,9 @@ class LaboratoryReviewApiIntegrationTest {
 
     @Autowired
     ObjectMapper objectMapper;
+
+    @Autowired
+    AccountLifecycleService accountLifecycleService;
 
     @PersistenceContext
     EntityManager entityManager;
@@ -113,6 +117,50 @@ class LaboratoryReviewApiIntegrationTest {
                     .andExpect(status().isUnauthorized())
                     .andExpect(jsonPath("$.success").value(false))
                     .andExpect(jsonPath("$.error.code").value("ACCESS_TOKEN_INVALID"));
+        }
+    }
+
+    @Test
+    void withdrawnUserCannotCallProtectedReviewApisWithPreviouslyIssuedAccessToken() throws Exception {
+        TestFixture fixture = createFixture();
+        long reviewId = createReview(fixture, fixture.owner());
+        RequestPostProcessor accessTokenIssuedBeforeWithdrawal = as(fixture.owner());
+
+        accountLifecycleService.withdraw(fixture.owner().getId());
+        entityManager.flush();
+
+        String requestBody = requestBody(validRequest());
+        RequestBuilder[] protectedRequests = {
+                post(
+                        "/api/v1/laboratories/{laboratoryId}/reviews",
+                        fixture.laboratoryId()
+                ).with(accessTokenIssuedBeforeWithdrawal)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody),
+                get(
+                        "/api/v1/laboratories/{laboratoryId}/reviews/me",
+                        fixture.laboratoryId()
+                ).with(accessTokenIssuedBeforeWithdrawal),
+                put(
+                        "/api/v1/laboratories/{laboratoryId}/reviews/{reviewId}",
+                        fixture.laboratoryId(),
+                        reviewId
+                ).with(accessTokenIssuedBeforeWithdrawal)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody),
+                delete(
+                        "/api/v1/laboratories/{laboratoryId}/reviews/{reviewId}",
+                        fixture.laboratoryId(),
+                        reviewId
+                ).with(accessTokenIssuedBeforeWithdrawal)
+        };
+
+        for (RequestBuilder request : protectedRequests) {
+            mockMvc.perform(request)
+                    .andExpect(status().isUnauthorized())
+                    .andExpect(jsonPath("$.success").value(false))
+                    .andExpect(jsonPath("$.error.code").value("ACCESS_TOKEN_INVALID"))
+                    .andExpect(jsonPath("$.error.message").value("유효하지 않은 인증 토큰입니다."));
         }
     }
 

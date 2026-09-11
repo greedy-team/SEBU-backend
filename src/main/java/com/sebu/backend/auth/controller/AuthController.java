@@ -6,6 +6,7 @@ import com.sebu.backend.auth.dto.RefreshResponse;
 import com.sebu.backend.auth.dto.SejongLoginRequest;
 import com.sebu.backend.auth.service.AuthService;
 import com.sebu.backend.auth.service.AuthSessionService;
+import com.sebu.backend.auth.service.AccountRecoveryService;
 import com.sebu.backend.global.auth.CsrfCookieSupport;
 import com.sebu.backend.global.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -33,6 +34,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
     private final AuthService authService;
     private final AuthSessionService authSessionService;
+    private final AccountRecoveryService accountRecoveryService;
     private final AuthCookieFactory cookieFactory;
     private final CsrfCookieSupport csrfCookieSupport;
 
@@ -65,34 +67,32 @@ public class AuthController {
             request.password()
         );
         csrfCookieSupport.renew(servletRequest, servletResponse);
-        if (outcome instanceof AuthSessionService.LoginSession session) {
-            return ResponseEntity.ok()
+        return switch (outcome) {
+            case AuthSessionService.LoginSession session -> ResponseEntity.ok()
                 .cacheControl(CacheControl.noStore())
                 .header(HttpHeaders.SET_COOKIE,
                     cookieFactory.access(session.accessToken(), session.expiresIn()).toString(),
                     cookieFactory.refresh(session.refreshToken(), session.refreshExpiresIn()).toString(),
                     cookieFactory.deleteRecovery().toString())
                 .body(ApiResponse.<LoginResponse>success(LoginResponse.authenticated(session)));
-        }
-        if (outcome instanceof AuthSessionService.RecoveryChallenge challenge) {
-            return ResponseEntity.ok()
+            case AuthSessionService.RecoveryChallenge challenge -> ResponseEntity.ok()
                 .cacheControl(CacheControl.noStore())
                 .header(HttpHeaders.SET_COOKIE,
                     cookieFactory.deleteAccess().toString(),
                     cookieFactory.deleteRefresh().toString(),
                     cookieFactory.recovery(challenge.recoveryToken(), challenge.recoveryExpiresIn()).toString())
                 .body(ApiResponse.<LoginResponse>success(LoginResponse.recoveryRequired(challenge)));
-        }
-        return ResponseEntity.status(HttpStatus.CONFLICT)
-            .cacheControl(CacheControl.noStore())
-            .header(HttpHeaders.SET_COOKIE,
-                cookieFactory.deleteAccess().toString(),
-                cookieFactory.deleteRefresh().toString(),
-                cookieFactory.deleteRecovery().toString())
-            .body(ApiResponse.<LoginResponse>failure(
-                "ACCOUNT_RECOVERY_COOLDOWN",
-                "아직 계정 복구 대기 시간이 지나지 않았습니다. 잠시 후 다시 시도해주세요."
-            ));
+            case AuthSessionService.RecoveryCooldown ignored -> ResponseEntity.status(HttpStatus.CONFLICT)
+                .cacheControl(CacheControl.noStore())
+                .header(HttpHeaders.SET_COOKIE,
+                    cookieFactory.deleteAccess().toString(),
+                    cookieFactory.deleteRefresh().toString(),
+                    cookieFactory.deleteRecovery().toString())
+                .body(ApiResponse.<LoginResponse>failure(
+                    "ACCOUNT_RECOVERY_COOLDOWN",
+                    "아직 계정 복구 대기 시간이 지나지 않았습니다. 잠시 후 다시 시도해주세요."
+                ));
+        };
     }
 
     @Operation(summary = "계정 복구", description = "일회용 복구 쿠키로 탈퇴 계정을 복구하고 새 로그인 세션을 발급합니다.")
@@ -112,7 +112,7 @@ public class AuthController {
         HttpServletRequest request,
         HttpServletResponse response
     ) {
-        AuthSessionService.LoginSession session = authSessionService.recover(recoveryToken);
+        AuthSessionService.LoginSession session = accountRecoveryService.recover(recoveryToken);
         csrfCookieSupport.renew(request, response);
         return ResponseEntity.ok()
             .cacheControl(CacheControl.noStore())

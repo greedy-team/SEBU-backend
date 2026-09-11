@@ -1,4 +1,4 @@
-package com.sebu.backend.mypage.service;
+package com.sebu.backend.account.service;
 
 import com.sebu.backend.auth.domain.AccountRecoveryToken;
 import com.sebu.backend.auth.domain.RefreshToken;
@@ -9,7 +9,6 @@ import com.sebu.backend.auth.port.SejongUserProfile;
 import com.sebu.backend.auth.service.AuthSessionService;
 import com.sebu.backend.user.domain.AppUser;
 import com.sebu.backend.user.repository.AppUserRepository;
-import com.sebu.backend.user.service.AccountService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -22,10 +21,10 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 
 @SpringBootTest
 @Transactional
-class AccountServiceTest {
+class AccountLifecycleServiceTest {
 
     @Autowired
-    AccountService accountService;
+    AccountLifecycleService accountLifecycleService;
 
     @Autowired
     AppUserRepository appUserRepository;
@@ -77,7 +76,7 @@ class AccountServiceTest {
         );
 
         // when
-        accountService.withdraw(user.getId());
+        accountLifecycleService.withdraw(user.getId());
 
         // then
         AppUser withdrawnUser = appUserRepository.findById(user.getId())
@@ -93,7 +92,7 @@ class AccountServiceTest {
     void 회원_탈퇴후_기존_refreshToken으로_재발급할_수_없다() {
         // given
         AuthSessionService.LoginSession loginSession =
-                authSessionService.start(new SejongUserProfile(
+                (AuthSessionService.LoginSession) authSessionService.login(new SejongUserProfile(
                         "29000001",
                         "탈퇴테스트",
                         "테스트학과"
@@ -106,7 +105,7 @@ class AccountServiceTest {
         assertThat(refreshToken).isNotBlank();
 
         // when
-        accountService.withdraw(userId);
+        accountLifecycleService.withdraw(userId);
 
         // then
         assertThatThrownBy(() ->

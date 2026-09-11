@@ -1,7 +1,7 @@
 package com.sebu.backend.auth.service;
 
-import com.sebu.backend.auth.config.AccountLifecycleProperties;
-import com.sebu.backend.auth.config.TokenProperties;
+import com.sebu.backend.account.config.AccountLifecycleProperties;
+import com.sebu.backend.account.service.AccountRecoveryPolicy;
 import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
@@ -12,26 +12,19 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class AccountRecoveryPolicyTest {
     private static final AccountLifecycleProperties ACCOUNT_PROPERTIES = new AccountLifecycleProperties(
-        Duration.ofDays(30), Duration.ofHours(1), Duration.ofMinutes(1), Duration.ofMinutes(5), 500, 100
+        Duration.ofDays(30), Duration.ofHours(1), Duration.ofMinutes(5), 500, 100
     );
 
     @Test
-    void usesTheMinimumCooldownForTheCurrentThirtyMinuteAccessToken() {
-        AccountRecoveryPolicy policy = policy(Duration.ofMinutes(30));
+    void usesTheConfiguredCooldownIndependentlyOfAccessTokenLifetime() {
+        AccountRecoveryPolicy policy = new AccountRecoveryPolicy(ACCOUNT_PROPERTIES);
 
         assertThat(policy.effectiveCooldown()).isEqualTo(Duration.ofHours(1));
     }
 
     @Test
-    void automaticallyExtendsCooldownBeyondALongerAccessTokenLifetime() {
-        AccountRecoveryPolicy policy = policy(Duration.ofHours(2));
-
-        assertThat(policy.effectiveCooldown()).isEqualTo(Duration.ofHours(2).plusMinutes(1));
-    }
-
-    @Test
     void appliesInclusiveCooldownAndRecoveryWindowBoundaries() {
-        AccountRecoveryPolicy policy = policy(Duration.ofMinutes(30));
+        AccountRecoveryPolicy policy = new AccountRecoveryPolicy(ACCOUNT_PROPERTIES);
         LocalDateTime deletedAt = LocalDateTime.of(2026, 9, 10, 0, 0);
 
         assertThat(policy.phase(deletedAt, deletedAt.plusHours(1).minusSeconds(1)))
@@ -43,16 +36,13 @@ class AccountRecoveryPolicyTest {
     }
 
     @Test
-    void rejectsAConfiguredAccessLifetimeThatLeavesNoRecoveryWindow() {
-        assertThatThrownBy(() -> policy(Duration.ofDays(30)))
+    void rejectsACooldownThatLeavesNoRecoveryWindow() {
+        AccountLifecycleProperties invalid = new AccountLifecycleProperties(
+            Duration.ofDays(30), Duration.ofDays(30), Duration.ofMinutes(5), 500, 100
+        );
+
+        assertThatThrownBy(() -> new AccountRecoveryPolicy(invalid))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessage("ACCOUNT_RECOVERY_COOLDOWN_MUST_BE_SHORTER_THAN_WINDOW");
-    }
-
-    private AccountRecoveryPolicy policy(Duration accessExpiration) {
-        TokenProperties tokenProperties = new TokenProperties(
-            "test-only", accessExpiration, Duration.ofDays(14), Duration.ofDays(30)
-        );
-        return new AccountRecoveryPolicy(ACCOUNT_PROPERTIES, tokenProperties);
     }
 }

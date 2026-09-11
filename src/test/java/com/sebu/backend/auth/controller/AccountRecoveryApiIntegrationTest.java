@@ -14,7 +14,7 @@ import com.sebu.backend.community.post.repository.CommunityPostRepository;
 import com.sebu.backend.user.domain.AppUser;
 import com.sebu.backend.user.domain.AuthProvider;
 import com.sebu.backend.user.repository.AppUserRepository;
-import com.sebu.backend.user.service.AccountService;
+import com.sebu.backend.account.service.AccountLifecycleService;
 import jakarta.persistence.EntityManager;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;
@@ -49,7 +49,7 @@ class AccountRecoveryApiIntegrationTest {
     @Autowired AppUserRepository appUserRepository;
     @Autowired RefreshTokenRepository refreshTokenRepository;
     @Autowired AccountRecoveryTokenRepository recoveryTokenRepository;
-    @Autowired AccountService accountService;
+    @Autowired AccountLifecycleService accountLifecycleService;
     @Autowired CommunityPostRepository postRepository;
     @Autowired CommunityPostLikeRepository likeRepository;
     @Autowired CommunityPostBookmarkRepository bookmarkRepository;
@@ -71,11 +71,13 @@ class AccountRecoveryApiIntegrationTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.data.loginStatus").value("AUTHENTICATED"))
             .andReturn();
+        Cookie accessBeforeWithdrawal = firstLogin.getResponse().getCookie(AuthCookieFactory.ACCESS_COOKIE);
         AppUser original = user("21070001");
         Long originalId = original.getId();
 
-        accountService.withdraw(originalId);
+        accountLifecycleService.withdraw(originalId);
         assertThat(refreshTokenRepository.countByUser_Id(originalId)).isZero();
+        assertThat(appUserRepository.findById(originalId).orElseThrow().getAuthVersion()).isOne();
 
         login("21070001")
             .andExpect(status().isConflict())
@@ -120,13 +122,23 @@ class AccountRecoveryApiIntegrationTest {
             .andExpect(jsonPath("$.data.user.isNewUser").value(false))
             .andReturn();
 
+        Cookie accessAfterRecovery = recovered.getResponse().getCookie(AuthCookieFactory.ACCESS_COOKIE);
+
         assertThat(recovered.getResponse().getCookie(AuthCookieFactory.ACCESS_COOKIE).getMaxAge()).isPositive();
         assertThat(recovered.getResponse().getCookie(AuthCookieFactory.REFRESH_COOKIE).getMaxAge()).isPositive();
         assertThat(recovered.getResponse().getCookie(AuthCookieFactory.RECOVERY_COOKIE).getMaxAge()).isZero();
         assertThat(recoveryTokenRepository.countByUser_Id(originalId)).isZero();
         AppUser restored = appUserRepository.findById(originalId).orElseThrow();
         assertThat(restored.getDeletedAt()).isNull();
+        assertThat(restored.getAuthVersion()).isOne();
         assertThat(restored.getName()).isEqualTo("홍길동");
+
+        mockMvc.perform(get("/api/v1/me").cookie(accessBeforeWithdrawal))
+            .andExpect(status().isUnauthorized())
+            .andExpect(jsonPath("$.error.code").value("ACCESS_TOKEN_INVALID"));
+        mockMvc.perform(get("/api/v1/me").cookie(accessAfterRecovery))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.data.id").value(originalId));
 
         mockMvc.perform(post("/api/v1/auth/recovery").cookie(recoveryCookie))
             .andExpect(status().isUnauthorized())
@@ -147,7 +159,7 @@ class AccountRecoveryApiIntegrationTest {
         likeRepository.saveAndFlush(new CommunityPostLike(oldUser, post));
         bookmarkRepository.saveAndFlush(new CommunityPostBookmark(oldUser, post));
 
-        accountService.withdraw(oldUserId);
+        accountLifecycleService.withdraw(oldUserId);
         moveWithdrawalTo(oldUserId, LocalDateTime.now(ZoneOffset.UTC).minusDays(31));
 
         MvcResult login = login("21070002")

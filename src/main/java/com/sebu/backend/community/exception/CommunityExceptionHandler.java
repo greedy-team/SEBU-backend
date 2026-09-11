@@ -41,7 +41,10 @@ public class CommunityExceptionHandler {
     ) {
         return ResponseEntity
                 .status(HttpStatus.UNAUTHORIZED)
-                .body(ApiResponse.failure("ACCESS_TOKEN_INVALID", "유효하지 않은 Access Token입니다."));
+                .body(ApiResponse.failure(
+                        AccessTokenInvalidException.CODE,
+                        AccessTokenInvalidException.USER_MESSAGE
+                ));
     }
 
     @ExceptionHandler(UserNotFoundException.class)

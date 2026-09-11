@@ -75,7 +75,7 @@ Swagger는 `/auth/csrf`를 먼저 실행하고 로그인한다. 토큰을 Bearer
 미사용 시간은 모든 페이지 클릭이 아니라 **로그인/Refresh 성공 시각** 기준이다.
 갱신마다 토큰 원문은 바꾸며 DB에는 SHA-256 해시만 저장한다. 사용한 토큰을 다시 보내면 거절하지만, 그 이유만으로 후속 토큰을 자동 폐기하지 않는다.
 명시적 로그아웃은 해당 `session_id`의 토큰을 모두 폐기한다. 갱신 전 토큰으로 로그아웃해도 후속 토큰이 폐기된다. 다른 기기의 독립 로그인은 유지한다. 회원 탈퇴는 사용자의 Refresh Token 행을 모두 즉시 물리 삭제한다.
-기존 사용자 행 → Refresh 행 순서로 잠그므로 갱신·로그아웃·탈퇴가 직렬화된다. 일반 API 요청에 새 세션 DB 조회를 추가하지 않는다.
+기존 사용자 행 → Refresh 행 순서로 잠그므로 갱신·로그아웃·탈퇴가 직렬화된다. Access JWT의 `authVersion`은 보호 API에서 사용자 행의 `auth_version`과 비교하며, 탈퇴 시 증가하고 복구 시 되돌리지 않는다. 따라서 탈퇴 전에 발급된 Access는 복구 후에도 사용할 수 없다.
 로그아웃에서는 아직 폐기되지 않은 현재 로그인 묶음만 조회한다. 탈퇴에서는 이력을 포함한 해당 사용자의 Refresh 행 전체를 벌크 삭제한다.
 Refresh 확인 뒤 JWT 발급 사이에 절대 만료를 지나도 401 `REFRESH_TOKEN_INVALID`를 반환하고 해당 갱신 트랜잭션은 롤백한다.
 
@@ -85,7 +85,7 @@ Refresh 확인 뒤 JWT 발급 사이에 절대 만료를 지나도 401 `REFRESH_
 
 ## 마이그레이션 및 배포
 
-`V37`은 기존 refresh_token에 session_id와 absolute_expires_at을 추가한다. `V38`은 `app_user.anonymized_at`과 해시 기반 `account_recovery_token` 테이블을 추가한다.
+`V37`은 기존 refresh_token에 session_id와 absolute_expires_at을 추가한다. `V38`은 `app_user.anonymized_at`과 해시 기반 `account_recovery_token` 테이블을 추가하고, `V39`는 `app_user.auth_version`을 추가한다.
 구형 토큰은 최초 로그인 시각을 복원할 수 없으므로 기존 행은 남기되 폐기 상태로 전환한다. 기존 사용자 데이터는 보존한다.
 프론트·백엔드를 함께 전환하며 기존 사용자는 한 번 다시 로그인해야 한다. 구형 Bearer 방식은 병행 지원하지 않는다.
 이미 적용한 V14~V36을 수정하거나 V37의 체크섬을 다시 바꾸어 배포하지 않는다. 운영 전진 수정은 새 버전으로 한다.
@@ -109,10 +109,3 @@ Refresh 확인 뒤 JWT 발급 사이에 절대 만료를 지나도 401 `REFRESH_
 
 두 번째 명령은 Docker 엔진이 필요하다. MySQL 8.4에서 기존 데이터 업그레이드, 제약조건, 최초 로그인·갱신·로그아웃·탈퇴 경합을 검증한다.
 Testcontainers 테스트가 skipped라면 MySQL 검증을 완료한 것으로 보지 않는다.
-
-## 테스트 결과
-
-- 전체 회귀 테스트: 비 Docker 386개, MySQL 20개 통과.
-- 최종 보완 사항 관련 테스트: 일반 21개, Docker MySQL 4개 통과.
-- 운영 이미지 빌드·컨테이너 헬스체크: 1개 통과.
-- 위 실행에서 실패·오류·건너뜀 없음.

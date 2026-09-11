@@ -1,5 +1,6 @@
 package com.sebu.backend.auth.config;
 
+import com.sebu.backend.account.config.AccountLifecycleProperties;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -42,7 +43,7 @@ class AuthConfigurationValidationTest {
     @ParameterizedTest
     @CsvSource({
         "recovery-window,0d", "minimum-recovery-cooldown,0m",
-        "access-token-safety-margin,0s", "recovery-token-expiration,-1m"
+        "recovery-token-expiration,-1m"
     })
     void rejectsInvalidAccountLifecycleDurations(String property, String value) {
         runner.withPropertyValues("app.auth.account." + property + "=" + value)
@@ -50,12 +51,17 @@ class AuthConfigurationValidationTest {
     }
 
     @Test
-    void rejectsRecoveryTokenLifetimeLongerThanRecoveryWindow() {
+    void rejectsRecoveryTokenLifetimeLongerThanFiveMinutes() {
         runner.withPropertyValues(
-                "app.auth.account.recovery-window=5m",
                 "app.auth.account.recovery-token-expiration=6m"
             )
             .run(context -> assertThat(context).hasFailed());
+    }
+
+    @Test
+    void acceptsFiveMinuteRecoveryTokenLifetime() {
+        runner.withPropertyValues("app.auth.account.recovery-token-expiration=5m")
+            .run(context -> assertThat(context).hasNotFailed());
     }
 
     @ParameterizedTest

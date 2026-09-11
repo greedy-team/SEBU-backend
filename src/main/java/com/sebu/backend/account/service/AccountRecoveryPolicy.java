@@ -1,7 +1,6 @@
-package com.sebu.backend.auth.service;
+package com.sebu.backend.account.service;
 
-import com.sebu.backend.auth.config.AccountLifecycleProperties;
-import com.sebu.backend.auth.config.TokenProperties;
+import com.sebu.backend.account.config.AccountLifecycleProperties;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
@@ -11,15 +10,10 @@ import java.util.Objects;
 @Component
 public class AccountRecoveryPolicy {
     private final AccountLifecycleProperties properties;
-    private final Duration effectiveCooldown;
 
-    public AccountRecoveryPolicy(AccountLifecycleProperties properties, TokenProperties tokenProperties) {
+    public AccountRecoveryPolicy(AccountLifecycleProperties properties) {
         this.properties = properties;
-        Duration tokenBound = tokenProperties.accessTokenExpiration().plus(properties.accessTokenSafetyMargin());
-        this.effectiveCooldown = tokenBound.compareTo(properties.minimumRecoveryCooldown()) > 0
-            ? tokenBound
-            : properties.minimumRecoveryCooldown();
-        if (effectiveCooldown.compareTo(properties.recoveryWindow()) >= 0) {
+        if (properties.minimumRecoveryCooldown().compareTo(properties.recoveryWindow()) >= 0) {
             throw new IllegalArgumentException("ACCOUNT_RECOVERY_COOLDOWN_MUST_BE_SHORTER_THAN_WINDOW");
         }
     }
@@ -37,7 +31,8 @@ public class AccountRecoveryPolicy {
     }
 
     public LocalDateTime recoveryAvailableAt(LocalDateTime deletedAt) {
-        return Objects.requireNonNull(deletedAt, "DELETED_AT_REQUIRED").plus(effectiveCooldown);
+        return Objects.requireNonNull(deletedAt, "DELETED_AT_REQUIRED")
+            .plus(properties.minimumRecoveryCooldown());
     }
 
     public LocalDateTime recoverableUntil(LocalDateTime deletedAt) {
@@ -56,7 +51,7 @@ public class AccountRecoveryPolicy {
     }
 
     public Duration effectiveCooldown() {
-        return effectiveCooldown;
+        return properties.minimumRecoveryCooldown();
     }
 
     public enum RecoveryPhase {

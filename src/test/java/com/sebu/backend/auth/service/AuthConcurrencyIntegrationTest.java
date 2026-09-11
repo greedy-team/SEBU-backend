@@ -9,7 +9,7 @@ import com.sebu.backend.auth.repository.RefreshTokenRepository;
 import com.sebu.backend.auth.token.JwtAccessTokenService;
 import com.sebu.backend.auth.token.RefreshTokenGenerator;
 import com.sebu.backend.user.repository.AppUserRepository;
-import com.sebu.backend.user.service.AccountService;
+import com.sebu.backend.account.service.AccountLifecycleService;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,6 +33,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.sebu.backend.support.CookieApiRequests.post;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -40,6 +42,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.mockingDetails;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -53,10 +57,11 @@ class AuthConcurrencyIntegrationTest {
     @Autowired
     AuthSessionService authSessionService;
 
-    @Autowired
+    @MockitoSpyBean
     AppUserRepository appUserRepository;
 
-    @Autowired AccountService accountService;
+    @Autowired AccountLifecycleService accountLifecycleService;
+    @Autowired AccountRecoveryService accountRecoveryService;
     @Autowired MockMvc mockMvc;
     @Autowired TransactionTemplate transactionTemplate;
     @Autowired JdbcTemplate jdbcTemplate;
@@ -115,7 +120,7 @@ class AuthConcurrencyIntegrationTest {
 
     @Test
     void onlyOneConcurrentRefreshCanRotateTheSameToken() throws Exception {
-        AuthSessionService.LoginSession login = authSessionService.start(new SejongUserProfile(
+        AuthSessionService.LoginSession login = (AuthSessionService.LoginSession) authSessionService.login(new SejongUserProfile(
             "concurrent-refresh-user", "홍길동", "컴퓨터공학과"
         ));
         CyclicBarrier barrier = new CyclicBarrier(2);
@@ -147,8 +152,8 @@ class AuthConcurrencyIntegrationTest {
     @Test
     void concurrentLogoutWithOriginalTokenAlsoRevokesAnyRotatedSuccessor() throws Exception {
         var profile = new SejongUserProfile("logout-race-user", "홍길동", "컴퓨터공학과");
-        var login = authSessionService.start(profile);
-        var otherLogin = authSessionService.start(profile);
+        var login = (AuthSessionService.LoginSession) authSessionService.login(profile);
+        var otherLogin = (AuthSessionService.LoginSession) authSessionService.login(profile);
         var barrier = new CyclicBarrier(2);
         ExecutorService executor = Executors.newFixedThreadPool(2);
         try {
@@ -174,14 +179,14 @@ class AuthConcurrencyIntegrationTest {
 
     @Test
     void concurrentWithdrawalLeavesNoUsableRefreshToken() throws Exception {
-        var login = authSessionService.start(new SejongUserProfile("withdraw-race-user", "홍길동", "컴퓨터공학과"));
+        var login = (AuthSessionService.LoginSession) authSessionService.login(new SejongUserProfile("withdraw-race-user", "홍길동", "컴퓨터공학과"));
         var barrier = new CyclicBarrier(2);
         ExecutorService executor = Executors.newFixedThreadPool(2);
         try {
             Future<Object> refresh = executor.submit(() -> refreshAfterBarrier(barrier, login.refreshToken()));
             Future<?> withdrawal = executor.submit(() -> {
                 barrier.await(30, TimeUnit.SECONDS);
-                accountService.withdraw(login.userId());
+                accountLifecycleService.withdraw(login.userId());
                 return null;
             });
             Object result = refresh.get(60, TimeUnit.SECONDS);
@@ -199,7 +204,7 @@ class AuthConcurrencyIntegrationTest {
 
     @Test
     void rejectingAnAlreadyUsedTokenDoesNotRevokeItsActiveSuccessor() {
-        var login = authSessionService.start(new SejongUserProfile("replay-user", "홍길동", "컴퓨터공학과"));
+        var login = (AuthSessionService.LoginSession) authSessionService.login(new SejongUserProfile("replay-user", "홍길동", "컴퓨터공학과"));
         var rotated = authSessionService.refresh(login.refreshToken());
         org.assertj.core.api.Assertions.assertThatThrownBy(() -> authSessionService.refresh(login.refreshToken()))
             .isInstanceOf(RefreshTokenInvalidException.class);
@@ -209,12 +214,12 @@ class AuthConcurrencyIntegrationTest {
     @Test
     void revocationQueriesExcludeHistoryAndKeepIndependentLogins() {
         var profile = new SejongUserProfile("revocation-query-user", "홍길동", "컴퓨터공학과");
-        var login = authSessionService.start(profile);
+        var login = (AuthSessionService.LoginSession) authSessionService.login(profile);
         String latestToken = login.refreshToken();
         for (int i = 0; i < 8; i++) {
             latestToken = authSessionService.refresh(latestToken).refreshToken();
         }
-        var independent = authSessionService.start(profile);
+        var independent = (AuthSessionService.LoginSession) authSessionService.login(profile);
         var original = refreshTokenRepository.findByTokenHash(tokenGenerator.hash(login.refreshToken())).orElseThrow();
         String latestHash = tokenGenerator.hash(latestToken);
         transactionTemplate.executeWithoutResult(status -> {
@@ -230,15 +235,15 @@ class AuthConcurrencyIntegrationTest {
             .isEqualTo(original.getRevokedAt());
         assertThat(authSessionService.refresh(independent.refreshToken())).isNotNull();
 
-        accountService.withdraw(login.userId());
+        accountLifecycleService.withdraw(login.userId());
         assertThat(refreshTokenRepository.findAllByUser_Id(login.userId())).isEmpty();
     }
 
     @Test
     void onlyOneConcurrentRecoveryCanUseTheSameToken() throws Exception {
         var profile = new SejongUserProfile("recovery-race-user", "홍길동", "컴퓨터공학과");
-        var login = authSessionService.start(profile);
-        accountService.withdraw(login.userId());
+        var login = (AuthSessionService.LoginSession) authSessionService.login(profile);
+        accountLifecycleService.withdraw(login.userId());
         jdbcTemplate.update(
             "UPDATE app_user SET deleted_at = ? WHERE id = ?",
             LocalDateTime.now(ZoneOffset.UTC).minusHours(2),
@@ -265,21 +270,124 @@ class AuthConcurrencyIntegrationTest {
         }
     }
 
+    @Test
+    void recoveryWinsWhenItLocksTheUserBeforeExpiredAccountAnonymization() throws Exception {
+        var login = (AuthSessionService.LoginSession) authSessionService.login(new SejongUserProfile(
+            "recovery-before-anonymization", "홍길동", "컴퓨터공학과"
+        ));
+        accountLifecycleService.withdraw(login.userId());
+        LocalDateTime deletedAt = LocalDateTime.now(ZoneOffset.UTC).minusHours(2);
+        jdbcTemplate.update("UPDATE app_user SET deleted_at = ? WHERE id = ?", deletedAt, login.userId());
+        var challenge = (AuthSessionService.RecoveryChallenge) authSessionService.login(new SejongUserProfile(
+            "recovery-before-anonymization", "홍길동", "컴퓨터공학과"
+        ));
+
+        CountDownLatch recoveryLockedUser = new CountDownLatch(1);
+        CountDownLatch allowRecoveryCommit = new CountDownLatch(1);
+        blockFirstUserLock(login.userId(), recoveryLockedUser, allowRecoveryCommit);
+
+        ExecutorService executor = Executors.newFixedThreadPool(2);
+        try {
+            Future<AuthSessionService.LoginSession> recovery = executor.submit(
+                () -> accountRecoveryService.recover(challenge.recoveryToken())
+            );
+            assertThat(recoveryLockedUser.await(5, TimeUnit.SECONDS)).isTrue();
+            Future<Boolean> anonymization = executor.submit(
+                () -> accountLifecycleService.anonymizeExpired(login.userId(), deletedAt.plusDays(31))
+            );
+
+            allowRecoveryCommit.countDown();
+            assertThat(recovery.get(10, TimeUnit.SECONDS).userId()).isEqualTo(login.userId());
+            assertThat(anonymization.get(10, TimeUnit.SECONDS)).isFalse();
+        } finally {
+            allowRecoveryCommit.countDown();
+            executor.shutdownNow();
+        }
+
+        var recovered = appUserRepository.findById(login.userId()).orElseThrow();
+        assertThat(recovered.isDeleted()).isFalse();
+        assertThat(recovered.isAnonymized()).isFalse();
+    }
+
+    @Test
+    void anonymizationWinsWhenItLocksTheUserBeforeRecovery() throws Exception {
+        var login = (AuthSessionService.LoginSession) authSessionService.login(new SejongUserProfile(
+            "anonymization-before-recovery", "홍길동", "컴퓨터공학과"
+        ));
+        accountLifecycleService.withdraw(login.userId());
+        LocalDateTime deletedAt = LocalDateTime.now(ZoneOffset.UTC).minusHours(2);
+        jdbcTemplate.update("UPDATE app_user SET deleted_at = ? WHERE id = ?", deletedAt, login.userId());
+        var challenge = (AuthSessionService.RecoveryChallenge) authSessionService.login(new SejongUserProfile(
+            "anonymization-before-recovery", "홍길동", "컴퓨터공학과"
+        ));
+
+        CountDownLatch anonymizationLockedUser = new CountDownLatch(1);
+        CountDownLatch allowAnonymizationCommit = new CountDownLatch(1);
+        blockFirstUserLock(login.userId(), anonymizationLockedUser, allowAnonymizationCommit);
+
+        ExecutorService executor = Executors.newFixedThreadPool(2);
+        try {
+            Future<Boolean> anonymization = executor.submit(
+                () -> accountLifecycleService.anonymizeExpired(login.userId(), deletedAt.plusDays(31))
+            );
+            assertThat(anonymizationLockedUser.await(5, TimeUnit.SECONDS)).isTrue();
+            Future<Object> recovery = executor.submit(() -> {
+                try {
+                    return accountRecoveryService.recover(challenge.recoveryToken());
+                } catch (RecoveryTokenInvalidException exception) {
+                    return exception;
+                }
+            });
+
+            allowAnonymizationCommit.countDown();
+            assertThat(anonymization.get(10, TimeUnit.SECONDS)).isTrue();
+            assertThat(recovery.get(10, TimeUnit.SECONDS))
+                .isInstanceOf(RecoveryTokenInvalidException.class);
+        } finally {
+            allowAnonymizationCommit.countDown();
+            executor.shutdownNow();
+        }
+
+        var anonymized = appUserRepository.findById(login.userId()).orElseThrow();
+        assertThat(anonymized.isDeleted()).isTrue();
+        assertThat(anonymized.isAnonymized()).isTrue();
+        assertThat(anonymized.getProviderUserId()).isNull();
+    }
+
     private Object recoverAfterBarrier(CyclicBarrier barrier, String recoveryToken) throws Exception {
         barrier.await(5, TimeUnit.SECONDS);
         try {
-            return authSessionService.recover(recoveryToken);
+            return accountRecoveryService.recover(recoveryToken);
         } catch (RecoveryTokenInvalidException exception) {
             return exception;
         }
     }
 
+    private void blockFirstUserLock(
+        Long userId,
+        CountDownLatch lockAcquired,
+        CountDownLatch allowCommit
+    ) {
+        AtomicBoolean blockOnce = new AtomicBoolean(true);
+        var repositoryDelegate = mockingDetails(appUserRepository).getMockCreationSettings().getDefaultAnswer();
+        doAnswer(invocation -> {
+            Object result = repositoryDelegate.answer(invocation);
+            if (blockOnce.compareAndSet(true, false)) {
+                lockAcquired.countDown();
+                if (!allowCommit.await(5, TimeUnit.SECONDS)) {
+                    throw new IllegalStateException("USER_LOCK_NOT_RELEASED");
+                }
+            }
+            return result;
+        }).when(appUserRepository).findByIdForUpdate(userId);
+    }
+
     @Test
     void absoluteExpiryDuringJwtIssuanceReturns401AndRollsBackRotation() throws Exception {
-        var login = authSessionService.start(new SejongUserProfile("expiry-boundary-user", "홍길동", "컴퓨터공학과"));
+        var login = (AuthSessionService.LoginSession) authSessionService.login(new SejongUserProfile("expiry-boundary-user", "홍길동", "컴퓨터공학과"));
         // Reproduce the deadline passing after the locked Refresh check, without sleeping.
         doThrow(new AuthSessionExpiredException()).when(accessTokenService)
-            .issueUntil(eq(login.userId()), any(Instant.class));
+            .issueUntil(eq(login.userId()), eq(0L), any(Instant.class));
 
         mockMvc.perform(post("/api/v1/auth/refresh").cookie(new Cookie("refresh_token", login.refreshToken())))
             .andExpect(status().isUnauthorized())

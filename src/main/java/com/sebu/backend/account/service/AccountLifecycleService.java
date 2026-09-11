@@ -1,12 +1,8 @@
-package com.sebu.backend.user.service;
+package com.sebu.backend.account.service;
 
-import com.sebu.backend.auth.config.AccountLifecycleProperties;
-import com.sebu.backend.auth.repository.AccountRecoveryTokenRepository;
-import com.sebu.backend.auth.repository.RefreshTokenRepository;
-import com.sebu.backend.auth.service.AccountRecoveryPolicy;
-import com.sebu.backend.bookmark.repository.BookmarkRepository;
-import com.sebu.backend.community.bookmark.repository.CommunityPostBookmarkRepository;
-import com.sebu.backend.community.like.repository.CommunityPostLikeRepository;
+import com.sebu.backend.account.config.AccountLifecycleProperties;
+import com.sebu.backend.account.port.ActivityCleanupPort;
+import com.sebu.backend.account.port.CredentialCleanupPort;
 import com.sebu.backend.user.domain.AppUser;
 import com.sebu.backend.user.exception.UserNotFoundException;
 import com.sebu.backend.user.repository.AppUserRepository;
@@ -22,14 +18,10 @@ import java.time.temporal.ChronoUnit;
 
 @Service
 @RequiredArgsConstructor
-public class AccountService {
-
+public class AccountLifecycleService {
     private final AppUserRepository appUserRepository;
-    private final RefreshTokenRepository refreshTokenRepository;
-    private final AccountRecoveryTokenRepository recoveryTokenRepository;
-    private final BookmarkRepository bookmarkRepository;
-    private final CommunityPostBookmarkRepository postBookmarkRepository;
-    private final CommunityPostLikeRepository postLikeRepository;
+    private final CredentialCleanupPort credentialCleanup;
+    private final ActivityCleanupPort activityCleanup;
     private final AccountRecoveryPolicy recoveryPolicy;
     private final AccountLifecycleProperties lifecycleProperties;
     private final Clock clock;
@@ -37,12 +29,11 @@ public class AccountService {
     @Transactional
     public void withdraw(Long userId) {
         AppUser user = appUserRepository.findByIdForUpdate(userId)
-                .filter(candidate -> !candidate.isDeleted())
-                .orElseThrow(UserNotFoundException::new);
+            .filter(candidate -> !candidate.isDeleted())
+            .orElseThrow(UserNotFoundException::new);
 
         user.withdraw(now());
-        refreshTokenRepository.deleteAllByUserId(userId);
-        recoveryTokenRepository.deleteAllByUserId(userId);
+        credentialCleanup.deleteAllByUserId(userId);
     }
 
     @Transactional
@@ -71,8 +62,6 @@ public class AccountService {
             }
         }
         appUserRepository.flush();
-        // The scheduler uses the fetched size to decide whether another page may remain.
-        // Returning the changed count could stop early when a candidate was recovered concurrently.
         return ids.size();
     }
 
@@ -83,11 +72,8 @@ public class AccountService {
     }
 
     private void eraseRecoverableData(Long userId) {
-        refreshTokenRepository.deleteAllByUserId(userId);
-        recoveryTokenRepository.deleteAllByUserId(userId);
-        bookmarkRepository.deleteAllByUserId(userId);
-        postBookmarkRepository.deleteAllByUserId(userId);
-        postLikeRepository.deleteAllByUserId(userId);
+        credentialCleanup.deleteAllByUserId(userId);
+        activityCleanup.deleteAllByUserId(userId);
     }
 
     private LocalDateTime now() {

@@ -25,7 +25,7 @@ class SejongProfileLoginIntegrationTest {
     @Test
     void createsOnceUpdatesOnlyChangedSchoolFieldsAndPreservesGrade() {
         SejongUserProfile initial = profile("홍길동", "컴퓨터공학과");
-        var first = authSessionService.start(initial);
+        var first = (AuthSessionService.LoginSession) authSessionService.login(initial);
         var user = appUserRepository.findByProviderAndProviderUserId(AuthProvider.SEJONG, "21012345")
             .orElseThrow();
 
@@ -38,14 +38,14 @@ class SejongProfileLoginIntegrationTest {
         assertThat(user.isProfileCompleted()).isFalse();
 
         LocalDateTime initialProfileUpdatedAt = user.getProfileUpdatedAt();
-        var second = authSessionService.start(initial);
+        var second = (AuthSessionService.LoginSession) authSessionService.login(initial);
         assertThat(second.userId()).isEqualTo(first.userId());
         assertThat(second.isNewUser()).isFalse();
         assertThat(user.getProfileUpdatedAt()).isEqualTo(initialProfileUpdatedAt);
 
         user.updateGrade(3, initialProfileUpdatedAt.plusMinutes(1));
-        authSessionService.start(profile("홍길순", "컴퓨터공학과"));
-        authSessionService.start(profile("홍길순", "컴퓨터공학과(개편)"));
+        authSessionService.login(profile("홍길순", "컴퓨터공학과"));
+        authSessionService.login(profile("홍길순", "컴퓨터공학과(개편)"));
         entityManager.flush();
         entityManager.clear();
 
@@ -61,10 +61,10 @@ class SejongProfileLoginIntegrationTest {
 
     @Test
     void schoolDepartmentNameChangeDoesNotBlockLogin() {
-        var first = authSessionService.start(new SejongUserProfile(
+        var first = (AuthSessionService.LoginSession) authSessionService.login(new SejongUserProfile(
             "anonymous-student", "테스트사용자", "무인이동체공학전공/지능기전공학부"
         ));
-        var second = authSessionService.start(new SejongUserProfile(
+        var second = (AuthSessionService.LoginSession) authSessionService.login(new SejongUserProfile(
             "anonymous-student", "테스트사용자", "무인이동체공학전공"
         ));
 
