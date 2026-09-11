@@ -59,12 +59,6 @@ public interface LaboratoryRepository extends JpaRepository<Laboratory, Long> {
             @Param("threshold") LocalDateTime threshold
     );
 
-    /*
-     * 전체 연구실 조회
-     *
-     * 후기 수는 LaboratoryReviewQueryRepository에서
-     * laboratory ID 목록 기준으로 별도 batch 집계한다.
-     */
     @Query("""
         select l.id as id,
                l.name as name,

@@ -137,6 +137,7 @@ public class SecurityConfiguration {
                                 "/api/v1/research-field-categories",
                                 "/api/v1/posts",
                                 "/api/v1/posts/**",
+                                "/api/v1/colleges",
                                 "/api/v1/users/*/community-profile"
                         ).permitAll()
 
