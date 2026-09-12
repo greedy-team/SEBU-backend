@@ -14,6 +14,7 @@ public interface LaboratoryResearchFieldCategoryQueryRepository
     @Query(value = """
         SELECT DISTINCT
             laboratory_field.laboratory_id AS laboratoryId,
+            laboratory_field.research_field_id AS researchFieldId,
             category.id AS categoryId,
             category.code AS categoryCode,
             category.name AS categoryName,
@@ -26,7 +27,8 @@ public interface LaboratoryResearchFieldCategoryQueryRepository
         WHERE laboratory_field.laboratory_id IN (:laboratoryIds)
         ORDER BY laboratory_field.laboratory_id,
                  category.display_order,
-                 category.id
+                 category.id,
+                 laboratory_field.research_field_id
         """, nativeQuery = true)
     List<LaboratoryResearchFieldCategoryProjection> findAllByLaboratoryIds(
         @Param("laboratoryIds") Collection<Long> laboratoryIds
