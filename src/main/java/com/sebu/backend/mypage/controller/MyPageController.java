@@ -12,6 +12,9 @@ import com.sebu.backend.mypage.service.MyPageService;
 import com.sebu.backend.mypage.service.ProfileService;
 import com.sebu.backend.account.service.AccountLifecycleService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -42,7 +45,14 @@ public class MyPageController {
     private final CsrfCookieSupport csrfCookieSupport;
 
 
-    @Operation(summary = "마이페이지 조회", description = "로그인한 사용자의 마이페이지 정보를 조회합니다.")
+    @Operation(summary = "마이페이지 조회", description = "마이페이지를 조회합니다. data.profile.academicField는 선택한 계열 코드이며 미선택 사용자는 null입니다.")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "200", description = "마이페이지 조회 성공",
+            content = @Content(mediaType = "application/json",
+                    schema = @Schema(implementation = MyPageOpenApiSchemas.PageResponse.class), examples = @ExampleObject(
+                    name = "mypage", value = MyPageOpenApiExamples.MYPAGE_RESPONSE
+            ))
+    )
     @SecurityRequirement(name = "cookieAuth")
     @GetMapping("/mypage")
     public ResponseEntity<ApiResponse<MyPageResponse>> getMyPage(){
@@ -56,7 +66,26 @@ public class MyPageController {
                 .body(ApiResponse.success(response));
     }
 
-    @Operation(summary = "프로필 수정", description = "로그인한 사용자의 프로필 정보를 수정합니다.")
+    @Operation(summary = "프로필 수정", description = "프로필과 전공 계열을 함께 저장합니다. academicField는 필수이며 계열만 변경할 때도 다른 프로필 입력값을 함께 보냅니다.",
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    required = true,
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ProfileUpdateRequest.class),
+                            examples = @ExampleObject(name = "engineering", value = MyPageOpenApiExamples.PROFILE_REQUEST))
+            ))
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "200", description = "프로필과 계열 저장 성공",
+            content = @Content(mediaType = "application/json",
+                    schema = @Schema(implementation = MyPageOpenApiSchemas.SavedProfileResponse.class), examples = @ExampleObject(
+                    name = "saved", value = MyPageOpenApiExamples.PROFILE_RESPONSE
+            ))
+    )
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "400", description = "프로필 입력값 오류",
+            content = @Content(mediaType = "application/json",
+                    schema = @Schema(ref = "#/components/schemas/ErrorApiResponse"),
+                    examples = @ExampleObject(name = "invalidAcademicField", value = MyPageOpenApiExamples.INVALID_ACADEMIC_FIELD))
+    )
     @SecurityRequirement(name = "cookieAuth")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(
             responseCode = "409",
