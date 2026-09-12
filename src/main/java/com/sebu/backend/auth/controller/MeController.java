@@ -29,7 +29,7 @@ public class MeController {
         return ApiResponse.success(MeResponse.from(currentUserService.getCurrentUser()));
     }
 
-    @Operation(summary = "내 학년 수정", description = "로그인한 사용자의 학년 정보를 수정합니다.")
+    @Operation(summary = "내 학년 수정", description = "로그인한 사용자의 학년 정보를 수정합니다. 1~4는 해당 학년, 5는 졸업생입니다.")
     @SecurityRequirement(name = "cookieAuth")
     @PatchMapping("/profile")
     public ApiResponse<MeResponse> updateProfile(@Valid @RequestBody UpdateGradeRequest request) {

@@ -60,7 +60,7 @@ public class AuthExceptionHandler {
         return failure(
             HttpStatus.BAD_REQUEST,
             "INVALID_GRADE",
-            "학년은 1부터 4까지 입력해주세요."
+            "학년은 1~4학년 또는 졸업생(5)을 선택해주세요."
         );
     }
 

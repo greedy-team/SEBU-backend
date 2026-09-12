@@ -14,14 +14,14 @@ final class GraduateGradeMigrationAssertions {
     static void verify(String url, String username, String password, boolean upgrade) throws Exception {
         if (upgrade) {
             Flyway.configure().dataSource(url, username, password)
-                .locations("classpath:db/migration").target("40").load().migrate();
+                .locations("classpath:db/migration").target("39").load().migrate();
             try (var connection = DriverManager.getConnection(url, username, password);
                  var statement = connection.createStatement()) {
                 statement.executeUpdate("INSERT INTO app_user (email) VALUES ('unselected@example.com')");
                 for (int grade = 1; grade <= 4; grade++) {
                     statement.executeUpdate("""
-                        INSERT INTO app_user (email, grade, academic_field, introduction)
-                        VALUES ('year-%d@example.com', %d, 'ENGINEERING', 'Existing introduction')
+                        INSERT INTO app_user (email, grade, introduction)
+                        VALUES ('year-%d@example.com', %d, 'Existing introduction')
                         """.formatted(grade, grade));
                 }
                 assertThatThrownBy(() -> statement.executeUpdate(
@@ -39,12 +39,11 @@ final class GraduateGradeMigrationAssertions {
              var statement = connection.createStatement()) {
             if (upgrade) {
                 try (var rows = statement.executeQuery(
-                    "SELECT grade, academic_field, introduction FROM app_user WHERE email LIKE 'year-%' ORDER BY grade"
+                    "SELECT grade, introduction FROM app_user WHERE email LIKE 'year-%' ORDER BY grade"
                 )) {
                     for (int grade = 1; grade <= 4; grade++) {
                         assertThat(rows.next()).isTrue();
                         assertThat(rows.getInt("grade")).isEqualTo(grade);
-                        assertThat(rows.getString("academic_field")).isEqualTo("ENGINEERING");
                         assertThat(rows.getString("introduction")).isEqualTo("Existing introduction");
                     }
                     assertThat(rows.next()).isFalse();

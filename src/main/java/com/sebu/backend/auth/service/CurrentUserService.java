@@ -33,7 +33,7 @@ public class CurrentUserService {
 
     @Transactional
     public CurrentUser updateGrade(Integer grade) {
-        if (grade == null || grade < 1 || grade > 4) {
+        if (grade == null || grade < 1 || grade > 5) {
             throw new InvalidGradeException();
         }
         Long userId = currentUserProvider.currentUserId()
