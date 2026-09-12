@@ -3,6 +3,7 @@ package com.sebu.backend.mypage.dto;
 import com.sebu.backend.community.common.dto.CommunityAuthorResponse;
 import com.sebu.backend.community.post.domain.CommunityPostCategory;
 import com.sebu.backend.user.domain.GpaBand;
+import com.sebu.backend.user.domain.AcademicField;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -18,6 +19,7 @@ public record MyPageResponse(
             String nickname,
             Short grade,
             DepartmentSummary department,
+            AcademicField academicField,
             GpaBand gpaBand,
             String introduction,
             boolean profileCompleted,

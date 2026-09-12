@@ -47,12 +47,14 @@ public class ProfileService {
             throw new IntroductionModerationException();
         }
 
+        LocalDateTime changedAt = LocalDateTime.now();
+        user.selectAcademicField(request.academicField(), changedAt);
         user.updateProfile(
                 nickname,
                 request.grade(),
                 request.gpaBand(),
                 request.introduction(),
-                LocalDateTime.now(),
+                changedAt,
                 moderationResult.policyVersion(),
                 moderationResult.providerVersion()
         );
@@ -112,6 +114,7 @@ public class ProfileService {
                 user.getNickname(),
                 user.getGrade(),
                 department,
+                user.getAcademicField(),
                 user.getGpaBand(),
                 user.getIntroduction(),
                 user.isProfileCompleted(),

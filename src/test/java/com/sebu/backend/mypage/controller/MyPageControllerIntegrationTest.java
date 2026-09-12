@@ -111,6 +111,7 @@ public class MyPageControllerIntegrationTest {
                 {
                   "nickname": "길동이",
                   "grade": 3,
+                  "academicField": "ENGINEERING",
                   "gpaBand": "GTE_3_5",
                   "introduction": "머신러닝에 관심이 있습니다."
                 }
@@ -158,6 +159,7 @@ public class MyPageControllerIntegrationTest {
                                         {
                                           "nickname": "  ＳｅＢｕ  ",
                                           "grade": 3,
+                                          "academicField": "ENGINEERING",
                                           "gpaBand": "GTE_3_5",
                                           "introduction": "정규화 테스트 자기소개"
                                         }
@@ -224,6 +226,7 @@ public class MyPageControllerIntegrationTest {
                                 {
                                   "nickname": "세부러",
                                   "grade": 3,
+                                  "academicField": "ENGINEERING",
                                   "gpaBand": "INVALID",
                                   "introduction": "잘못된 enum 테스트"
                                 }
@@ -250,6 +253,7 @@ public class MyPageControllerIntegrationTest {
                 {
                   "nickname": "길동이",
                   "grade": 5,
+                  "academicField": "ENGINEERING",
                   "gpaBand": "GTE_3_5",
                   "introduction": "머신러닝에 관심이 있습니다."
                 }
@@ -288,6 +292,7 @@ public class MyPageControllerIntegrationTest {
                 {
                   "nickname": "길동이",
                   "grade": 3,
+                  "academicField": "ENGINEERING",
                   "gpaBand": "GTE_3_5",
                   "introduction": "검사할 자기소개"
                 }
@@ -383,6 +388,7 @@ public class MyPageControllerIntegrationTest {
         {
           "nickname": "길동이",
           "grade": 3,
+          "academicField": "ENGINEERING",
           "gpaBand": "GTE_3_5",
           "introduction": "차 단.테-스 트 표현"
         }
@@ -438,6 +444,7 @@ public class MyPageControllerIntegrationTest {
             {
               "nickname": "길동이",
               "grade": 3,
+              "academicField": "ENGINEERING",
               "gpaBand": "GTE_3_5",
               "introduction": "검사할 자기소개"
             }
@@ -513,6 +520,7 @@ public class MyPageControllerIntegrationTest {
               "nickname": null,
               "grade": 3,
               "majorId": "999999",
+              "academicField": "ENGINEERING",
               "gpaBand": "GTE_3_5",
               "introduction": "머신러닝에 관심이 있습니다."
             }
@@ -552,6 +560,7 @@ public class MyPageControllerIntegrationTest {
                 {
                   "nickname": "%s",
                   "grade": 3,
+                  "academicField": "ENGINEERING",
                   "gpaBand": "GTE_3_5",
                   "introduction": "%s"
                 }
