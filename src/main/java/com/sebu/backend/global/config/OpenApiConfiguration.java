@@ -124,8 +124,10 @@ public class OpenApiConfiguration {
                         )
                 .addSecuritySchemes("csrfHeader", new SecurityScheme().name("X-XSRF-TOKEN")
                     .type(SecurityScheme.Type.APIKEY).in(SecurityScheme.In.HEADER)
-                    .description("GET /api/v1/auth/csrf 후 XSRF-TOKEN 쿠키 값을 전달합니다. 로그인·로그아웃 뒤에는 새 쿠키를 읽습니다."))
+                    .description("GET /api/v1/auth/csrf 후 XSRF-TOKEN 쿠키 값을 전달합니다. 로그인·복구·로그아웃·탈퇴 뒤에는 새 쿠키를 읽습니다."))
                 .addSecuritySchemes("refreshCookie", new SecurityScheme().name("refresh_token")
+                    .type(SecurityScheme.Type.APIKEY).in(SecurityScheme.In.COOKIE))
+                .addSecuritySchemes("recoveryCookie", new SecurityScheme().name("recovery_token")
                     .type(SecurityScheme.Type.APIKEY).in(SecurityScheme.In.COOKIE));
     }
 

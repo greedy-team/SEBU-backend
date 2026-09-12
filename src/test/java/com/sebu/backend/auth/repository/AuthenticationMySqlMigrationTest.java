@@ -64,7 +64,7 @@ class AuthenticationMySqlMigrationTest {
         ); var statement = connection.createStatement()) {
             try (var result = statement.executeQuery("""
                 SELECT email, provider, provider_user_id, profile_completed, sejong_department_name,
-                       nickname, version
+                       nickname, version, auth_version, anonymized_at
                 FROM app_user
                 WHERE email = 'legacy@example.com'
                 """)) {
@@ -76,6 +76,8 @@ class AuthenticationMySqlMigrationTest {
                 assertThat(result.getString("sejong_department_name")).isNull();
                 assertThat(result.getString("nickname")).isNull();
                 assertThat(result.getLong("version")).isZero();
+                assertThat(result.getLong("auth_version")).isZero();
+                assertThat(result.getTimestamp("anonymized_at")).isNull();
             }
 
             statement.executeUpdate("""
@@ -88,6 +90,25 @@ class AuthenticationMySqlMigrationTest {
                 VALUES ('SEJONG', '21012345', FALSE)
                 """))
                 .isInstanceOf(SQLException.class);
+
+            statement.executeUpdate("""
+                INSERT INTO account_recovery_token (user_id, token_hash, expires_at, created_at)
+                SELECT id, REPEAT('b', 64), '2026-10-01 00:05:00', '2026-10-01 00:00:00'
+                FROM app_user WHERE provider_user_id = '21012345'
+                """);
+            assertThatThrownBy(() -> statement.executeUpdate("""
+                INSERT INTO account_recovery_token (user_id, token_hash, expires_at, created_at)
+                SELECT id, REPEAT('c', 64), '2026-10-01 00:05:00', '2026-10-01 00:00:00'
+                FROM app_user WHERE provider_user_id = '21012345'
+                """))
+                .isInstanceOf(SQLException.class);
+            try (var result = statement.executeQuery("""
+                SELECT COUNT(*) AS token_count FROM account_recovery_token
+                WHERE token_hash = REPEAT('b', 64)
+                """)) {
+                assertThat(result.next()).isTrue();
+                assertThat(result.getLong("token_count")).isOne();
+            }
 
             try (var result = statement.executeQuery("""
                 SELECT session_id, revoked_at, expires_at, absolute_expires_at

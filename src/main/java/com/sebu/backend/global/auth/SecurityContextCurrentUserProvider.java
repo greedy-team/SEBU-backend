@@ -1,6 +1,7 @@
 package com.sebu.backend.global.auth;
 
 import com.sebu.backend.user.repository.AppUserRepository;
+import com.sebu.backend.auth.token.JwtAccessTokenService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -36,8 +37,25 @@ public class SecurityContextCurrentUserProvider implements CurrentUserProvider {
             return Optional.empty();
         }
 
+        Long tokenAuthVersion = authVersion(jwt);
+        if (tokenAuthVersion == null) {
+            return Optional.empty();
+        }
+
         return appUserRepository.findById(userId)
-                .filter(user -> !user.isDeleted())
+                .filter(user -> !user.isDeleted() && user.getAuthVersion() == tokenAuthVersion)
                 .map(user -> user.getId());
+    }
+
+    private Long authVersion(Jwt jwt) {
+        Object claim = jwt.getClaim(JwtAccessTokenService.AUTH_VERSION_CLAIM);
+        if (claim == null) {
+            return 0L;
+        }
+        if (!(claim instanceof Number number)) {
+            return null;
+        }
+        long value = number.longValue();
+        return value >= 0 ? value : null;
     }
 }

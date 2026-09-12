@@ -94,7 +94,7 @@ class CookieCsrfIntegrationTest {
         Cookie initial = csrf();
         MvcResult login = login(initial);
         var response = login.getResponse();
-        assertThat(response.getHeaders("Set-Cookie")).hasSize(3);
+        assertThat(response.getHeaders("Set-Cookie")).hasSize(4);
         Cookie access = response.getCookie("access_token");
         Cookie refresh = response.getCookie("refresh_token");
         assertThat(access.isHttpOnly()).isTrue();
@@ -105,6 +105,7 @@ class CookieCsrfIntegrationTest {
         assertThat(refresh.getSecure()).isTrue();
         assertThat(access.getDomain()).isNull();
         assertThat(refresh.getMaxAge()).isEqualTo(14 * 24 * 3600);
+        assertThat(response.getCookie("recovery_token").getMaxAge()).isZero();
         assertThat(response.getCookie("XSRF-TOKEN").getValue()).isNotEqualTo(initial.getValue());
         assertThat(response.getCookie("XSRF-TOKEN").getAttribute("SameSite")).isEqualTo("Lax");
         assertThat(response.getContentAsString()).doesNotContain(access.getValue(), refresh.getValue(), "accessToken", "refreshToken", "tokenType");

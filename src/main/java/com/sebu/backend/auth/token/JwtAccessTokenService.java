@@ -17,6 +17,7 @@ import java.time.temporal.ChronoUnit;
 
 @Component
 public class JwtAccessTokenService {
+    public static final String AUTH_VERSION_CLAIM = "authVersion";
     private static final String ROLE = "USER";
 
     private final JwtEncoder jwtEncoder;
@@ -34,13 +35,16 @@ public class JwtAccessTokenService {
         this.clock = clock;
     }
 
-    public String issue(Long userId) {
-        return issueUntil(userId, clock.instant().plus(properties.accessTokenExpiration())).value();
+    public String issue(Long userId, long authVersion) {
+        return issueUntil(userId, authVersion, clock.instant().plus(properties.accessTokenExpiration())).value();
     }
 
-    public IssuedAccessToken issueUntil(Long userId, Instant absoluteExpiresAt) {
+    public IssuedAccessToken issueUntil(Long userId, long authVersion, Instant absoluteExpiresAt) {
         if (userId == null) {
             throw new IllegalArgumentException("ACCESS_TOKEN_USER_ID_REQUIRED");
+        }
+        if (authVersion < 0) {
+            throw new IllegalArgumentException("ACCESS_TOKEN_AUTH_VERSION_INVALID");
         }
         Instant issuedAt = clock.instant().truncatedTo(ChronoUnit.SECONDS);
         if (!absoluteExpiresAt.isAfter(issuedAt)) {
@@ -55,6 +59,7 @@ public class JwtAccessTokenService {
         JwtClaimsSet claims = JwtClaimsSet.builder()
             .subject(userId.toString())
             .claim("role", ROLE)
+            .claim(AUTH_VERSION_CLAIM, authVersion)
             .issuedAt(issuedAt)
             .expiresAt(expiresAt)
             .build();

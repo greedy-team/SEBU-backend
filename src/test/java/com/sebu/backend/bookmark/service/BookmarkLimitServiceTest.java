@@ -9,13 +9,14 @@ import com.sebu.backend.community.bookmark.domain.CommunityPostBookmarkId;
 import com.sebu.backend.community.bookmark.repository.CommunityPostBookmarkRepository;
 import com.sebu.backend.community.like.repository.CommunityPostLikeRepository;
 import com.sebu.backend.community.post.repository.CommunityPostRepository;
+import com.sebu.backend.community.post.domain.CommunityPost;
 import com.sebu.backend.community.reaction.service.CommunityPostReactionService;
+import com.sebu.backend.global.auth.ActiveUserCommandGuard;
 import com.sebu.backend.laboratory.domain.Laboratory;
 import com.sebu.backend.laboratory.query.LaboratorySummaryAssembler;
 import com.sebu.backend.laboratory.repository.LaboratoryRepository;
 import com.sebu.backend.laboratory.repository.LaboratoryResearchFieldRepository;
 import com.sebu.backend.user.domain.AppUser;
-import com.sebu.backend.user.repository.AppUserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -32,7 +33,7 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class BookmarkLimitServiceTest {
-    @Mock AppUserRepository userRepository;
+    @Mock ActiveUserCommandGuard activeUserGuard;
     @Mock LaboratoryRepository laboratoryRepository;
     @Mock BookmarkRepository laboratoryBookmarkRepository;
     @Mock LaboratoryResearchFieldRepository researchFieldRepository;
@@ -42,6 +43,7 @@ class BookmarkLimitServiceTest {
     @Mock CommunityPostBookmarkRepository postBookmarkRepository;
     @Mock AppUser user;
     @Mock Laboratory laboratory;
+    @Mock CommunityPost post;
 
     private BookmarkService laboratoryBookmarkService;
     private CommunityPostReactionService postReactionService;
@@ -50,7 +52,7 @@ class BookmarkLimitServiceTest {
     void setUp() {
         BookmarkLimitPolicy policy = new BookmarkLimitPolicy();
         laboratoryBookmarkService = new BookmarkService(
-                userRepository,
+                activeUserGuard,
                 laboratoryRepository,
                 laboratoryBookmarkRepository,
                 policy,
@@ -61,15 +63,15 @@ class BookmarkLimitServiceTest {
                 postRepository,
                 likeRepository,
                 postBookmarkRepository,
-                userRepository,
+                activeUserGuard,
                 policy
         );
     }
 
     @Test
     void rejectsFiftyFirstLaboratoryBookmark() {
-        when(userRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(user));
-        when(laboratoryRepository.findByIdAndDeletedAtIsNull(51L)).thenReturn(Optional.of(laboratory));
+        when(activeUserGuard.lock(1L)).thenReturn(user);
+        when(laboratoryRepository.findByIdForUpdate(51L)).thenReturn(Optional.of(laboratory));
         when(laboratoryBookmarkRepository.existsById(new BookmarkId(1L, 51L))).thenReturn(false);
         when(laboratoryBookmarkRepository.countByUser_IdAndLaboratory_DeletedAtIsNull(1L)).thenReturn(50L);
 
@@ -87,8 +89,8 @@ class BookmarkLimitServiceTest {
     @Test
     void duplicateLaboratoryBookmarkRemainsIdempotentAtLimit() {
         BookmarkId bookmarkId = new BookmarkId(1L, 10L);
-        when(userRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(user));
-        when(laboratoryRepository.findByIdAndDeletedAtIsNull(10L)).thenReturn(Optional.of(laboratory));
+        when(activeUserGuard.lock(1L)).thenReturn(user);
+        when(laboratoryRepository.findByIdForUpdate(10L)).thenReturn(Optional.of(laboratory));
         when(laboratoryBookmarkRepository.existsById(bookmarkId)).thenReturn(true);
 
         laboratoryBookmarkService.add(1L, 10L);
@@ -101,8 +103,8 @@ class BookmarkLimitServiceTest {
     @Test
     void rejectsFiftyFirstPostBookmark() {
         CommunityPostBookmarkId bookmarkId = new CommunityPostBookmarkId(1L, 51L);
-        when(postRepository.existsByIdAndDeletedAtIsNull(51L)).thenReturn(true);
-        when(userRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(user));
+        when(postRepository.findForUpdate(51L)).thenReturn(Optional.of(post));
+        when(activeUserGuard.lock(1L)).thenReturn(user);
         when(postBookmarkRepository.existsById(bookmarkId)).thenReturn(false);
         when(postBookmarkRepository.countByUser_IdAndPost_DeletedAtIsNull(1L)).thenReturn(50L);
 
@@ -120,16 +122,16 @@ class BookmarkLimitServiceTest {
     @Test
     void locksUserBeforeReadingPostWhenAddingPostBookmark() {
         CommunityPostBookmarkId bookmarkId = new CommunityPostBookmarkId(1L, 10L);
-        when(userRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(user));
-        when(postRepository.existsByIdAndDeletedAtIsNull(10L)).thenReturn(true);
+        when(activeUserGuard.lock(1L)).thenReturn(user);
+        when(postRepository.findForUpdate(10L)).thenReturn(Optional.of(post));
         when(postBookmarkRepository.existsById(bookmarkId)).thenReturn(false);
         when(postBookmarkRepository.countByUser_IdAndPost_DeletedAtIsNull(1L)).thenReturn(49L);
 
         postReactionService.bookmark(1L, 10L);
 
-        var ordered = inOrder(userRepository, postRepository, postBookmarkRepository);
-        ordered.verify(userRepository).findByIdForUpdate(1L);
-        ordered.verify(postRepository).existsByIdAndDeletedAtIsNull(10L);
+        var ordered = inOrder(activeUserGuard, postRepository, postBookmarkRepository);
+        ordered.verify(activeUserGuard).lock(1L);
+        ordered.verify(postRepository).findForUpdate(10L);
         ordered.verify(postBookmarkRepository).existsById(bookmarkId);
         ordered.verify(postBookmarkRepository).countByUser_IdAndPost_DeletedAtIsNull(1L);
         ordered.verify(postBookmarkRepository).insertIgnore(1L, 10L);
@@ -138,8 +140,8 @@ class BookmarkLimitServiceTest {
     @Test
     void duplicatePostBookmarkRemainsIdempotentAtLimit() {
         CommunityPostBookmarkId bookmarkId = new CommunityPostBookmarkId(1L, 10L);
-        when(postRepository.existsByIdAndDeletedAtIsNull(10L)).thenReturn(true);
-        when(userRepository.findByIdForUpdate(1L)).thenReturn(Optional.of(user));
+        when(postRepository.findForUpdate(10L)).thenReturn(Optional.of(post));
+        when(activeUserGuard.lock(1L)).thenReturn(user);
         when(postBookmarkRepository.existsById(bookmarkId)).thenReturn(true);
 
         postReactionService.bookmark(1L, 10L);

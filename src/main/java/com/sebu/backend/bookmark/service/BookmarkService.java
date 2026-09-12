@@ -6,6 +6,7 @@ import com.sebu.backend.bookmark.domain.BookmarkLimitPolicy;
 import com.sebu.backend.bookmark.domain.BookmarkType;
 import com.sebu.backend.bookmark.dto.BookmarkedLaboratoriesResponse;
 import com.sebu.backend.bookmark.repository.BookmarkRepository;
+import com.sebu.backend.global.auth.ActiveUserCommandGuard;
 import com.sebu.backend.laboratory.dto.LaboratoriesResult;
 import com.sebu.backend.laboratory.exception.LaboratoryNotFoundException;
 import com.sebu.backend.laboratory.query.LaboratorySummaryAssembler;
@@ -13,8 +14,6 @@ import com.sebu.backend.laboratory.repository.LaboratoryRepository;
 import com.sebu.backend.laboratory.repository.LaboratoryResearchFieldProjection;
 import com.sebu.backend.laboratory.repository.LaboratoryResearchFieldRepository;
 import com.sebu.backend.laboratory.repository.LaboratorySummaryProjection;
-import com.sebu.backend.user.exception.UserNotFoundException;
-import com.sebu.backend.user.repository.AppUserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,7 +26,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class BookmarkService {
 
-    private final AppUserRepository appUserRepository;
+    private final ActiveUserCommandGuard activeUserGuard;
     private final LaboratoryRepository laboratoryRepository;
     private final BookmarkRepository bookmarkRepository;
     private final BookmarkLimitPolicy bookmarkLimitPolicy;
@@ -36,11 +35,11 @@ public class BookmarkService {
 
     @Transactional
     public void add(Long userId, Long laboratoryId) {
-        appUserRepository.findByIdForUpdate(userId)
-                .orElseThrow(UserNotFoundException::new);
+        activeUserGuard.lock(userId);
 
         laboratoryRepository
-                .findByIdAndDeletedAtIsNull(laboratoryId)
+                .findByIdForUpdate(laboratoryId)
+                .filter(laboratory -> !laboratory.isDeleted())
                 .orElseThrow(LaboratoryNotFoundException::new);
 
         BookmarkId bookmarkId = new BookmarkId(userId, laboratoryId);
@@ -90,8 +89,9 @@ public class BookmarkService {
 
     @Transactional
     public void remove(Long userId, Long laboratoryId) {
+        activeUserGuard.lock(userId);
         laboratoryRepository
-                .findById(laboratoryId)
+                .findByIdForUpdate(laboratoryId)
                 .orElseThrow(LaboratoryNotFoundException::new);
 
         bookmarkRepository.deleteById(

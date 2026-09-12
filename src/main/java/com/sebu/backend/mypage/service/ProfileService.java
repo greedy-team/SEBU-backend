@@ -1,6 +1,7 @@
 package com.sebu.backend.mypage.service;
 
 import com.sebu.backend.department.domain.Department;
+import com.sebu.backend.global.auth.ActiveUserCommandGuard;
 import com.sebu.backend.mypage.dto.ProfileResponse;
 import com.sebu.backend.mypage.dto.ProfileUpdateRequest;
 import com.sebu.backend.user.exception.ProfileUpdateConflictException;
@@ -10,7 +11,6 @@ import com.sebu.backend.mypage.moderation.ModerationResult;
 import com.sebu.backend.user.domain.AppUser;
 import com.sebu.backend.user.domain.Nickname;
 import com.sebu.backend.user.exception.NicknameAlreadyExistsException;
-import com.sebu.backend.user.exception.UserNotFoundException;
 import com.sebu.backend.user.repository.AppUserRepository;
 import lombok.RequiredArgsConstructor;
 import org.hibernate.exception.ConstraintViolationException;
@@ -27,6 +27,7 @@ import java.util.Locale;
 public class ProfileService {
 
     private final AppUserRepository appUserRepository;
+    private final ActiveUserCommandGuard activeUserGuard;
     private final IntroductionModerator introductionModerator;
 
     @Transactional
@@ -34,8 +35,7 @@ public class ProfileService {
             Long userId,
             ProfileUpdateRequest request
     ) {
-        AppUser user = appUserRepository.findById(userId)
-                .orElseThrow(UserNotFoundException::new);
+        AppUser user = activeUserGuard.lock(userId);
 
         Nickname nickname = Nickname.from(request.nickname());
         validateNicknameUniqueness(user, nickname);

@@ -1,5 +1,6 @@
 package com.sebu.backend.auth.config;
 
+import com.sebu.backend.account.config.AccountLifecycleProperties;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -40,6 +41,30 @@ class AuthConfigurationValidationTest {
     }
 
     @ParameterizedTest
+    @CsvSource({
+        "recovery-window,0d", "minimum-recovery-cooldown,0m",
+        "recovery-token-expiration,-1m"
+    })
+    void rejectsInvalidAccountLifecycleDurations(String property, String value) {
+        runner.withPropertyValues("app.auth.account." + property + "=" + value)
+            .run(context -> assertThat(context).hasFailed());
+    }
+
+    @Test
+    void rejectsRecoveryTokenLifetimeLongerThanFiveMinutes() {
+        runner.withPropertyValues(
+                "app.auth.account.recovery-token-expiration=6m"
+            )
+            .run(context -> assertThat(context).hasFailed());
+    }
+
+    @Test
+    void acceptsFiveMinuteRecoveryTokenLifetime() {
+        runner.withPropertyValues("app.auth.account.recovery-token-expiration=5m")
+            .run(context -> assertThat(context).hasNotFailed());
+    }
+
+    @ParameterizedTest
     @ValueSource(strings = {
         "*", "https://*.vercel.app", "https://example.com/path",
         "https://user@example.com", "https://example.com?query=value", "null"
@@ -50,7 +75,11 @@ class AuthConfigurationValidationTest {
     }
 
     @Configuration(proxyBeanMethods = false)
-    @EnableConfigurationProperties({TokenProperties.class, AuthCsrfProperties.class})
+    @EnableConfigurationProperties({
+        TokenProperties.class,
+        AuthCsrfProperties.class,
+        AccountLifecycleProperties.class
+    })
     static class PropertiesConfiguration {
     }
 }

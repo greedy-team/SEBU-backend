@@ -33,14 +33,15 @@ class JwtAccessTokenServiceTest {
 
     @Test
     void issuesHs256TokenWithOnlyRequiredClaims() {
-        String token = accessTokenService.issue(17L);
+        String token = accessTokenService.issue(17L, 3L);
 
         Jwt jwt = jwtDecoder.decode(token);
 
         assertThat(jwt.getHeaders().get("alg")).isEqualTo("HS256");
-        assertThat(jwt.getClaims().keySet()).isEqualTo(Set.of("sub", "role", "iat", "exp"));
+        assertThat(jwt.getClaims().keySet()).isEqualTo(Set.of("sub", "role", "authVersion", "iat", "exp"));
         assertThat(jwt.getSubject()).isEqualTo("17");
         assertThat(jwt.getClaimAsString("role")).isEqualTo("USER");
+        assertThat(((Number) jwt.getClaim("authVersion")).longValue()).isEqualTo(3L);
         assertThat(accessTokenService.expiresInSeconds()).isEqualTo(1800);
     }
 
@@ -53,7 +54,7 @@ class JwtAccessTokenServiceTest {
             Clock.fixed(expiredIssueTime, ZoneOffset.UTC)
         );
 
-        assertThatThrownBy(() -> jwtDecoder.decode(expiredIssuer.issue(17L)))
+        assertThatThrownBy(() -> jwtDecoder.decode(expiredIssuer.issue(17L, 0L)))
             .isInstanceOf(JwtValidationException.class);
     }
 }

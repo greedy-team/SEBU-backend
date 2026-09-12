@@ -1,5 +1,6 @@
 package com.sebu.backend.mypage.service;
 
+import com.sebu.backend.global.auth.ActiveUserCommandGuard;
 import com.sebu.backend.mypage.dto.ProfileUpdateRequest;
 import com.sebu.backend.mypage.moderation.IntroductionModerator;
 import com.sebu.backend.mypage.moderation.ModerationResult;
@@ -14,8 +15,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
 
-import java.util.Optional;
-
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
@@ -25,6 +24,7 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class ProfileServiceNicknameConflictTest {
     @Mock AppUserRepository appUserRepository;
+    @Mock ActiveUserCommandGuard activeUserCommandGuard;
     @Mock IntroductionModerator introductionModerator;
     @InjectMocks ProfileService profileService;
 
@@ -32,7 +32,7 @@ class ProfileServiceNicknameConflictTest {
     void 사전_조회_후_발생한_DB_닉네임_충돌도_도메인_오류로_변환한다() {
         AppUser user = mock(AppUser.class);
         when(user.getId()).thenReturn(1L);
-        when(appUserRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(activeUserCommandGuard.lock(1L)).thenReturn(user);
         when(appUserRepository.existsByNicknameNormalizedAndIdNot("sebu", 1L)).thenReturn(false);
         when(introductionModerator.moderate(anyString()))
                 .thenReturn(new ModerationResult(true, "v1", "test-provider"));
@@ -54,7 +54,7 @@ class ProfileServiceNicknameConflictTest {
     void 닉네임_제약이_아닌_DB_오류는_중복_오류로_변환하지_않는다() {
         AppUser user = mock(AppUser.class);
         when(user.getId()).thenReturn(1L);
-        when(appUserRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(activeUserCommandGuard.lock(1L)).thenReturn(user);
         when(appUserRepository.existsByNicknameNormalizedAndIdNot("sebu", 1L)).thenReturn(false);
         when(introductionModerator.moderate(anyString()))
                 .thenReturn(new ModerationResult(true, "v1", "test-provider"));

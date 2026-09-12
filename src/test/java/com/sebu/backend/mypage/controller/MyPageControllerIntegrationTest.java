@@ -338,7 +338,7 @@ public class MyPageControllerIntegrationTest {
                 new AppUser("withdraw-access@example.com")
         );
 
-        user.withdraw();
+        user.withdraw(java.time.LocalDateTime.now());
 
         // when & then
         mockMvc.perform(

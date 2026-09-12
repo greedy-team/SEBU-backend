@@ -25,6 +25,14 @@ app:
       purge-cron: "0 10 3 * * *"
       batch-size: 500
       max-batches: 100
+    account:
+      recovery-window: 30d
+      minimum-recovery-cooldown: 1h
+      recovery-token-expiration: 5m
+      recovery-token-cleanup-cron: "0 15 3 * * *"
+      anonymization-cron: "0 20 3 * * *"
+      batch-size: 500
+      max-batches: 100
     cookie:
       secure: true
     sejong:

@@ -1,25 +1,25 @@
 package com.sebu.backend.mypage.controller;
 
-import com.sebu.backend.auth.exception.AccessTokenInvalidException;
 import com.sebu.backend.auth.controller.AuthCookieFactory;
-import com.sebu.backend.global.auth.CsrfCookieSupport;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.CacheControl;
+import com.sebu.backend.auth.exception.AccessTokenInvalidException;
 import com.sebu.backend.global.auth.CurrentUserProvider;
+import com.sebu.backend.global.auth.CsrfCookieSupport;
 import com.sebu.backend.global.response.ApiResponse;
 import com.sebu.backend.mypage.dto.MyPageResponse;
 import com.sebu.backend.mypage.dto.ProfileResponse;
 import com.sebu.backend.mypage.dto.ProfileUpdateRequest;
 import com.sebu.backend.mypage.service.MyPageService;
 import com.sebu.backend.mypage.service.ProfileService;
-import com.sebu.backend.user.service.AccountService;
+import com.sebu.backend.account.service.AccountLifecycleService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.CacheControl;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -37,7 +37,7 @@ public class MyPageController {
     private final MyPageService myPageService;
     private final CurrentUserProvider currentUserProvider;
     private final ProfileService profileService;
-    private final AccountService accountService;
+    private final AccountLifecycleService accountLifecycleService;
     private final AuthCookieFactory cookieFactory;
     private final CsrfCookieSupport csrfCookieSupport;
 
@@ -88,11 +88,14 @@ public class MyPageController {
         Long userId = currentUserProvider.currentUserId()
                 .orElseThrow(AccessTokenInvalidException::new);
 
-        accountService.withdraw(userId);
+        accountLifecycleService.withdraw(userId);
         csrfCookieSupport.renew(request, response);
 
         return ResponseEntity.noContent().cacheControl(CacheControl.noStore())
-            .header(HttpHeaders.SET_COOKIE, cookieFactory.deleteAccess().toString(), cookieFactory.deleteRefresh().toString())
+            .header(HttpHeaders.SET_COOKIE,
+                cookieFactory.deleteAccess().toString(),
+                cookieFactory.deleteRefresh().toString(),
+                cookieFactory.deleteRecovery().toString())
             .build();
     }
 }

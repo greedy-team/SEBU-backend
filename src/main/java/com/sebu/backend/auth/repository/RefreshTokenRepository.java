@@ -2,21 +2,25 @@ package com.sebu.backend.auth.repository;
 
 import com.sebu.backend.auth.domain.RefreshToken;
 import jakarta.persistence.LockModeType;
-import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-import java.time.LocalDateTime;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.Modifying;
 
 public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long> {
     Optional<RefreshToken> findByTokenHash(String tokenHash);
 
     long countByUser_Id(Long userId);
+
+    @Modifying(flushAutomatically = true)
+    @Query("delete from RefreshToken token where token.user.id = :userId")
+    int deleteAllByUserId(@Param("userId") Long userId);
 
     @Query("select token.user.id from RefreshToken token where token.tokenHash = :tokenHash")
     Optional<Long> findUserIdByTokenHash(@Param("tokenHash") String tokenHash);

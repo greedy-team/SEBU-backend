@@ -1,13 +1,14 @@
-package com.sebu.backend.mypage.service;
+package com.sebu.backend.account.service;
 
+import com.sebu.backend.auth.domain.AccountRecoveryToken;
 import com.sebu.backend.auth.domain.RefreshToken;
 import com.sebu.backend.auth.exception.RefreshTokenInvalidException;
+import com.sebu.backend.auth.repository.AccountRecoveryTokenRepository;
 import com.sebu.backend.auth.repository.RefreshTokenRepository;
 import com.sebu.backend.auth.port.SejongUserProfile;
 import com.sebu.backend.auth.service.AuthSessionService;
 import com.sebu.backend.user.domain.AppUser;
 import com.sebu.backend.user.repository.AppUserRepository;
-import com.sebu.backend.user.service.AccountService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -20,10 +21,10 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 
 @SpringBootTest
 @Transactional
-class AccountServiceTest {
+class AccountLifecycleServiceTest {
 
     @Autowired
-    AccountService accountService;
+    AccountLifecycleService accountLifecycleService;
 
     @Autowired
     AppUserRepository appUserRepository;
@@ -32,10 +33,13 @@ class AccountServiceTest {
     RefreshTokenRepository refreshTokenRepository;
 
     @Autowired
+    AccountRecoveryTokenRepository recoveryTokenRepository;
+
+    @Autowired
     AuthSessionService authSessionService;
 
     @Test
-    void 회원_탈퇴시_사용자의_모든_refreshToken이_폐기된다() {
+    void 회원_탈퇴시_사용자의_모든_refreshToken이_즉시_삭제된다() {
         // given
         AppUser user = appUserRepository.save(
                 new AppUser("withdraw-token@example.com")
@@ -46,7 +50,7 @@ class AccountServiceTest {
         String hash1 = "a".repeat(64);
         String hash2 = "b".repeat(64);
 
-        RefreshToken token1 = refreshTokenRepository.save(
+        refreshTokenRepository.save(
                 new RefreshToken(
                         user,
                         hash1,
@@ -55,7 +59,14 @@ class AccountServiceTest {
                 )
         );
 
-        RefreshToken token2 = refreshTokenRepository.save(
+        recoveryTokenRepository.save(new AccountRecoveryToken(
+                user,
+                "c".repeat(64),
+                now.plusMinutes(5),
+                now
+        ));
+
+        refreshTokenRepository.save(
                 new RefreshToken(
                         user,
                         hash2,
@@ -65,7 +76,7 @@ class AccountServiceTest {
         );
 
         // when
-        accountService.withdraw(user.getId());
+        accountLifecycleService.withdraw(user.getId());
 
         // then
         AppUser withdrawnUser = appUserRepository.findById(user.getId())
@@ -73,21 +84,15 @@ class AccountServiceTest {
 
         assertThat(withdrawnUser.getDeletedAt()).isNotNull();
 
-        RefreshToken savedToken1 = refreshTokenRepository.findById(token1.getId())
-                .orElseThrow();
-
-        RefreshToken savedToken2 = refreshTokenRepository.findById(token2.getId())
-                .orElseThrow();
-
-        assertThat(savedToken1.getRevokedAt()).isNotNull();
-        assertThat(savedToken2.getRevokedAt()).isNotNull();
+        assertThat(refreshTokenRepository.countByUser_Id(user.getId())).isZero();
+        assertThat(recoveryTokenRepository.countByUser_Id(user.getId())).isZero();
     }
 
     @Test
     void 회원_탈퇴후_기존_refreshToken으로_재발급할_수_없다() {
         // given
         AuthSessionService.LoginSession loginSession =
-                authSessionService.start(new SejongUserProfile(
+                (AuthSessionService.LoginSession) authSessionService.login(new SejongUserProfile(
                         "29000001",
                         "탈퇴테스트",
                         "테스트학과"
@@ -100,7 +105,7 @@ class AccountServiceTest {
         assertThat(refreshToken).isNotBlank();
 
         // when
-        accountService.withdraw(userId);
+        accountLifecycleService.withdraw(userId);
 
         // then
         assertThatThrownBy(() ->

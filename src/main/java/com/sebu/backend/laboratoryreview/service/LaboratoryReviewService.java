@@ -1,5 +1,6 @@
 package com.sebu.backend.laboratoryreview.service;
 
+import com.sebu.backend.global.auth.ActiveUserCommandGuard;
 import com.sebu.backend.laboratory.domain.Laboratory;
 import com.sebu.backend.laboratory.exception.LaboratoryNotFoundException;
 import com.sebu.backend.laboratory.repository.LaboratoryRepository;
@@ -19,8 +20,6 @@ import com.sebu.backend.laboratoryreview.exception.LaboratoryReviewForbiddenExce
 import com.sebu.backend.laboratoryreview.exception.LaboratoryReviewNotFoundException;
 import com.sebu.backend.laboratoryreview.repository.LaboratoryReviewRepository;
 import com.sebu.backend.user.domain.AppUser;
-import com.sebu.backend.user.exception.UserNotFoundException;
-import com.sebu.backend.user.repository.AppUserRepository;
 import lombok.RequiredArgsConstructor;
 import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.data.domain.Page;
@@ -46,7 +45,7 @@ public class LaboratoryReviewService {
 
     private final LaboratoryReviewRepository laboratoryReviewRepository;
     private final LaboratoryRepository laboratoryRepository;
-    private final AppUserRepository appUserRepository;
+    private final ActiveUserCommandGuard activeUserGuard;
 
     @Transactional
     public LaboratoryReviewCreateResponse createReview(
@@ -54,12 +53,8 @@ public class LaboratoryReviewService {
             Long userId,
             LaboratoryReviewCreateRequest request
     ) {
-        Laboratory laboratory = findActiveLaboratory(laboratoryId);
-
-        AppUser author = appUserRepository
-                .findById(userId)
-                .filter(user -> !user.isDeleted())
-                .orElseThrow(UserNotFoundException::new);
+        AppUser author = activeUserGuard.lock(userId);
+        Laboratory laboratory = findActiveLaboratoryForUpdate(laboratoryId);
 
         boolean alreadyExists =
                 laboratoryReviewRepository
@@ -219,7 +214,8 @@ public class LaboratoryReviewService {
             Long userId,
             LaboratoryReviewUpdateRequest request
     ) {
-        findActiveLaboratory(laboratoryId);
+        activeUserGuard.lock(userId);
+        findActiveLaboratoryForUpdate(laboratoryId);
 
         LaboratoryReview review =
                 findActiveReview(
@@ -256,7 +252,8 @@ public class LaboratoryReviewService {
             Long reviewId,
             Long userId
     ) {
-        findActiveLaboratory(laboratoryId);
+        activeUserGuard.lock(userId);
+        findActiveLaboratoryForUpdate(laboratoryId);
 
         LaboratoryReview review =
                 findActiveReview(
@@ -286,12 +283,18 @@ public class LaboratoryReviewService {
                 );
     }
 
+    private Laboratory findActiveLaboratoryForUpdate(Long laboratoryId) {
+        return laboratoryRepository.findByIdForUpdate(laboratoryId)
+                .filter(laboratory -> !laboratory.isDeleted())
+                .orElseThrow(LaboratoryNotFoundException::new);
+    }
+
     private LaboratoryReview findActiveReview(
             Long laboratoryId,
             Long reviewId
     ) {
         return laboratoryReviewRepository
-                .findByIdAndLaboratoryIdAndDeletedAtIsNull(
+                .findForUpdate(
                         reviewId,
                         laboratoryId
                 )

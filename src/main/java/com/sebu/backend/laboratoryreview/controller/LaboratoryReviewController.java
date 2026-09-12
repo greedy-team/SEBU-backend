@@ -1,5 +1,6 @@
 package com.sebu.backend.laboratoryreview.controller;
 
+import com.sebu.backend.auth.exception.AccessTokenInvalidException;
 import com.sebu.backend.global.auth.CurrentUserProvider;
 import com.sebu.backend.global.response.ApiResponse;
 import com.sebu.backend.laboratoryreview.dto.LaboratoryReviewCreateRequest;
@@ -58,11 +59,7 @@ public class LaboratoryReviewController {
             @Valid @RequestBody LaboratoryReviewCreateRequest request
     ) {
         Long userId = currentUserProvider.currentUserId()
-                .orElseThrow(() ->
-                        new IllegalStateException(
-                                "AUTHENTICATION_REQUIRED"
-                        )
-                );
+                .orElseThrow(AccessTokenInvalidException::new);
 
         LaboratoryReviewCreateResponse response =
                 laboratoryReviewService.createReview(
@@ -124,11 +121,7 @@ public class LaboratoryReviewController {
             @PathVariable Long laboratoryId
     ) {
         Long userId = currentUserProvider.currentUserId()
-                .orElseThrow(() ->
-                        new IllegalStateException(
-                                "AUTHENTICATION_REQUIRED"
-                        )
-                );
+                .orElseThrow(AccessTokenInvalidException::new);
 
         LaboratoryReviewMeResponse response =
                 laboratoryReviewService.getMyReview(
@@ -155,11 +148,7 @@ public class LaboratoryReviewController {
             @Valid @RequestBody LaboratoryReviewUpdateRequest request
     ) {
         Long userId = currentUserProvider.currentUserId()
-                .orElseThrow(() ->
-                        new IllegalStateException(
-                                "AUTHENTICATION_REQUIRED"
-                        )
-                );
+                .orElseThrow(AccessTokenInvalidException::new);
 
         LaboratoryReviewUpdateResponse response =
                 laboratoryReviewService.updateReview(
@@ -187,11 +176,7 @@ public class LaboratoryReviewController {
             @PathVariable Long reviewId
     ) {
         Long userId = currentUserProvider.currentUserId()
-                .orElseThrow(() ->
-                        new IllegalStateException(
-                                "AUTHENTICATION_REQUIRED"
-                        )
-                );
+                .orElseThrow(AccessTokenInvalidException::new);
 
         LaboratoryReviewDeleteResponse response =
                 laboratoryReviewService.deleteReview(

@@ -13,9 +13,8 @@ import com.sebu.backend.community.exception.CommentNotFoundException;
 import com.sebu.backend.community.exception.PostNotFoundException;
 import com.sebu.backend.community.post.domain.CommunityPost;
 import com.sebu.backend.community.post.repository.CommunityPostRepository;
+import com.sebu.backend.global.auth.ActiveUserCommandGuard;
 import com.sebu.backend.user.domain.AppUser;
-import com.sebu.backend.user.exception.UserNotFoundException;
-import com.sebu.backend.user.repository.AppUserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,14 +24,14 @@ import org.springframework.transaction.annotation.Transactional;
 public class CommunityCommentCommandService {
     private final CommunityPostRepository postRepository;
     private final CommunityCommentRepository commentRepository;
-    private final AppUserRepository appUserRepository;
+    private final ActiveUserCommandGuard activeUserGuard;
     private final CommunityContentPolicy contentPolicy;
     private final CommunityCommentQueryService queryService;
 
     @Transactional
     public CommentCreateResponse create(Long userId, Long postId, CommentCreateRequest request) {
+        AppUser author = activeUserGuard.lock(userId);
         CommunityPost post = findActivePostForUpdate(postId);
-        AppUser author = findActiveUser(userId);
         contentPolicy.validate("content", request.content());
 
         CommunityComment comment = commentRepository.saveAndFlush(
@@ -51,6 +50,7 @@ public class CommunityCommentCommandService {
             Long commentId,
             CommentUpdateRequest request
     ) {
+        activeUserGuard.lock(userId);
         findActivePostForShare(postId);
         CommunityComment comment = findActiveComment(postId, commentId);
         requireOwner(comment, userId);
@@ -67,6 +67,7 @@ public class CommunityCommentCommandService {
 
     @Transactional
     public CommentDeleteResponse delete(Long userId, Long postId, Long commentId) {
+        activeUserGuard.lock(userId);
         findActivePostForUpdate(postId);
         CommunityComment comment = findActiveComment(postId, commentId);
         requireOwner(comment, userId);
@@ -93,12 +94,6 @@ public class CommunityCommentCommandService {
     private CommunityComment findActiveComment(Long postId, Long commentId) {
         return commentRepository.findForUpdate(commentId, postId)
                 .orElseThrow(CommentNotFoundException::new);
-    }
-
-    private AppUser findActiveUser(Long userId) {
-        return appUserRepository.findById(userId)
-                .filter(user -> !user.isDeleted())
-                .orElseThrow(UserNotFoundException::new);
     }
 
     private void requireOwner(CommunityComment comment, Long userId) {

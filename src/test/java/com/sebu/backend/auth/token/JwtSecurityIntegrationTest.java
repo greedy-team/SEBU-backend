@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -44,7 +45,8 @@ class JwtSecurityIntegrationTest {
     void authenticatesCookieAndExposesCurrentUserId() throws Exception {
         AppUser user = appUserRepository.save(AppUser.sejong("jwt-user"));
         mockMvc.perform(get("/api/v1/me")
-                .cookie(new Cookie(AuthCookieFactory.ACCESS_COOKIE, accessTokenService.issue(user.getId()))))
+                .cookie(new Cookie(AuthCookieFactory.ACCESS_COOKIE,
+                    accessTokenService.issue(user.getId(), user.getAuthVersion()))))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.data.id").value(user.getId()))
@@ -78,7 +80,8 @@ class JwtSecurityIntegrationTest {
         );
 
         mockMvc.perform(get("/api/v1/me")
-                .cookie(new Cookie(AuthCookieFactory.ACCESS_COOKIE, expiredIssuer.issue(user.getId()))))
+                .cookie(new Cookie(AuthCookieFactory.ACCESS_COOKIE,
+                    expiredIssuer.issue(user.getId(), user.getAuthVersion()))))
             .andExpect(status().isUnauthorized())
             .andExpect(jsonPath("$.success").value(false))
             .andExpect(jsonPath("$.error.code").value("ACCESS_TOKEN_EXPIRED"));
@@ -94,9 +97,30 @@ class JwtSecurityIntegrationTest {
     }
 
     @Test
+    void accessTokenIssuedBeforeWithdrawalStaysInvalidAfterRecovery() throws Exception {
+        AppUser user = appUserRepository.save(AppUser.sejong("withdrawn-jwt-user"));
+        String accessBeforeWithdrawal = accessTokenService.issue(user.getId(), user.getAuthVersion());
+
+        user.withdraw(LocalDateTime.now());
+        user.recover();
+        appUserRepository.flush();
+
+        mockMvc.perform(get("/api/v1/me")
+                .cookie(new Cookie(AuthCookieFactory.ACCESS_COOKIE, accessBeforeWithdrawal)))
+            .andExpect(status().isUnauthorized())
+            .andExpect(jsonPath("$.error.code").value("ACCESS_TOKEN_INVALID"));
+
+        mockMvc.perform(get("/api/v1/me")
+                .cookie(new Cookie(AuthCookieFactory.ACCESS_COOKIE,
+                    accessTokenService.issue(user.getId(), user.getAuthVersion()))))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.data.id").value(user.getId()));
+    }
+
+    @Test
     void doesNotAcceptBearerHeaderOrQueryParameterAsAuthentication() throws Exception {
         AppUser user = appUserRepository.save(AppUser.sejong("header-user"));
-        String token = accessTokenService.issue(user.getId());
+        String token = accessTokenService.issue(user.getId(), user.getAuthVersion());
         mockMvc.perform(get("/api/v1/me").header("Authorization", "Bearer " + token))
             .andExpect(status().isUnauthorized());
         mockMvc.perform(get("/api/v1/me").param("access_token", token))
@@ -106,7 +130,7 @@ class JwtSecurityIntegrationTest {
     @Test
     void rejectsDuplicateAndOversizedAccessCookiesWithoutEchoingTheirValues() throws Exception {
         AppUser user = appUserRepository.save(AppUser.sejong("ambiguous-cookie-user"));
-        String validToken = accessTokenService.issue(user.getId());
+        String validToken = accessTokenService.issue(user.getId(), user.getAuthVersion());
         mockMvc.perform(get("/api/v1/me").cookie(
                 new Cookie(AuthCookieFactory.ACCESS_COOKIE, validToken),
                 new Cookie(AuthCookieFactory.ACCESS_COOKIE, "untrusted-duplicate")))

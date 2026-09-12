@@ -1,7 +1,9 @@
 package com.sebu.backend.auth.service;
 
+import com.sebu.backend.account.service.AccountLifecycleService;
 import com.sebu.backend.auth.port.SejongAuthenticator;
 import com.sebu.backend.auth.port.SejongUserProfile;
+import com.sebu.backend.auth.exception.AccessTokenInvalidException;
 import com.sebu.backend.auth.repository.RefreshTokenRepository;
 import com.sebu.backend.college.domain.College;
 import com.sebu.backend.college.repository.CollegeRepository;
@@ -49,6 +51,7 @@ import static com.sebu.backend.support.CookieApiRequests.put;
 class UserProfileConcurrencyIntegrationTest {
     @Autowired AuthService authService;
     @Autowired AuthSessionService authSessionService;
+    @Autowired AccountLifecycleService accountLifecycleService;
     @Autowired ProfileService profileService;
     @MockitoSpyBean AppUserRepository appUserRepository;
     @Autowired RefreshTokenRepository refreshTokenRepository;
@@ -74,10 +77,10 @@ class UserProfileConcurrencyIntegrationTest {
     }
 
     @Test
-    void profileUpdateReturnsConflictInsteadOfOverwritingConcurrentSchoolProfile() throws Exception {
+    void profileUpdateAndSchoolProfileSyncSerializeWithoutOverwritingEachOther() throws Exception {
         Department initialDepartment = department("동시성초기대학", "동시성초기학과");
         Department changedDepartment = department("동시성변경대학", "동시성변경학과");
-        var initialLogin = authSessionService.start(profile(
+        var initialLogin = (AuthSessionService.LoginSession) authSessionService.login(profile(
             "21009990", "기존이름", initialDepartment.getName()
         ));
 
@@ -91,7 +94,7 @@ class UserProfileConcurrencyIntegrationTest {
             return new ModerationResult(true, "v1", "test-provider");
         });
 
-        ExecutorService executor = Executors.newSingleThreadExecutor();
+        ExecutorService executor = Executors.newFixedThreadPool(2);
         try {
             Future<MvcResult> profileResult = executor.submit(() -> mockMvc.perform(
                     put("/api/v1/users/me/profile")
@@ -111,15 +114,16 @@ class UserProfileConcurrencyIntegrationTest {
                 ).andReturn());
 
             assertThat(profileLoaded.await(5, TimeUnit.SECONDS)).isTrue();
-            authSessionService.start(profile(
-                "21009990", "변경된이름", changedDepartment.getName()
-            ));
+            Future<AuthSessionService.LoginOutcome> schoolProfileSync = executor.submit(
+                () -> authSessionService.login(profile(
+                    "21009990", "변경된이름", changedDepartment.getName()
+                ))
+            );
             allowProfileUpdate.countDown();
 
-            MvcResult conflict = profileResult.get(10, TimeUnit.SECONDS);
-            assertThat(conflict.getResponse().getStatus()).isEqualTo(409);
-            assertThat(conflict.getResponse().getContentAsString())
-                .contains("PROFILE_UPDATE_CONFLICT");
+            assertThat(profileResult.get(10, TimeUnit.SECONDS).getResponse().getStatus()).isEqualTo(200);
+            assertThat(schoolProfileSync.get(10, TimeUnit.SECONDS))
+                .isInstanceOf(AuthSessionService.LoginSession.class);
         } finally {
             allowProfileUpdate.countDown();
             executor.shutdownNow();
@@ -131,16 +135,16 @@ class UserProfileConcurrencyIntegrationTest {
         assertThat(saved.getName()).isEqualTo("변경된이름");
         assertThat(saved.getSejongDepartmentName()).isEqualTo(changedDepartment.getName());
         assertThat(saved.getMajorDepartment().getId()).isEqualTo(changedDepartment.getId());
-        assertThat(saved.getNickname()).isNull();
-        assertThat(saved.getGrade()).isNull();
-        assertThat(saved.getIntroduction()).isEmpty();
+        assertThat(saved.getNickname()).isEqualTo("동시닉네임");
+        assertThat(saved.getGrade()).isEqualTo((short) 3);
+        assertThat(saved.getIntroduction()).isEqualTo("동시성 자기소개");
     }
 
     @Test
     void loginPreservesAProfileCommittedBeforeItAcquiresTheUserLock() throws Exception {
         Department initialDepartment = department("재시도초기대학", "재시도초기학과");
         Department changedDepartment = department("재시도변경대학", "재시도변경학과");
-        var initialLogin = authSessionService.start(profile(
+        var initialLogin = (AuthSessionService.LoginSession) authSessionService.login(profile(
             "21009991", "기존이름", initialDepartment.getName()
         ));
         when(sejongAuthenticator.authenticate("21009991", "password"))
@@ -163,7 +167,7 @@ class UserProfileConcurrencyIntegrationTest {
         ExecutorService executor = Executors.newSingleThreadExecutor();
         try {
             Future<AuthSessionService.LoginSession> loginResult = executor.submit(
-                () -> authService.loginWithSejong("21009991", "password")
+                () -> (AuthSessionService.LoginSession) authService.loginWithSejong("21009991", "password")
             );
 
             assertThat(loginLoaded.await(5, TimeUnit.SECONDS)).isTrue();
@@ -194,6 +198,118 @@ class UserProfileConcurrencyIntegrationTest {
         assertThat(saved.getIntroduction()).isEqualTo("보존할 자기소개");
         assertThat(saved.isProfileCompleted()).isTrue();
         assertThat(refreshTokenRepository.countByUser_Id(saved.getId())).isEqualTo(2);
+    }
+
+    @Test
+    void profileUpdateCannotCommitAfterWithdrawalHasLockedTheUser() throws Exception {
+        Department department = department("탈퇴경합대학", "탈퇴경합학과");
+        var login = (AuthSessionService.LoginSession) authSessionService.login(profile(
+            "21009992", "탈퇴경합사용자", department.getName()
+        ));
+
+        CountDownLatch withdrawalLockedUser = new CountDownLatch(1);
+        CountDownLatch allowWithdrawalCommit = new CountDownLatch(1);
+        AtomicBoolean blockOnce = new AtomicBoolean(true);
+        var repositoryDelegate = mockingDetails(appUserRepository).getMockCreationSettings().getDefaultAnswer();
+        doAnswer(invocation -> {
+            Object result = repositoryDelegate.answer(invocation);
+            if (blockOnce.compareAndSet(true, false)) {
+                withdrawalLockedUser.countDown();
+                if (!allowWithdrawalCommit.await(5, TimeUnit.SECONDS)) {
+                    throw new IllegalStateException("WITHDRAWAL_NOT_RELEASED");
+                }
+            }
+            return result;
+        }).when(appUserRepository).findByIdForUpdate(login.userId());
+
+        ExecutorService executor = Executors.newFixedThreadPool(2);
+        try {
+            Future<?> withdrawal = executor.submit(() -> {
+                accountLifecycleService.withdraw(login.userId());
+                return null;
+            });
+            assertThat(withdrawalLockedUser.await(5, TimeUnit.SECONDS)).isTrue();
+
+            Future<Object> profileUpdate = executor.submit(() -> {
+                try {
+                    return profileService.updateProfile(
+                        login.userId(),
+                        new ProfileUpdateRequest(
+                            "탈퇴경합닉네임",
+                            (short) 3,
+                            GpaBand.GTE_3_5,
+                            "탈퇴 이후에는 저장되면 안 되는 자기소개"
+                        )
+                    );
+                } catch (AccessTokenInvalidException exception) {
+                    return exception;
+                }
+            });
+
+            allowWithdrawalCommit.countDown();
+            withdrawal.get(10, TimeUnit.SECONDS);
+            assertThat(profileUpdate.get(10, TimeUnit.SECONDS))
+                .isInstanceOf(AccessTokenInvalidException.class);
+        } finally {
+            allowWithdrawalCommit.countDown();
+            executor.shutdownNow();
+        }
+
+        AppUser withdrawn = appUserRepository.findById(login.userId()).orElseThrow();
+        assertThat(withdrawn.isDeleted()).isTrue();
+        assertThat(withdrawn.getNickname()).isNull();
+    }
+
+    @Test
+    void withdrawalWaitsForAProfileUpdateThatLockedTheUserFirst() throws Exception {
+        Department department = department("수정선행대학", "수정선행학과");
+        var login = (AuthSessionService.LoginSession) authSessionService.login(profile(
+            "21009993", "수정선행사용자", department.getName()
+        ));
+
+        CountDownLatch profileLockedUser = new CountDownLatch(1);
+        CountDownLatch allowProfileCommit = new CountDownLatch(1);
+        when(introductionModerator.moderate("탈퇴 전에 저장할 자기소개")).thenAnswer(invocation -> {
+            profileLockedUser.countDown();
+            if (!allowProfileCommit.await(5, TimeUnit.SECONDS)) {
+                throw new IllegalStateException("PROFILE_UPDATE_NOT_RELEASED");
+            }
+            return new ModerationResult(true, "v1", "test-provider");
+        });
+
+        ExecutorService executor = Executors.newFixedThreadPool(2);
+        try {
+            Future<?> profileUpdate = executor.submit(() -> profileService.updateProfile(
+                login.userId(),
+                new ProfileUpdateRequest(
+                    "수정선행닉네임",
+                    (short) 3,
+                    GpaBand.GTE_3_5,
+                    "탈퇴 전에 저장할 자기소개"
+                )
+            ));
+            assertThat(profileLockedUser.await(5, TimeUnit.SECONDS)).isTrue();
+
+            CountDownLatch withdrawalStarted = new CountDownLatch(1);
+            Future<?> withdrawal = executor.submit(() -> {
+                withdrawalStarted.countDown();
+                accountLifecycleService.withdraw(login.userId());
+                return null;
+            });
+            assertThat(withdrawalStarted.await(5, TimeUnit.SECONDS)).isTrue();
+
+            allowProfileCommit.countDown();
+            profileUpdate.get(10, TimeUnit.SECONDS);
+            withdrawal.get(10, TimeUnit.SECONDS);
+        } finally {
+            allowProfileCommit.countDown();
+            executor.shutdownNow();
+        }
+
+        AppUser withdrawn = appUserRepository.findById(login.userId()).orElseThrow();
+        assertThat(withdrawn.isDeleted()).isTrue();
+        assertThat(withdrawn.getNickname()).isEqualTo("수정선행닉네임");
+        assertThat(withdrawn.getIntroduction()).isEqualTo("탈퇴 전에 저장할 자기소개");
     }
 
     private Department department(String collegeName, String departmentName) {

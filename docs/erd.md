@@ -15,6 +15,7 @@ erDiagram
     DEPARTMENT o|--o{ APP_USER : majors_in
     APP_USER ||--o{ BOOKMARK : creates
     APP_USER ||--o{ REFRESH_TOKEN : authenticates
+    APP_USER ||--o| ACCOUNT_RECOVERY_TOKEN : recovers
     LABORATORY ||--o{ BOOKMARK : receives
 ```
 
@@ -43,9 +44,10 @@ erDiagram
 - 사용자의 전공은 `major_department_id`로 기존 학과를 참조하며 단과대 컬럼을 중복 저장하지 않는다.
 - GPA 구간은 `GTE_3_0`, `GTE_3_5`, `GTE_4_0`만 허용하고, 미선택 상태는 `NULL`로 표현한다.
 - 자기소개는 최대 500자이며 승인된 내용과 검수 시각·정책·제공자 버전을 같은 트랜잭션에서 저장한다.
-- 회원 탈퇴 상태는 `app_user.deleted_at`으로 기록한다.
+- 회원 탈퇴 상태는 `app_user.deleted_at`으로 기록하고, 30일 경과 익명화 완료 시각은 `anonymized_at`으로 기록한다. `auth_version`은 탈퇴할 때 증가하며 Access JWT의 발급 버전과 비교해 탈퇴 전 토큰이 복구 후 되살아나는 것을 막는다.
 - `refresh_token`은 토큰 해시, 미사용 만료 시각, 폐기 시각을 저장한다. `session_id`는 같은 로그인에서 회전한 토큰을 묶고, `absolute_expires_at`은 최초 로그인부터 30일로 고정한다. 별도 서버 세션 테이블은 사용하지 않는다.
-- Refresh는 미사용 14일과 절대 30일 중 먼저 도래하는 시각에 만료된다. 명시적 로그아웃은 현재 로그인 묶음을, 회원 탈퇴는 사용자의 모든 묶음을 폐기한다. 인증 계약과 정리 정책은 [쿠키 인증 문서](cookie-authentication.md)를 참고한다.
+- Refresh는 미사용 14일과 절대 30일 중 먼저 도래하는 시각에 만료된다. 명시적 로그아웃은 현재 로그인 묶음을 폐기하고, 회원 탈퇴는 사용자의 모든 Refresh 행을 즉시 물리 삭제한다.
+- `account_recovery_token`은 사용자마다 최대 하나인 일회용 복구 토큰의 SHA-256 해시와 만료 시각만 저장한다. 탈퇴·복구·익명화 시 물리 삭제한다. 상세 정책은 [회원 탈퇴 및 계정 복구 계약](account-withdrawal-recovery.md)을 참고한다.
 - `bookmarkCount`는 저장하지 않고 `bookmark`를 집계하며, `(laboratory_id)` 보조 인덱스를 사용한다.
 - 마이페이지의 최신 북마크 조회는 `(user_id, created_at DESC, laboratory_id DESC)` 인덱스를 사용한다.
 - 단과대·학과·교수 참조 삭제는 제한하고, 연구실 물리 삭제 시 연결 데이터와 북마크는 연쇄 삭제한다.
