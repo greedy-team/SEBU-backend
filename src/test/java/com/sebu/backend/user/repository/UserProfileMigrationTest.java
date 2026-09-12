@@ -100,7 +100,7 @@ class UserProfileMigrationTest {
             assertThatThrownBy(() -> executeUpdate(
                 connection,
                 "UPDATE app_user SET grade = ? WHERE id = ?",
-                5,
+                6,
                 userId
             )).isInstanceOf(SQLException.class);
             assertThatThrownBy(() -> executeUpdate(
