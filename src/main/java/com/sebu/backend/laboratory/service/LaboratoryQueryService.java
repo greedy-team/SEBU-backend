@@ -6,6 +6,7 @@ import com.sebu.backend.laboratory.dto.LaboratoriesResult;
 import com.sebu.backend.laboratory.dto.LaboratoriesResult.AffiliationResult;
 import com.sebu.backend.laboratory.dto.LaboratoriesResult.LaboratoryResult;
 import com.sebu.backend.laboratory.dto.LaboratoriesResult.ResearchFieldCategoryResult;
+import com.sebu.backend.laboratory.dto.LaboratoriesResult.ResearchFieldResult;
 import com.sebu.backend.laboratory.query.LaboratorySummaryAssembler;
 import com.sebu.backend.laboratory.repository.LaboratoryAffiliationProjection;
 import com.sebu.backend.laboratory.repository.LaboratoryDepartmentRepository;
@@ -25,6 +26,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -158,19 +160,23 @@ public class LaboratoryQueryService {
         List<Long> laboratoryIds =
                 laboratoryIds(summaries);
 
-        Map<Long, List<String>> researchFields =
-                findResearchFields(laboratoryIds);
+        List<LaboratoryResearchFieldCategoryProjection> categoryMappings =
+                laboratoryResearchFieldCategoryQueryRepository
+                        .findAllByLaboratoryIds(laboratoryIds);
+
+        Map<Long, List<ResearchFieldResult>> researchFields =
+                findResearchFields(laboratoryIds, categoryMappings);
 
         Map<Long, List<ResearchFieldCategoryResult>>
                 researchFieldCategories =
-                findResearchFieldCategories(laboratoryIds);
+                findResearchFieldCategories(categoryMappings);
 
         Map<Long, List<AffiliationResult>> affiliations =
                 findAffiliations(laboratoryIds);
 
         return summaries.stream()
                 .map(summary ->
-                        laboratorySummaryAssembler.assemble(
+                        laboratorySummaryAssembler.assembleWithResearchFieldDetails(
                                 summary,
                                 researchFields.getOrDefault(
                                         summary.getId(),
@@ -220,9 +226,26 @@ public class LaboratoryQueryService {
                 .toList();
     }
 
-    private Map<Long, List<String>> findResearchFields(
-            List<Long> laboratoryIds
+    private Map<Long, List<ResearchFieldResult>> findResearchFields(
+            List<Long> laboratoryIds,
+            List<LaboratoryResearchFieldCategoryProjection> categoryMappings
     ) {
+        Map<ResearchFieldKey, List<Long>> categoryIdsByField =
+                categoryMappings.stream()
+                        .collect(Collectors.groupingBy(
+                                category -> new ResearchFieldKey(
+                                        category.getLaboratoryId(),
+                                        category.getResearchFieldId()
+                                ),
+                                Collectors.mapping(
+                                        LaboratoryResearchFieldCategoryProjection::getCategoryId,
+                                        Collectors.collectingAndThen(
+                                                Collectors.toCollection(LinkedHashSet::new),
+                                                List::copyOf
+                                        )
+                                )
+                        ));
+
         return laboratoryResearchFieldRepository
                 .findFieldsByLaboratoryIds(laboratoryIds)
                 .stream()
@@ -231,7 +254,17 @@ public class LaboratoryQueryService {
                                 LaboratoryResearchFieldProjection::getLaboratoryId,
                                 LinkedHashMap::new,
                                 Collectors.mapping(
-                                        LaboratoryResearchFieldProjection::getName,
+                                        field -> new ResearchFieldResult(
+                                                field.getResearchFieldId(),
+                                                field.getName(),
+                                                categoryIdsByField.getOrDefault(
+                                                        new ResearchFieldKey(
+                                                                field.getLaboratoryId(),
+                                                                field.getResearchFieldId()
+                                                        ),
+                                                        List.of()
+                                                )
+                                        ),
                                         Collectors.toList()
                                 )
                         )
@@ -240,15 +273,13 @@ public class LaboratoryQueryService {
 
     private Map<Long, List<ResearchFieldCategoryResult>>
     findResearchFieldCategories(
-            List<Long> laboratoryIds
+            List<LaboratoryResearchFieldCategoryProjection> categoryMappings
     ) {
         Map<Long, LinkedHashMap<Long, ResearchFieldCategoryResult>>
                 categoriesByLaboratory =
                 new LinkedHashMap<>();
 
-        for (LaboratoryResearchFieldCategoryProjection category
-                : laboratoryResearchFieldCategoryQueryRepository
-                .findAllByLaboratoryIds(laboratoryIds)) {
+        for (LaboratoryResearchFieldCategoryProjection category : categoryMappings) {
 
             categoriesByLaboratory
                     .computeIfAbsent(
@@ -283,6 +314,9 @@ public class LaboratoryQueryService {
                 category.getCategoryCode(),
                 category.getCategoryName()
         );
+    }
+
+    private record ResearchFieldKey(Long laboratoryId, Long researchFieldId) {
     }
 
     private Map<Long, List<AffiliationResult>> findAffiliations(

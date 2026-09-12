@@ -27,7 +27,8 @@ public class LaboratoryController {
 
     @Operation(
             summary = "연구실 목록 조회",
-            description = "sort가 REVIEW_COUNT_DESC이면 리뷰 수 기준 페이지 목록을, 그 외에는 전체 목록을 조회합니다."
+            description = "sort가 REVIEW_COUNT_DESC이면 리뷰 수 기준 페이지 목록을, 그 외에는 전체 목록을 조회합니다. "
+                    + "각 연구실은 연결된 연구 분야의 ID, 이름, 카테고리 ID 목록을 researchFieldDetails로 반환합니다."
     )
     @io.swagger.v3.oas.annotations.responses.ApiResponse(
             responseCode = "200",

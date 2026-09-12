@@ -10,6 +10,7 @@ import com.sebu.backend.laboratory.repository.LaboratoryRepository;
 import com.sebu.backend.laboratory.repository.LaboratoryResearchFieldCategoryProjection;
 import com.sebu.backend.laboratory.repository.LaboratoryResearchFieldCategoryQueryRepository;
 import com.sebu.backend.laboratory.repository.LaboratoryResearchFieldRepository;
+import com.sebu.backend.laboratory.repository.LaboratoryResearchFieldProjection;
 import com.sebu.backend.laboratory.repository.LaboratorySummaryProjection;
 import com.sebu.backend.laboratoryreview.repository.LaboratoryReviewQueryRepository;
 import org.junit.jupiter.api.Test;
@@ -63,6 +64,12 @@ class LaboratoryQueryServiceTest {
     @Mock
     LaboratoryResearchFieldCategoryProjection duplicateCategoryProjection;
 
+    @Mock
+    LaboratoryResearchFieldProjection researchField;
+
+    @Mock
+    LaboratoryResearchFieldProjection secondResearchField;
+
     @Spy
     LaboratorySummaryAssembler laboratorySummaryAssembler =
             new LaboratorySummaryAssembler();
@@ -110,7 +117,14 @@ class LaboratoryQueryServiceTest {
                 .findFieldsByLaboratoryIds(
                         List.of(1L)
                 ))
-                .thenReturn(List.of());
+                .thenReturn(List.of(researchField, secondResearchField));
+
+        when(researchField.getLaboratoryId()).thenReturn(1L);
+        when(researchField.getResearchFieldId()).thenReturn(101L);
+        when(researchField.getName()).thenReturn("머신러닝");
+        when(secondResearchField.getLaboratoryId()).thenReturn(1L);
+        when(secondResearchField.getResearchFieldId()).thenReturn(102L);
+        when(secondResearchField.getName()).thenReturn("인공지능");
 
         when(laboratoryResearchFieldCategoryQueryRepository
                 .findAllByLaboratoryIds(
@@ -144,6 +158,9 @@ class LaboratoryQueryServiceTest {
 
         when(duplicateCategoryProjection.getLaboratoryId())
                 .thenReturn(1L);
+
+        when(categoryProjection.getResearchFieldId()).thenReturn(101L);
+        when(duplicateCategoryProjection.getResearchFieldId()).thenReturn(102L);
 
         when(duplicateCategoryProjection.getCategoryId())
                 .thenReturn(10L);
@@ -195,6 +212,14 @@ class LaboratoryQueryServiceTest {
                         category -> category.code()
                 )
                 .containsExactly("AI_ML");
+
+        assertThat(laboratory.researchFieldDetails())
+                .extracting(field -> field.researchFieldId())
+                .containsExactly(101L, 102L);
+        assertThat(laboratory.researchFieldDetails())
+                .allSatisfy(field -> assertThat(field.categoryIds()).containsExactly(10L));
+        assertThat(laboratory.researchFields())
+                .containsExactly("머신러닝", "인공지능");
 
         assertThat(laboratory.reviewCount())
                 .isZero();
