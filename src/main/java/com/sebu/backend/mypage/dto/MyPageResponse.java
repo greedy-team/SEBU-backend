@@ -19,6 +19,7 @@ public record MyPageResponse(
     public record Profile(
             String name,
             String nickname,
+            @Schema(description = "학년: 1~4=해당 학년, 5=졸업생. 미선택 시 null", example = "5", nullable = true)
             Short grade,
             DepartmentSummary department,
             @Schema(description = "전공 계열 코드. 아직 선택하지 않은 기존 사용자는 null",

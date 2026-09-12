@@ -11,6 +11,8 @@ import com.sebu.backend.user.domain.AppUser;
 import com.sebu.backend.user.repository.AppUserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -96,8 +98,9 @@ public class MyPageControllerIntegrationTest {
                         .isEmpty());
     }
 
-    @Test
-    void 로그인한_사용자는_프로필을_저장할_수_있다() throws Exception {
+    @ParameterizedTest
+    @ValueSource(ints = {1, 2, 3, 4, 5})
+    void 로그인한_사용자는_학년과_졸업생_프로필을_저장하고_조회할_수_있다(int grade) throws Exception {
         College college = collegeRepository.save(
                 new College("프로필컨트롤러대학")
         );
@@ -110,12 +113,12 @@ public class MyPageControllerIntegrationTest {
         String requestBody = """
                 {
                   "nickname": "길동이",
-                  "grade": 3,
+                  "grade": %d,
                   "academicField": "ENGINEERING",
                   "gpaBand": "GTE_3_5",
                   "introduction": "머신러닝에 관심이 있습니다."
                 }
-                """;
+                """.formatted(grade);
 
         mockMvc.perform(
                         put("/api/v1/users/me/profile")
@@ -133,7 +136,7 @@ public class MyPageControllerIntegrationTest {
                 ))
                 .andExpect(jsonPath("$.data.name").value("홍길동"))
                 .andExpect(jsonPath("$.data.nickname").value("길동이"))
-                .andExpect(jsonPath("$.data.grade").value(3))
+                .andExpect(jsonPath("$.data.grade").value(grade))
                 .andExpect(jsonPath("$.data.department.id")
                         .value(major.getId().toString()))
                 .andExpect(jsonPath("$.data.department.name")
@@ -145,6 +148,12 @@ public class MyPageControllerIntegrationTest {
                 .andExpect(jsonPath("$.data.profileCompleted")
                         .value(true))
                 .andExpect(jsonPath("$.data.profileUpdatedAt").exists());
+
+        mockMvc.perform(get("/api/v1/users/me/mypage")
+                        .with(jwt().jwt(jwt -> jwt.subject(user.getId().toString()))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.profile.grade").value(grade))
+                .andExpect(jsonPath("$.data.profile.profileCompleted").value(true));
     }
 
     @Test
@@ -252,7 +261,7 @@ public class MyPageControllerIntegrationTest {
         String requestBody = """
                 {
                   "nickname": "길동이",
-                  "grade": 5,
+                  "grade": 6,
                   "academicField": "ENGINEERING",
                   "gpaBand": "GTE_3_5",
                   "introduction": "머신러닝에 관심이 있습니다."

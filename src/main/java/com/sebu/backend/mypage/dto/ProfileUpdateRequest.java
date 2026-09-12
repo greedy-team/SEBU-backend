@@ -15,7 +15,9 @@ public record ProfileUpdateRequest (
 
     @NotNull
     @Min(1)
-    @Max(4)
+    @Max(5)
+    @Schema(description = "학년: 1=1학년, 2=2학년, 3=3학년, 4=4학년, 5=졸업생. 사용자가 직접 선택",
+        example = "5")
     Short grade,
 
     @NotNull(message = "계열을 선택해 주세요.")

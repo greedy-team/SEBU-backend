@@ -15,6 +15,8 @@ import com.sebu.backend.user.repository.AppUserRepository;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -271,8 +273,9 @@ class AuthApiIntegrationTest {
             .andExpect(header().stringValues(HttpHeaders.SET_COOKIE, org.hamcrest.Matchers.hasItem(containsString("Max-Age=0"))));
     }
 
-    @Test
-    void authenticatedUserChoosesGradeAndReloginDoesNotOverwriteIt() throws Exception {
+    @ParameterizedTest
+    @ValueSource(ints = {1, 2, 3, 4, 5})
+    void authenticatedUserChoosesGradeAndReloginDoesNotOverwriteIt(int grade) throws Exception {
         MvcResult login = mockMvc.perform(loginRequest("21012345", "known-fake-password-for-log-test"))
             .andExpect(status().isOk())
             .andReturn();
@@ -281,14 +284,14 @@ class AuthApiIntegrationTest {
         mockMvc.perform(patch("/api/v1/me/profile")
                 .cookie(new Cookie(AuthCookieFactory.ACCESS_COOKIE, accessToken))
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"grade\":3}"))
+                .content("{\"grade\":%d}".formatted(grade)))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.data.studentId").value("21012345"))
             .andExpect(jsonPath("$.data.name").value("홍길동"))
             .andExpect(jsonPath("$.data.nickname").doesNotExist())
             .andExpect(jsonPath("$.data.department.name").value("컴퓨터공학과"))
             .andExpect(jsonPath("$.data.department.code").doesNotExist())
-            .andExpect(jsonPath("$.data.grade").value(3))
+            .andExpect(jsonPath("$.data.grade").value(grade))
             .andExpect(jsonPath("$.data.profileCompleted").value(true));
 
         mockMvc.perform(loginRequest("21012345", "known-fake-password-for-log-test"))
@@ -296,12 +299,12 @@ class AuthApiIntegrationTest {
         mockMvc.perform(get("/api/v1/me")
                 .cookie(new Cookie(AuthCookieFactory.ACCESS_COOKIE, accessToken)))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.data.grade").value(3));
+            .andExpect(jsonPath("$.data.grade").value(grade));
 
         mockMvc.perform(patch("/api/v1/me/profile")
                 .cookie(new Cookie(AuthCookieFactory.ACCESS_COOKIE, accessToken))
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"grade\":5}"))
+                .content("{\"grade\":6}"))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.error.code").value("INVALID_GRADE"));
 
