@@ -1,5 +1,8 @@
 # 교수 정보 1차 크롤링 실행 안내
 
+우주항공시스템공학부 세 전공은 별도 `SEJONG_AEROSPACE` 파서를 사용합니다.
+지원 범위와 출처 등록 전 확인사항은 [우주항공 교수 목록 크롤링](aerospace-professor-crawling.md)을 참고합니다.
+
 ## 동작 범위
 
 교수진 목록 페이지에서 다음 값을 수집하여 `professor_crawl_candidate`에 저장합니다.
