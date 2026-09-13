@@ -74,7 +74,7 @@ Windows에서는 저장소 루트에서 다음 명령을 실행합니다.
 - Swagger UI: `http://localhost:8080/swagger-ui/index.html`
 - OpenAPI JSON: `http://localhost:8080/v3/api-docs`
 
-인증이 필요한 API는 로그인으로 발급받은 Access Token을 Swagger UI의 `Authorize` 버튼에 입력합니다. `Bearer` 접두사는 Swagger UI가 자동으로 추가하므로 토큰 값만 입력합니다. 운영 환경에서는 Swagger UI와 OpenAPI 문서를 노출하지 않습니다.
+인증이 필요한 API는 먼저 `GET /api/v1/auth/csrf`를 호출한 뒤 세종대학교 로그인을 실행합니다. 인증은 브라우저가 저장한 HttpOnly 쿠키를 사용하며, 변경 요청에는 현재 `XSRF-TOKEN` 쿠키 값을 `X-XSRF-TOKEN` 헤더로 전달합니다. 자세한 흐름은 [쿠키 인증 계약](docs/cookie-authentication.md)을 참고합니다. 운영 환경에서는 Swagger UI와 OpenAPI 문서를 노출하지 않습니다.
 
 ### 세종 포털 로그인 TLS 호환성
 
