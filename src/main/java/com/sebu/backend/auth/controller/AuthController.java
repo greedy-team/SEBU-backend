@@ -9,6 +9,8 @@ import com.sebu.backend.auth.service.AuthSessionService;
 import com.sebu.backend.auth.service.AccountRecoveryService;
 import com.sebu.backend.global.auth.CsrfCookieSupport;
 import com.sebu.backend.global.response.ApiResponse;
+import com.sebu.backend.global.logging.OperationalLog;
+import org.slf4j.event.Level;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -67,6 +69,7 @@ public class AuthController {
             request.password()
         );
         csrfCookieSupport.renew(servletRequest, servletResponse);
+        logLogin(outcome);
         return switch (outcome) {
             case AuthSessionService.LoginSession session -> ResponseEntity.ok()
                 .cacheControl(CacheControl.noStore())
@@ -113,6 +116,8 @@ public class AuthController {
         HttpServletResponse response
     ) {
         AuthSessionService.LoginSession session = accountRecoveryService.recover(recoveryToken);
+        OperationalLog.auth(OperationalLog.Auth.RECOVERY, OperationalLog.Outcome.SUCCESS,
+            "RECOVERED", null, Level.INFO, null);
         csrfCookieSupport.renew(request, response);
         return ResponseEntity.ok()
             .cacheControl(CacheControl.noStore())
@@ -134,6 +139,8 @@ public class AuthController {
         @CookieValue(name = AuthCookieFactory.REFRESH_COOKIE, required = false) String refreshToken
     ) {
         AuthSessionService.RefreshSession session = authSessionService.refresh(refreshToken);
+        OperationalLog.auth(OperationalLog.Auth.REFRESH, OperationalLog.Outcome.SUCCESS,
+            "ROTATED", null, Level.INFO, null);
         return ResponseEntity.ok()
             .cacheControl(CacheControl.noStore())
             .header(HttpHeaders.SET_COOKIE,
@@ -149,6 +156,8 @@ public class AuthController {
         HttpServletRequest request, HttpServletResponse response
     ) {
         authSessionService.logout(refreshToken);
+        OperationalLog.auth(OperationalLog.Auth.LOGOUT, OperationalLog.Outcome.COMPLETED,
+            "REQUEST_COMPLETED", null, Level.INFO, null);
         csrfCookieSupport.renew(request, response);
         return ResponseEntity.ok()
             .cacheControl(CacheControl.noStore())
@@ -157,5 +166,16 @@ public class AuthController {
                 cookieFactory.deleteRefresh().toString(),
                 cookieFactory.deleteRecovery().toString())
             .body(ApiResponse.success(new LogoutResponse("로그아웃되었습니다.")));
+    }
+
+    private void logLogin(AuthSessionService.LoginOutcome outcome) {
+        switch (outcome) {
+            case AuthSessionService.LoginSession session -> OperationalLog.auth(
+                OperationalLog.Auth.LOGIN, OperationalLog.Outcome.SUCCESS, "AUTHENTICATED", session.isNewUser(), Level.INFO, null);
+            case AuthSessionService.RecoveryChallenge ignored -> OperationalLog.auth(
+                OperationalLog.Auth.LOGIN, OperationalLog.Outcome.RECOVERY_REQUIRED, "RECOVERY_REQUIRED", null, Level.INFO, null);
+            case AuthSessionService.RecoveryCooldown ignored -> OperationalLog.auth(
+                OperationalLog.Auth.LOGIN, OperationalLog.Outcome.REJECTED, "RECOVERY_COOLDOWN", null, Level.INFO, null);
+        }
     }
 }

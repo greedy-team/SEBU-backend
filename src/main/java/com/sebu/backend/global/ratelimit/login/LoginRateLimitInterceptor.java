@@ -1,5 +1,6 @@
 package com.sebu.backend.global.ratelimit.login;
 
+import com.sebu.backend.global.logging.OperationalLog;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sebu.backend.global.ratelimit.dto.RateLimitDecision;
 import com.sebu.backend.global.response.ApiResponse;
@@ -34,6 +35,7 @@ public class LoginRateLimitInterceptor implements HandlerInterceptor {
             return true;
         }
 
+        OperationalLog.rateLimited(request, "LOGIN", decision.retryAfterSeconds());
         response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
         response.setHeader("Retry-After", String.valueOf(decision.retryAfterSeconds()));
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);

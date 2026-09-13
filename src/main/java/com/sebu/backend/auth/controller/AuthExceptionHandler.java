@@ -8,6 +8,8 @@ import com.sebu.backend.auth.exception.RecoveryTokenInvalidException;
 import com.sebu.backend.auth.exception.RefreshTokenInvalidException;
 import com.sebu.backend.auth.port.SejongAuthenticationException;
 import com.sebu.backend.global.response.ApiResponse;
+import com.sebu.backend.global.logging.OperationalLog;
+import org.slf4j.event.Level;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.Ordered;
@@ -33,6 +35,8 @@ public class AuthExceptionHandler {
     }
 
     private ResponseEntity<ApiResponse<Void>> invalidLoginRequest() {
+        OperationalLog.auth(OperationalLog.Auth.LOGIN, OperationalLog.Outcome.REJECTED,
+            "INVALID_LOGIN_REQUEST", null, Level.INFO, null);
         return failure(
             HttpStatus.BAD_REQUEST,
             "INVALID_LOGIN_REQUEST",
@@ -66,6 +70,15 @@ public class AuthExceptionHandler {
 
     @ExceptionHandler(SejongAuthenticationException.class)
     public ResponseEntity<ApiResponse<Void>> handleSejongAuthentication(SejongAuthenticationException exception) {
+        boolean expected = exception.getReason() == SejongAuthenticationException.Reason.AUTHENTICATION_FAILED;
+        boolean suspicious = exception.getReason() == SejongAuthenticationException.Reason.IDENTITY_MISMATCH
+            || exception.getFailureKind() == SejongAuthenticationException.FailureKind.REDIRECT_BLOCKED;
+        String reason = exception.getFailureKind() == SejongAuthenticationException.FailureKind.NONE
+            ? exception.getReason().name() : exception.getFailureKind().name();
+        OperationalLog.auth(OperationalLog.Auth.LOGIN,
+            expected || suspicious ? OperationalLog.Outcome.REJECTED : OperationalLog.Outcome.FAILURE,
+            reason, null, suspicious ? Level.WARN : expected ? Level.INFO : Level.ERROR,
+            expected || suspicious ? null : exception, exception.getStage().name());
         if (exception.getReason() == SejongAuthenticationException.Reason.AUTHENTICATION_FAILED
             || exception.getReason() == SejongAuthenticationException.Reason.IDENTITY_MISMATCH) {
             return failure(
@@ -83,6 +96,8 @@ public class AuthExceptionHandler {
 
     @ExceptionHandler(RefreshTokenInvalidException.class)
     public ResponseEntity<ApiResponse<Void>> handleInvalidRefreshToken(RefreshTokenInvalidException exception) {
+        OperationalLog.auth(OperationalLog.Auth.REFRESH, OperationalLog.Outcome.REJECTED,
+            exception.getReason().name(), null, Level.INFO, null);
         return failure(
             HttpStatus.UNAUTHORIZED,
             "REFRESH_TOKEN_INVALID",
@@ -92,6 +107,8 @@ public class AuthExceptionHandler {
 
     @ExceptionHandler(RecoveryTokenInvalidException.class)
     public ResponseEntity<ApiResponse<Void>> handleInvalidRecoveryToken(RecoveryTokenInvalidException exception) {
+        OperationalLog.auth(OperationalLog.Auth.RECOVERY, OperationalLog.Outcome.REJECTED,
+            "RECOVERY_TOKEN_INVALID", null, Level.INFO, null);
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
             .header(HttpHeaders.CACHE_CONTROL, "private, no-store")
             .header(HttpHeaders.SET_COOKIE, cookieFactory.deleteRecovery().toString())
@@ -103,6 +120,8 @@ public class AuthExceptionHandler {
 
     @ExceptionHandler(AuthSessionConflictException.class)
     public ResponseEntity<ApiResponse<Void>> handleAuthSessionConflict(AuthSessionConflictException exception) {
+        OperationalLog.auth(OperationalLog.Auth.LOGIN, OperationalLog.Outcome.REJECTED,
+            "SESSION_CONFLICT", null, Level.INFO, null);
         return failure(
             HttpStatus.CONFLICT,
             "AUTH_SESSION_CONFLICT",
@@ -112,6 +131,7 @@ public class AuthExceptionHandler {
 
     @ExceptionHandler(AccessTokenInvalidException.class)
     public ResponseEntity<ApiResponse<Void>> handleInvalidAccessToken(AccessTokenInvalidException exception) {
+        OperationalLog.accessRejected(AccessTokenInvalidException.CODE);
         return failure(
             HttpStatus.UNAUTHORIZED,
             AccessTokenInvalidException.CODE,
