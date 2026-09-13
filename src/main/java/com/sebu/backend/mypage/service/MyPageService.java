@@ -157,6 +157,7 @@ public class MyPageService {
                 user.getNickname(),
                 user.getGrade(),
                 department,
+                user.getAcademicField(),
                 user.getGpaBand(),
                 user.getIntroduction(),
                 user.isProfileCompleted(),
