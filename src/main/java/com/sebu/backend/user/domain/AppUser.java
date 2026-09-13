@@ -19,6 +19,8 @@ import jakarta.persistence.Version;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
 import java.util.Objects;
@@ -71,6 +73,7 @@ public class AppUser extends BaseTimeEntity {
     @Column(name = "nickname_normalized", length = 100)
     private String nicknameNormalized;
 
+    // 1-4: undergraduate year, 5: graduate (selected by the user).
     private Short grade;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -79,6 +82,11 @@ public class AppUser extends BaseTimeEntity {
 
     @Column(name = "sejong_department_name", length = 100)
     private String sejongDepartmentName;
+
+    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.VARCHAR)
+    @Column(name = "academic_field", length = 32)
+    private AcademicField academicField;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "gpa_band", length = 20)
@@ -159,7 +167,7 @@ public class AppUser extends BaseTimeEntity {
     }
 
     public void updateGrade(int grade, LocalDateTime changedAt) {
-        if (grade < 1 || grade > 4) {
+        if (grade < 1 || grade > 5) {
             throw new IllegalArgumentException("GRADE_OUT_OF_RANGE");
         }
         short normalizedGrade = (short) grade;
@@ -169,6 +177,15 @@ public class AppUser extends BaseTimeEntity {
         this.grade = normalizedGrade;
         this.profileUpdatedAt = Objects.requireNonNull(changedAt, "PROFILE_UPDATED_AT_REQUIRED");
         refreshProfileCompleted();
+    }
+
+    public void selectAcademicField(AcademicField academicField, LocalDateTime changedAt) {
+        Objects.requireNonNull(academicField, "ACADEMIC_FIELD_REQUIRED");
+        if (this.academicField == academicField) {
+            return;
+        }
+        this.profileUpdatedAt = Objects.requireNonNull(changedAt, "PROFILE_UPDATED_AT_REQUIRED");
+        this.academicField = academicField;
     }
 
     private void refreshProfileCompleted() {
@@ -251,7 +268,7 @@ public class AppUser extends BaseTimeEntity {
     }
 
     private static void requireGrade(Short grade) {
-        if (grade == null || grade < 1 || grade > 4) {
+        if (grade == null || grade < 1 || grade > 5) {
             throw new IllegalArgumentException("GRADE_OUT_OF_RANGE");
         }
     }
@@ -287,6 +304,7 @@ public class AppUser extends BaseTimeEntity {
         grade = null;
         majorDepartment = null;
         sejongDepartmentName = null;
+        academicField = null;
         gpaBand = null;
         introduction = "";
         introductionModeratedAt = null;

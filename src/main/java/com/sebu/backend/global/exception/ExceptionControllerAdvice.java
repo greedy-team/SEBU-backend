@@ -1,5 +1,7 @@
 package com.sebu.backend.global.exception;
 
+import com.fasterxml.jackson.databind.exc.MismatchedInputException;
+import com.sebu.backend.user.domain.AcademicField;
 import com.sebu.backend.auth.exception.AccessTokenInvalidException;
 import com.sebu.backend.bookmark.exception.BookmarkLimitExceededException;
 import com.sebu.backend.global.response.ApiResponse;
@@ -275,6 +277,19 @@ public class ExceptionControllerAdvice {
     public ResponseEntity<ApiResponse<Void>> handleHttpMessageNotReadable(
             HttpMessageNotReadableException exception
     ) {
+        for (Throwable cause = exception.getCause(); cause != null; cause = cause.getCause()) {
+            if (cause instanceof MismatchedInputException mismatch
+                    && mismatch.getTargetType() == AcademicField.class) {
+                return ResponseEntity.badRequest().body(ApiResponse.failure(
+                        "VALIDATION_ERROR",
+                        "입력값을 확인해 주세요.",
+                        List.of(new ApiResponse.FieldError(
+                                "academicField", "INVALID_VALUE", mismatch.getOriginalMessage()
+                        )),
+                        null
+                ));
+            }
+        }
         return ResponseEntity
                 .badRequest()
                 .body(ApiResponse.failure(

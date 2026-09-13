@@ -10,6 +10,7 @@ import com.sebu.backend.mypage.moderation.IntroductionModerationException;
 import com.sebu.backend.mypage.moderation.IntroductionModerator;
 import com.sebu.backend.mypage.moderation.ModerationResult;
 import com.sebu.backend.user.domain.AppUser;
+import com.sebu.backend.user.domain.AcademicField;
 import com.sebu.backend.user.domain.GpaBand;
 import com.sebu.backend.user.repository.AppUserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -58,6 +59,7 @@ class ProfileServiceTest {
                 new ProfileUpdateRequest(
                         " 길동이 ",
                         (short) 3,
+                        AcademicField.ENGINEERING,
                         GpaBand.GTE_3_5,
                         "머신러닝에 관심이 있습니다."
                 );
@@ -106,6 +108,7 @@ class ProfileServiceTest {
                 new ProfileUpdateRequest(
                         "   ",
                         (short) 3,
+                        AcademicField.ENGINEERING,
                         GpaBand.GTE_3_5,
                         "머신러닝에 관심이 있습니다."
                 );
@@ -164,6 +167,7 @@ class ProfileServiceTest {
                 new ProfileUpdateRequest(
                         "길동이",
                         (short) 3,
+                        AcademicField.ENGINEERING,
                         GpaBand.GTE_3_5,
                         "차단될 자기소개"
                 );

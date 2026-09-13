@@ -14,6 +14,7 @@ import com.sebu.backend.mypage.moderation.IntroductionModerator;
 import com.sebu.backend.mypage.moderation.ModerationResult;
 import com.sebu.backend.mypage.service.ProfileService;
 import com.sebu.backend.user.domain.AppUser;
+import com.sebu.backend.user.domain.AcademicField;
 import com.sebu.backend.user.domain.AuthProvider;
 import com.sebu.backend.user.domain.GpaBand;
 import com.sebu.backend.user.repository.AppUserRepository;
@@ -107,6 +108,7 @@ class UserProfileConcurrencyIntegrationTest {
                             {
                               "nickname": "동시닉네임",
                               "grade": 3,
+                              "academicField": "ENGINEERING",
                               "gpaBand": "GTE_3_5",
                               "introduction": "동시성 자기소개"
                             }
@@ -176,6 +178,7 @@ class UserProfileConcurrencyIntegrationTest {
                 new ProfileUpdateRequest(
                     "보존할닉네임",
                     (short) 3,
+                    AcademicField.ENGINEERING,
                     GpaBand.GTE_3_5,
                     "보존할 자기소개"
                 )
@@ -194,6 +197,7 @@ class UserProfileConcurrencyIntegrationTest {
         assertThat(saved.getSejongDepartmentName()).isEqualTo(changedDepartment.getName());
         assertThat(saved.getMajorDepartment().getId()).isEqualTo(changedDepartment.getId());
         assertThat(saved.getNickname()).isEqualTo("보존할닉네임");
+        assertThat(saved.getAcademicField()).isEqualTo(AcademicField.ENGINEERING);
         assertThat(saved.getGrade()).isEqualTo((short) 3);
         assertThat(saved.getIntroduction()).isEqualTo("보존할 자기소개");
         assertThat(saved.isProfileCompleted()).isTrue();
@@ -237,6 +241,7 @@ class UserProfileConcurrencyIntegrationTest {
                         new ProfileUpdateRequest(
                             "탈퇴경합닉네임",
                             (short) 3,
+                            AcademicField.ENGINEERING,
                             GpaBand.GTE_3_5,
                             "탈퇴 이후에는 저장되면 안 되는 자기소개"
                         )
@@ -284,6 +289,7 @@ class UserProfileConcurrencyIntegrationTest {
                 new ProfileUpdateRequest(
                     "수정선행닉네임",
                     (short) 3,
+                    AcademicField.ENGINEERING,
                     GpaBand.GTE_3_5,
                     "탈퇴 전에 저장할 자기소개"
                 )

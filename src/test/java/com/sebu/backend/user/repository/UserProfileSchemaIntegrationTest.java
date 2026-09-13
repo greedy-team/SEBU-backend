@@ -105,8 +105,8 @@ class UserProfileSchemaIntegrationTest {
     }
 
     @ParameterizedTest
-    @ValueSource(ints = {0, 5})
-    void gradeOutsideOneToFourIsRejected(int grade) {
+    @ValueSource(ints = {0, 6})
+    void gradeOutsideSupportedYearsAndGraduateIsRejected(int grade) {
         assertThatThrownBy(() -> jdbcTemplate.update(
             "INSERT INTO app_user (email, grade) VALUES (?, ?)",
             "invalid-grade-" + grade + "@example.com",

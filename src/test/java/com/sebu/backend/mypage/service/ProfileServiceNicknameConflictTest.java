@@ -5,6 +5,7 @@ import com.sebu.backend.mypage.dto.ProfileUpdateRequest;
 import com.sebu.backend.mypage.moderation.IntroductionModerator;
 import com.sebu.backend.mypage.moderation.ModerationResult;
 import com.sebu.backend.user.domain.AppUser;
+import com.sebu.backend.user.domain.AcademicField;
 import com.sebu.backend.user.domain.GpaBand;
 import com.sebu.backend.user.exception.NicknameAlreadyExistsException;
 import com.sebu.backend.user.repository.AppUserRepository;
@@ -42,6 +43,7 @@ class ProfileServiceNicknameConflictTest {
         ProfileUpdateRequest request = new ProfileUpdateRequest(
                 "SeBu",
                 (short) 3,
+                AcademicField.ENGINEERING,
                 GpaBand.GTE_3_5,
                 "동시 충돌 테스트 자기소개"
         );
@@ -65,6 +67,7 @@ class ProfileServiceNicknameConflictTest {
         ProfileUpdateRequest request = new ProfileUpdateRequest(
                 "SeBu",
                 (short) 3,
+                AcademicField.ENGINEERING,
                 GpaBand.GTE_3_5,
                 "다른 DB 오류 테스트 자기소개"
         );
