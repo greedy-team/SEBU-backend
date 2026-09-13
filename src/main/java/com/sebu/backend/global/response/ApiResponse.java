@@ -1,5 +1,6 @@
 package com.sebu.backend.global.response;
 
+import com.sebu.backend.global.logging.RequestTrace;
 import java.util.List;
 
 public record ApiResponse<T>(
@@ -23,7 +24,7 @@ public record ApiResponse<T>(
                         code,
                         message,
                         List.of(),
-                        null
+                        RequestTrace.currentId()
                 )
         );
     }
@@ -41,7 +42,7 @@ public record ApiResponse<T>(
                         code,
                         message,
                         fieldErrors,
-                        traceId
+                        RequestTrace.currentId() != null ? RequestTrace.currentId() : traceId
                 )
         );
     }

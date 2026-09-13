@@ -1,5 +1,6 @@
 package com.sebu.backend.global.auth;
 
+import com.sebu.backend.global.logging.OperationalLog;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sebu.backend.global.response.ApiResponse;
 import jakarta.servlet.http.HttpServletRequest;
@@ -23,6 +24,7 @@ public class ApiAccessDeniedHandler implements AccessDeniedHandler {
     public void handle(HttpServletRequest request, HttpServletResponse response,
                        AccessDeniedException exception) throws IOException {
         boolean csrf = exception instanceof CsrfException;
+        OperationalLog.accessRejected(csrf ? "CSRF_TOKEN_INVALID" : "FORBIDDEN");
         response.setStatus(HttpServletResponse.SC_FORBIDDEN);
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setCharacterEncoding(StandardCharsets.UTF_8.name());

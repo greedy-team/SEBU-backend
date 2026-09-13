@@ -1,5 +1,6 @@
 package com.sebu.backend.global.auth;
 
+import com.sebu.backend.global.logging.OperationalLog;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sebu.backend.auth.exception.AccessTokenInvalidException;
 import com.sebu.backend.global.response.ApiResponse;
@@ -32,6 +33,7 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
     ) throws IOException, ServletException {
         boolean expired = containsExpiredTokenError(authenticationException);
         String code = expired ? "ACCESS_TOKEN_EXPIRED" : AccessTokenInvalidException.CODE;
+        OperationalLog.accessRejected(code);
         String message = expired ? "인증 토큰이 만료되었습니다." : AccessTokenInvalidException.USER_MESSAGE;
 
         response.setStatus(HttpStatus.UNAUTHORIZED.value());

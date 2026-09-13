@@ -5,7 +5,6 @@ import com.sebu.backend.auth.port.SejongAuthenticationException;
 import com.sebu.backend.auth.port.SejongAuthenticator;
 import com.sebu.backend.auth.port.SejongUserProfile;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import okhttp3.FormBody;
 import okhttp3.HttpUrl;
 import okhttp3.MediaType;
@@ -28,7 +27,6 @@ import java.util.regex.Pattern;
 
 @Component
 @RequiredArgsConstructor
-@Slf4j
 public class SejongSsoClient implements SejongAuthenticator {
     private static final String PORTAL_SESSION_COOKIE = "SSOTOKEN";
     private static final String SJPT_SESSION_COOKIE = "JSESSIONID";
@@ -222,12 +220,8 @@ public class SejongSsoClient implements SejongAuthenticator {
         } catch (SejongAuthenticationException exception) {
             throw exception;
         } catch (IOException | RuntimeException exception) {
-            log.warn(
-                "Sejong authentication upstream failure: stage={} causeType={}",
-                stage,
-                exception.getClass().getSimpleName()
-            );
-            throw SejongAuthenticationException.systemUnavailable(exception);
+            throw SejongAuthenticationException.systemUnavailable(exception)
+                .atStage(stage, SejongAuthenticationException.FailureKind.IO_FAILURE);
         }
     }
 
@@ -282,12 +276,8 @@ public class SejongSsoClient implements SejongAuthenticator {
 
     private void requireSuccessful(String stage, int statusCode) {
         if (!isSuccessful(statusCode)) {
-            log.warn(
-                "Sejong authentication upstream failure: stage={} status={}",
-                stage,
-                statusCode
-            );
-            throw SejongAuthenticationException.systemUnavailable();
+            throw SejongAuthenticationException.systemUnavailable()
+                .atStage(stage, SejongAuthenticationException.FailureKind.HTTP_STATUS);
         }
     }
 
@@ -297,8 +287,8 @@ public class SejongSsoClient implements SejongAuthenticator {
         String stage
     ) {
         if (!hasCookie(session, expectedName)) {
-            log.warn("Sejong authentication upstream failure: stage={}", stage);
-            throw SejongAuthenticationException.systemUnavailable();
+            throw SejongAuthenticationException.systemUnavailable()
+                .atStage(stage, SejongAuthenticationException.FailureKind.COOKIE_MISSING);
         }
     }
 
@@ -362,13 +352,8 @@ public class SejongSsoClient implements SejongAuthenticator {
     }
 
     private void rejectRedirect(String stage, int status, String reason) {
-        log.warn(
-            "Sejong authentication upstream failure: stage={} status={} redirect={}",
-            stage,
-            status,
-            reason
-        );
-        throw SejongAuthenticationException.systemUnavailable();
+        throw SejongAuthenticationException.systemUnavailable()
+            .atStage(stage, SejongAuthenticationException.FailureKind.REDIRECT_BLOCKED);
     }
 
     private boolean isSuccessful(int statusCode) {
