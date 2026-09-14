@@ -1,4 +1,3 @@
--- V40/V41 are reserved by the academic-field / graduate-grade pull requests.
 -- Expand both the source setting and the candidate provenance constraints.
 -- Existing values, review state and promotion history remain unchanged.
 ALTER TABLE crawl_source
