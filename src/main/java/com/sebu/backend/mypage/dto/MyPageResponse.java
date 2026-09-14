@@ -3,6 +3,7 @@ package com.sebu.backend.mypage.dto;
 import com.sebu.backend.community.common.dto.CommunityAuthorResponse;
 import com.sebu.backend.community.post.domain.CommunityPostCategory;
 import com.sebu.backend.user.domain.GpaBand;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -16,6 +17,7 @@ public record MyPageResponse(
     public record Profile(
             String name,
             String nickname,
+            @Schema(description = "학년: 1~4=해당 학년, 5=졸업생. 미선택 시 null", example = "5", nullable = true)
             Short grade,
             DepartmentSummary department,
             GpaBand gpaBand,

@@ -71,6 +71,7 @@ public class AppUser extends BaseTimeEntity {
     @Column(name = "nickname_normalized", length = 100)
     private String nicknameNormalized;
 
+    // 1-4: undergraduate year, 5: graduate (selected by the user).
     private Short grade;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -159,7 +160,7 @@ public class AppUser extends BaseTimeEntity {
     }
 
     public void updateGrade(int grade, LocalDateTime changedAt) {
-        if (grade < 1 || grade > 4) {
+        if (grade < 1 || grade > 5) {
             throw new IllegalArgumentException("GRADE_OUT_OF_RANGE");
         }
         short normalizedGrade = (short) grade;
@@ -251,7 +252,7 @@ public class AppUser extends BaseTimeEntity {
     }
 
     private static void requireGrade(Short grade) {
-        if (grade == null || grade < 1 || grade > 4) {
+        if (grade == null || grade < 1 || grade > 5) {
             throw new IllegalArgumentException("GRADE_OUT_OF_RANGE");
         }
     }
