@@ -5,6 +5,24 @@ import lombok.Getter;
 @Getter
 public class SejongAuthenticationException extends RuntimeException {
     private final Reason reason;
+    private Stage stage = Stage.UNKNOWN;
+    private FailureKind failureKind = FailureKind.NONE;
+
+    public SejongAuthenticationException atStage(String stage, FailureKind kind) {
+        this.stage = switch (stage) {
+            case "portal-login-page" -> Stage.PORTAL_LOGIN_PAGE;
+            case "portal-login" -> Stage.PORTAL_LOGIN;
+            case "portal-sso-login" -> Stage.PORTAL_SSO_LOGIN;
+            case "sso-login" -> Stage.SSO_LOGIN;
+            case "user-info" -> Stage.USER_INFO;
+            default -> Stage.UNKNOWN;
+        };
+        this.failureKind = kind;
+        return this;
+    }
+
+    public enum Stage { UNKNOWN, PORTAL_LOGIN_PAGE, PORTAL_LOGIN, PORTAL_SSO_LOGIN, SSO_LOGIN, USER_INFO }
+    public enum FailureKind { NONE, IO_FAILURE, HTTP_STATUS, COOKIE_MISSING, REDIRECT_BLOCKED }
 
     private SejongAuthenticationException(Reason reason, String message, Throwable cause) {
         super(message, cause);

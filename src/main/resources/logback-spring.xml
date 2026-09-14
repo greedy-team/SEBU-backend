@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <springProperty scope="context" name="logEnvironment" source="spring.profiles.active" defaultValue="local"/>
+    <appender name="SAFE_CONSOLE" class="com.sebu.backend.global.logging.BoundedConsoleAppender">
+        <layout class="com.sebu.backend.global.logging.SafeJsonLayout">
+            <environment>${logEnvironment}</environment>
+        </layout>
+    </appender>
+    <logger name="sebu.events" level="INFO"/>
+    <!-- 라이브러리의 SQL/파라미터/예외 원문도 출력하지 않는다. -->
+    <root level="WARN">
+        <appender-ref ref="SAFE_CONSOLE"/>
+    </root>
+</configuration>

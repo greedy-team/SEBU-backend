@@ -1,12 +1,12 @@
 package com.sebu.backend.researchfield.manualsplit.runner;
 
+import com.sebu.backend.global.logging.BatchLog;
 import com.sebu.backend.researchfield.manualsplit.config.ManualSplitImportProperties;
 import com.sebu.backend.researchfield.manualsplit.dto.ManualSplitCsvRow;
 import com.sebu.backend.researchfield.manualsplit.dto.ManualSplitImportResult;
 import com.sebu.backend.researchfield.manualsplit.reader.ManualSplitCsvReader;
 import com.sebu.backend.researchfield.manualsplit.service.ManualSplitImportService;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -15,7 +15,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 
-@Slf4j
 @Component
 @Profile(
     "research-field-manual-split"
@@ -36,18 +35,19 @@ public class ManualSplitImportRunner implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) {
-        List<ManualSplitCsvRow> rows = csvReader.read(properties.getCsvPath());
-        ManualSplitImportResult result = importService.importRows(
-            rows,
-            properties.getReviewer()
-        );
-        log.info(
-            "Manual research field split import finished: sources={}, rows={}, created={}, unchanged={}, rejectedSources={}",
-            result.sourceCount(),
-            result.rowCount(),
-            result.createdCount(),
-            result.unchangedCount(),
-            result.rejectedSourceCount()
-        );
+        BatchLog batch = BatchLog.start("MANUAL_SPLIT_IMPORT");
+        try {
+            List<ManualSplitCsvRow> rows = csvReader.read(properties.getCsvPath());
+            ManualSplitImportResult result = importService.importRows(rows, properties.getReviewer());
+            batch.processed(result.createdCount() + result.unchangedCount());
+            if (result.rejectedSourceCount() > 0) {
+                batch.failed(result.rejectedSourceCount(), null);
+            } else {
+                batch.complete(false);
+            }
+        } catch (RuntimeException exception) {
+            batch.failed(exception);
+            throw exception;
+        }
     }
 }

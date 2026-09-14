@@ -1,5 +1,6 @@
 package com.sebu.backend.global.ratelimit.web;
 
+import com.sebu.backend.global.logging.OperationalLog;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sebu.backend.global.ratelimit.dto.RateLimitDecision;
 import com.sebu.backend.global.ratelimit.service.RateLimiter;
@@ -39,6 +40,7 @@ public class RateLimitInterceptor implements HandlerInterceptor {
         }
         RateLimitDecision decision = rateLimiter.tryAcquireAll(entries);
         if (!decision.allowed()) {
+            OperationalLog.rateLimited(request, primaryPolicy.name(), decision.retryAfterSeconds());
             return reject(response, decision);
         }
         return true;

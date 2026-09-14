@@ -96,19 +96,22 @@ public class AuthSessionService {
     @Transactional
     public RefreshSession refresh(String rawRefreshToken) {
         if (!hasValidTokenShape(rawRefreshToken)) {
-            throw new RefreshTokenInvalidException();
+            throw new RefreshTokenInvalidException(RefreshTokenInvalidException.Reason.MALFORMED);
         }
         String tokenHash = refreshTokenGenerator.hash(rawRefreshToken);
         Long userId = refreshTokenRepository.findUserIdByTokenHash(tokenHash)
-            .orElseThrow(RefreshTokenInvalidException::new);
+            .orElseThrow(() -> new RefreshTokenInvalidException(RefreshTokenInvalidException.Reason.NOT_FOUND));
         AppUser user = appUserRepository.findByIdForUpdate(userId)
             .filter(candidate -> !candidate.isDeleted())
-            .orElseThrow(RefreshTokenInvalidException::new);
+            .orElseThrow(() -> new RefreshTokenInvalidException(RefreshTokenInvalidException.Reason.USER_UNAVAILABLE));
         RefreshToken currentToken = refreshTokenRepository.findByTokenHashForUpdate(tokenHash)
-            .orElseThrow(RefreshTokenInvalidException::new);
+            .orElseThrow(() -> new RefreshTokenInvalidException(RefreshTokenInvalidException.Reason.NOT_FOUND));
         LocalDateTime now = now();
         if (!currentToken.isUsableAt(now)) {
-            throw new RefreshTokenInvalidException();
+            throw new RefreshTokenInvalidException(currentToken.getRevokedAt() != null
+                ? RefreshTokenInvalidException.Reason.REVOKED
+                : !now.isBefore(currentToken.getAbsoluteExpiresAt())
+                    ? RefreshTokenInvalidException.Reason.SESSION_EXPIRED : RefreshTokenInvalidException.Reason.EXPIRED);
         }
 
         var material = refreshTokenGenerator.generate();
@@ -123,7 +126,7 @@ public class AuthSessionService {
             );
         } catch (AuthSessionExpiredException exception) {
             // Expiry can pass after the locked Refresh check. Roll back rotation and keep the 401 contract.
-            throw new RefreshTokenInvalidException();
+            throw new RefreshTokenInvalidException(RefreshTokenInvalidException.Reason.SESSION_EXPIRED);
         }
         return new RefreshSession(
             access.value(), access.expiresIn(), material.rawToken(),

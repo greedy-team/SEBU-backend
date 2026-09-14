@@ -1,11 +1,11 @@
 package com.sebu.backend.community.exception;
 
+import com.sebu.backend.global.logging.OperationalLog;
 import com.sebu.backend.auth.exception.AccessTokenInvalidException;
 import com.sebu.backend.bookmark.exception.BookmarkLimitExceededException;
 import com.sebu.backend.global.response.ApiResponse;
 import com.sebu.backend.mypage.moderation.IntroductionModerationUnavailableException;
 import com.sebu.backend.user.exception.UserNotFoundException;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
@@ -18,7 +18,6 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 
 import java.util.List;
 
-@Slf4j
 @Order(Ordered.HIGHEST_PRECEDENCE)
 @RestControllerAdvice(basePackages = "com.sebu.backend.community")
 public class CommunityExceptionHandler {
@@ -39,6 +38,7 @@ public class CommunityExceptionHandler {
     public ResponseEntity<ApiResponse<Void>> handleAccessTokenInvalid(
             AccessTokenInvalidException exception
     ) {
+        OperationalLog.accessRejected(AccessTokenInvalidException.CODE);
         return ResponseEntity
                 .status(HttpStatus.UNAUTHORIZED)
                 .body(ApiResponse.failure(
@@ -63,6 +63,7 @@ public class CommunityExceptionHandler {
 
     @ExceptionHandler(PostForbiddenException.class)
     public ResponseEntity<ApiResponse<Void>> handlePostForbidden(PostForbiddenException exception) {
+        OperationalLog.accessRejected("POST_FORBIDDEN");
         return ResponseEntity
                 .status(HttpStatus.FORBIDDEN)
                 .body(ApiResponse.failure("POST_FORBIDDEN", "게시글을 수정하거나 삭제할 권한이 없습니다."));
@@ -77,6 +78,7 @@ public class CommunityExceptionHandler {
 
     @ExceptionHandler(CommentForbiddenException.class)
     public ResponseEntity<ApiResponse<Void>> handleCommentForbidden(CommentForbiddenException exception) {
+        OperationalLog.accessRejected("COMMENT_FORBIDDEN");
         return ResponseEntity
                 .status(HttpStatus.FORBIDDEN)
                 .body(ApiResponse.failure("COMMENT_FORBIDDEN", "댓글을 수정하거나 삭제할 권한이 없습니다."));
@@ -143,6 +145,7 @@ public class CommunityExceptionHandler {
     public ResponseEntity<ApiResponse<Void>> handleContentModerationUnavailable(
             IntroductionModerationUnavailableException exception
     ) {
+        OperationalLog.moderationUnavailable(exception);
         return ResponseEntity
                 .status(HttpStatus.SERVICE_UNAVAILABLE)
                 .body(ApiResponse.failure(
@@ -155,7 +158,7 @@ public class CommunityExceptionHandler {
     public ResponseEntity<ApiResponse<Void>> handleUnexpectedRuntimeException(
             RuntimeException exception
     ) {
-        log.error("Unexpected community API failure", exception);
+        OperationalLog.unexpected(exception);
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ApiResponse.failure(

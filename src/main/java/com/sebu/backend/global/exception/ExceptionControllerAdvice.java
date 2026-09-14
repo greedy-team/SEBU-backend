@@ -1,5 +1,6 @@
 package com.sebu.backend.global.exception;
 
+import com.sebu.backend.global.logging.OperationalLog;
 import com.sebu.backend.auth.exception.AccessTokenInvalidException;
 import com.sebu.backend.bookmark.exception.BookmarkLimitExceededException;
 import com.sebu.backend.global.response.ApiResponse;
@@ -18,7 +19,6 @@ import com.sebu.backend.user.exception.InvalidNicknameException;
 import com.sebu.backend.user.exception.NicknameAlreadyExistsException;
 import com.sebu.backend.user.exception.ProfileUpdateConflictException;
 import com.sebu.backend.user.exception.UserNotFoundException;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
@@ -31,7 +31,6 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 
 import java.util.List;
 
-@Slf4j
 @Order(Ordered.LOWEST_PRECEDENCE)
 @RestControllerAdvice
 public class ExceptionControllerAdvice {
@@ -119,6 +118,7 @@ public class ExceptionControllerAdvice {
     public ResponseEntity<ApiResponse<Void>> handleIntroductionModerationUnavailable(
             IntroductionModerationUnavailableException exception
     ) {
+        OperationalLog.moderationUnavailable(exception);
         return ResponseEntity
                 .status(HttpStatus.SERVICE_UNAVAILABLE)
                 .body(ApiResponse.failure(
@@ -133,6 +133,7 @@ public class ExceptionControllerAdvice {
     public ResponseEntity<ApiResponse<Void>> handleAccessTokenInvalid(
             AccessTokenInvalidException exception
     ) {
+        OperationalLog.accessRejected(AccessTokenInvalidException.CODE);
         return ResponseEntity
                 .status(HttpStatus.UNAUTHORIZED)
                 .body(ApiResponse.failure(
@@ -193,6 +194,7 @@ public class ExceptionControllerAdvice {
     public ResponseEntity<ApiResponse<Void>> handleLaboratoryReviewForbidden(
             LaboratoryReviewForbiddenException exception
     ) {
+        OperationalLog.accessRejected("LABORATORY_REVIEW_FORBIDDEN");
         return ResponseEntity
                 .status(HttpStatus.FORBIDDEN)
                 .body(ApiResponse.failure(
@@ -299,7 +301,7 @@ public class ExceptionControllerAdvice {
     public ResponseEntity<ApiResponse<Void>> handleUnexpectedRuntimeException(
             RuntimeException exception
     ) {
-        log.error("Unexpected API failure", exception);
+        OperationalLog.unexpected(exception);
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ApiResponse.failure(
