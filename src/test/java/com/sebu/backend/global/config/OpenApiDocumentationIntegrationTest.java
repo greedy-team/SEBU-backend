@@ -69,6 +69,32 @@ class OpenApiDocumentationIntegrationTest {
     }
 
     @Test
+    void documentsResearchFieldDetailsOnBothLaboratoryResponses() throws Exception {
+        mockMvc.perform(get("/v3/api-docs"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.components.schemas.LaboratoriesResponse.properties.laboratories.items['$ref']")
+                        .value("#/components/schemas/LaboratoryResponse"))
+                .andExpect(jsonPath("$.components.schemas.LaboratoriesPagedResponse.properties.laboratories.items['$ref']")
+                        .value("#/components/schemas/LaboratoryResponse"))
+                .andExpect(jsonPath("$.components.schemas.LaboratoryResponse.properties.researchFields.items.type")
+                        .value("string"))
+                .andExpect(jsonPath("$.components.schemas.LaboratoryResponse.properties.researchFieldDetails.type")
+                        .value("array"))
+                .andExpect(jsonPath("$.components.schemas.LaboratoryResponse.properties.researchFieldDetails.items['$ref']")
+                        .value("#/components/schemas/LaboratoryResearchFieldDetailResponse"))
+                .andExpect(jsonPath("$.components.schemas.LaboratoryResearchFieldDetailResponse.properties.researchFieldId.type")
+                        .value("integer"))
+                .andExpect(jsonPath("$.components.schemas.LaboratoryResearchFieldDetailResponse.properties.researchFieldId.format")
+                        .value("int64"))
+                .andExpect(jsonPath("$.components.schemas.LaboratoryResearchFieldDetailResponse.properties.name.type")
+                        .value("string"))
+                .andExpect(jsonPath("$.components.schemas.LaboratoryResearchFieldDetailResponse.properties.categoryIds.type")
+                        .value("array"))
+                .andExpect(jsonPath("$.components.schemas.LaboratoryResearchFieldDetailResponse.properties.categoryIds.items.type")
+                        .value("integer"));
+    }
+
+    @Test
     void exposesSwaggerUiWithoutAuthentication() throws Exception {
         mockMvc.perform(get("/swagger-ui/index.html"))
                 .andExpect(status().isOk());

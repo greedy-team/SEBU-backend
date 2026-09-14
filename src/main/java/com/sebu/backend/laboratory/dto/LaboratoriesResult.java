@@ -19,6 +19,7 @@ public record LaboratoriesResult(
             DepartmentResult department,
             List<AffiliationResult> affiliations,
             List<String> researchFields,
+            List<ResearchFieldResult> researchFieldDetails,
             List<ResearchFieldCategoryResult> researchFieldCategories,
             RecruitmentStatus recruitmentStatus,
             long bookmarkCount,
@@ -44,6 +45,16 @@ public record LaboratoriesResult(
             Long id,
             String name
     ) {
+    }
+
+    public record ResearchFieldResult(
+            Long researchFieldId,
+            String name,
+            List<Long> categoryIds
+    ) {
+        public ResearchFieldResult {
+            categoryIds = List.copyOf(categoryIds);
+        }
     }
 
     public record ResearchFieldCategoryResult(

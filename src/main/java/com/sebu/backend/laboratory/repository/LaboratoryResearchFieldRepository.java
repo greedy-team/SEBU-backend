@@ -11,10 +11,10 @@ import java.util.List;
 
 public interface LaboratoryResearchFieldRepository extends JpaRepository<LaboratoryResearchField, LaboratoryResearchFieldId> {
     @Query("""
-        select lrf.laboratory.id as laboratoryId, rf.name as name
+        select lrf.laboratory.id as laboratoryId, rf.id as researchFieldId, rf.name as name
         from LaboratoryResearchField lrf join lrf.researchField rf
         where lrf.laboratory.id in :laboratoryIds
-        order by lrf.laboratory.id, rf.name
+        order by lrf.laboratory.id, rf.name, rf.id
         """)
     List<LaboratoryResearchFieldProjection> findFieldsByLaboratoryIds(@Param("laboratoryIds") Collection<Long> laboratoryIds);
 }

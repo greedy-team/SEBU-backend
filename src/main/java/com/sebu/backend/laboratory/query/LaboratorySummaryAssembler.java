@@ -41,6 +41,43 @@ public class LaboratorySummaryAssembler {
             List<LaboratoriesResult.AffiliationResult> affiliations,
             long reviewCount
     ) {
+        return assemble(
+                projection,
+                researchFields,
+                List.of(),
+                researchFieldCategories,
+                affiliations,
+                reviewCount
+        );
+    }
+
+    public LaboratoriesResult.LaboratoryResult assembleWithResearchFieldDetails(
+            LaboratorySummaryProjection projection,
+            List<LaboratoriesResult.ResearchFieldResult> researchFieldDetails,
+            List<LaboratoriesResult.ResearchFieldCategoryResult> researchFieldCategories,
+            List<LaboratoriesResult.AffiliationResult> affiliations,
+            long reviewCount
+    ) {
+        return assemble(
+                projection,
+                researchFieldDetails.stream()
+                        .map(LaboratoriesResult.ResearchFieldResult::name)
+                        .toList(),
+                List.copyOf(researchFieldDetails),
+                researchFieldCategories,
+                affiliations,
+                reviewCount
+        );
+    }
+
+    private LaboratoriesResult.LaboratoryResult assemble(
+            LaboratorySummaryProjection projection,
+            List<String> researchFields,
+            List<LaboratoriesResult.ResearchFieldResult> researchFieldDetails,
+            List<LaboratoriesResult.ResearchFieldCategoryResult> researchFieldCategories,
+            List<LaboratoriesResult.AffiliationResult> affiliations,
+            long reviewCount
+    ) {
         List<LaboratoriesResult.AffiliationResult> resolvedAffiliations =
                 affiliations.isEmpty()
                         ? List.of(primaryAffiliation(projection))
@@ -70,6 +107,7 @@ public class LaboratorySummaryAssembler {
 
                 resolvedAffiliations,
                 researchFields,
+                researchFieldDetails,
                 researchFieldCategories,
                 projection.getRecruitmentStatus(),
                 projection.getBookmarkCount(),

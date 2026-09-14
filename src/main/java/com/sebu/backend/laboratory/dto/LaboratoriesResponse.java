@@ -2,6 +2,7 @@ package com.sebu.backend.laboratory.dto;
 
 import com.sebu.backend.laboratory.domain.LaboratoryNameSource;
 import com.sebu.backend.laboratory.domain.RecruitmentStatus;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.util.List;
 
@@ -31,6 +32,8 @@ public record LaboratoriesResponse(
             DepartmentResponse department,
             List<AffiliationResponse> affiliations,
             List<String> researchFields,
+            @Schema(description = "해당 연구실의 연구 분야 ID, 이름 및 분야별 카테고리 ID 목록")
+            List<ResearchFieldDetailResponse> researchFieldDetails,
             List<Long> researchFieldCategoryIds,
             List<ResearchFieldCategoryResponse> researchFieldCategories,
             RecruitmentStatus recruitmentStatus,
@@ -71,6 +74,11 @@ public record LaboratoriesResponse(
 
                     result.researchFields(),
 
+                    result.researchFieldDetails()
+                            .stream()
+                            .map(ResearchFieldDetailResponse::from)
+                            .toList(),
+
                     result.researchFieldCategories()
                             .stream()
                             .map(
@@ -109,6 +117,29 @@ public record LaboratoriesResponse(
             Long id,
             String name
     ) {
+    }
+
+    @Schema(name = "LaboratoryResearchFieldDetailResponse")
+    public record ResearchFieldDetailResponse(
+            @Schema(description = "연구 분야 고유 ID", example = "102",
+                    requiredMode = Schema.RequiredMode.REQUIRED)
+            Long researchFieldId,
+            @Schema(description = "연구 분야 이름", example = "머신러닝",
+                    requiredMode = Schema.RequiredMode.REQUIRED)
+            String name,
+            @Schema(description = "해당 분야의 카테고리 ID 목록. 표시 순서로 정렬하며 미분류이면 빈 배열",
+                    requiredMode = Schema.RequiredMode.REQUIRED)
+            List<Long> categoryIds
+    ) {
+        private static ResearchFieldDetailResponse from(
+                LaboratoriesResult.ResearchFieldResult field
+        ) {
+            return new ResearchFieldDetailResponse(
+                    field.researchFieldId(),
+                    field.name(),
+                    field.categoryIds()
+            );
+        }
     }
 
     public record ResearchFieldCategoryResponse(
