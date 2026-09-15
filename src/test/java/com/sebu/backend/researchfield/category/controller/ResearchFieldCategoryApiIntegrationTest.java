@@ -24,7 +24,7 @@ class ResearchFieldCategoryApiIntegrationTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.error").doesNotExist())
-            .andExpect(jsonPath("$.data.categories.length()").value(24))
+            .andExpect(jsonPath("$.data.categories.length()").value(32))
             .andExpect(jsonPath("$.data.categories[0].code").value("AI_ML"))
             .andExpect(jsonPath("$.data.categories[0].name")
                 .value("인공지능·기계학습"))
@@ -54,6 +54,18 @@ class ResearchFieldCategoryApiIntegrationTest {
             .andExpect(jsonPath("$.data.categories[23].code").value("MOLECULAR_BIOTECH"))
             .andExpect(jsonPath("$.data.categories[23].name")
                 .value("분자·세포생물학·생명공학"))
-            .andExpect(jsonPath("$.data.categories[23].displayOrder").value(24));
+            .andExpect(jsonPath("$.data.categories[23].displayOrder").value(24))
+            .andExpect(jsonPath("$.data.categories[24].code").value("ARCHITECTURE_CIVIL"))
+            .andExpect(jsonPath("$.data.categories[24].name").value("건축·토목·도시"))
+            .andExpect(jsonPath("$.data.categories[24].displayOrder").value(25))
+            .andExpect(jsonPath("$.data.categories[25].code").value("MECHANICAL_AEROSPACE"))
+            .andExpect(jsonPath("$.data.categories[26].code").value("EARTH_GEOSPATIAL"))
+            .andExpect(jsonPath("$.data.categories[27].code").value("LANGUAGE_LITERATURE"))
+            .andExpect(jsonPath("$.data.categories[28].code").value("HISTORY_CULTURE"))
+            .andExpect(jsonPath("$.data.categories[29].code").value("MEDIA_COMMUNICATION"))
+            .andExpect(jsonPath("$.data.categories[30].code").value("DESIGN_ARTS"))
+            .andExpect(jsonPath("$.data.categories[31].code").value("PSYCHOLOGY_BEHAVIOR"))
+            .andExpect(jsonPath("$.data.categories[31].name").value("심리·인지·행동"))
+            .andExpect(jsonPath("$.data.categories[31].displayOrder").value(32));
     }
 }

@@ -27,6 +27,8 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -54,7 +56,8 @@ class DatabaseConstraintsIntegrationTest {
         Laboratory found = laboratoryRepository.findById(lab.getId()).orElseThrow();
         assertThat(found.getRecruitmentStatus()).isEqualTo(RecruitmentStatus.ALWAYS_OPEN);
         assertThat(found.getWebsiteUrl()).isNull();
-        assertThat(laboratoryResearchFieldRepository.count()).isZero();
+        assertThat(laboratoryResearchFieldRepository.findFieldsByLaboratoryIds(List.of(lab.getId())))
+            .isEmpty();
     }
 
     @Test

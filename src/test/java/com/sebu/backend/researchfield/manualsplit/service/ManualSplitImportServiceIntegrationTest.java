@@ -15,6 +15,8 @@ import com.sebu.backend.researchfield.manualsplit.dto.ManualSplitImportResult;
 import com.sebu.backend.researchfield.manualsplit.exception.ManualSplitImportException;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -50,9 +52,10 @@ class ManualSplitImportServiceIntegrationTest {
     @Autowired
     PlatformTransactionManager transactionManager;
 
-    @Test
-    void importsManualSplitsRejectsTheSourceAndReplaysIdempotently() {
-        FixtureIds fixture = createFixture();
+    @ParameterizedTest
+    @EnumSource(value = ResearchFieldExtractionMethod.class, names = {"WHOLE_TEXT", "DELIMITED", "LONG_TEXT"})
+    void importsManualSplitsRejectsTheSourceAndReplaysIdempotently(ResearchFieldExtractionMethod method) {
+        FixtureIds fixture = createFixture(method);
         try {
             List<ManualSplitCsvRow> rows = List.of(
                 row(fixture, 1, "자율주행 인공지능", 2),
@@ -148,6 +151,10 @@ class ManualSplitImportServiceIntegrationTest {
     }
 
     private FixtureIds createFixture() {
+        return createFixture(ResearchFieldExtractionMethod.LONG_TEXT);
+    }
+
+    private FixtureIds createFixture(ResearchFieldExtractionMethod method) {
         TransactionTemplate transaction = new TransactionTemplate(transactionManager);
         return transaction.execute(status -> {
             String suffix = UUID.randomUUID().toString();
@@ -176,8 +183,8 @@ class ManualSplitImportServiceIntegrationTest {
                     new ResearchFieldCandidateDraft(
                         "a".repeat(64),
                         laboratory.getDescription(),
-                        null,
-                        ResearchFieldExtractionMethod.LONG_TEXT,
+                        method == ResearchFieldExtractionMethod.LONG_TEXT ? null : laboratory.getDescription(),
+                        method,
                         0
                     ),
                     "b".repeat(64),
