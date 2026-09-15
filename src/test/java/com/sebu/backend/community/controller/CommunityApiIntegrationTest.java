@@ -63,6 +63,73 @@ class CommunityApiIntegrationTest {
     @Autowired CommunityPostBookmarkRepository bookmarkRepository;
 
     @Test
+    void collegeGroupsApplyToExistingAuthorsAcrossPostCommentAndMyPageWithoutExposingIdentity() throws Exception {
+        String[][] cases = {
+            {"국어국문학과", "인문사회대학"},
+            {"무인이동체공학전공", "인공지능융합대학"},
+            {"자유전공학부", null}
+        };
+        for (int index = 0; index < cases.length; index++) {
+            String schoolName = cases[index][0];
+            String group = cases[index][1];
+            AppUser author = userWithNickname("group-author-" + index, "노출금지실명", "비공개닉네임" + index);
+            author.applySejongProfile("노출금지실명", schoolName, null, LocalDateTime.now());
+            appUserRepository.flush();
+            CommunityPost post = savePost(author, CommunityPostCategory.FREE, "소속검증글" + index, "본문");
+            var createdComment = mockMvc.perform(post("/api/v1/posts/{id}/comments", post.getId())
+                    .with(as(author)).contentType(MediaType.APPLICATION_JSON).content(commentBody("댓글")))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.data.comment.mine").value(true)).andReturn();
+            assertAnonymousGroup(createdComment, "/data/comment/author", group);
+            bookmarkRepository.saveAndFlush(new CommunityPostBookmark(author, post));
+
+            var list = mockMvc.perform(get("/api/v1/posts").param("keyword", "소속검증글" + index))
+                .andExpect(status().isOk()).andReturn();
+            assertAnonymousGroup(list, "/data/posts/0/author", group);
+            var detail = mockMvc.perform(get("/api/v1/posts/{id}", post.getId()).with(as(author)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.post.mine").value(true)).andReturn();
+            assertAnonymousGroup(detail, "/data/post/author", group);
+            var comments = mockMvc.perform(get("/api/v1/posts/{id}/comments", post.getId()).with(as(author)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.comments[0].mine").value(true)).andReturn();
+            assertAnonymousGroup(comments, "/data/comments/0/author", group);
+            var mypage = mockMvc.perform(get("/api/v1/users/me/mypage").with(as(author)))
+                .andExpect(status().isOk()).andReturn();
+            assertAnonymousGroup(mypage, "/data/bookmarkedPosts/items/0/post/author", group);
+            mockMvc.perform(get("/api/v1/me").with(as(author)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.department.name").value(schoolName));
+
+            appUserRepository.findById(author.getId()).orElseThrow().withdraw(LocalDateTime.now());
+            appUserRepository.flush();
+            mockMvc.perform(get("/api/v1/posts/{id}", post.getId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.post.author.status").value("WITHDRAW"))
+                .andExpect(jsonPath("$.data.post.author.collegeGroup").doesNotExist());
+            appUserRepository.findById(author.getId()).orElseThrow().recover();
+            appUserRepository.flush();
+            var recovered = mockMvc.perform(get("/api/v1/posts/{id}", post.getId()))
+                .andExpect(status().isOk()).andReturn();
+            assertAnonymousGroup(recovered, "/data/post/author", group);
+        }
+    }
+
+    private void assertAnonymousGroup(MvcResult result, String pointer, String group) throws Exception {
+        JsonNode author = objectMapper.readTree(result.getResponse().getContentAsByteArray()).at(pointer);
+        org.assertj.core.api.Assertions.assertThat(author.has("id")).isTrue();
+        org.assertj.core.api.Assertions.assertThat(author.get("id").isNull()).isTrue();
+        org.assertj.core.api.Assertions.assertThat(author.get("nickname").asText()).isEqualTo("익명");
+        org.assertj.core.api.Assertions.assertThat(author.get("status").asText()).isEqualTo("ACTIVE");
+        if (group == null) {
+            org.assertj.core.api.Assertions.assertThat(author.has("collegeGroup")).isFalse();
+        } else {
+            org.assertj.core.api.Assertions.assertThat(author.get("collegeGroup").asText()).isEqualTo(group);
+        }
+        org.assertj.core.api.Assertions.assertThat(author.size()).isEqualTo(group == null ? 3 : 4);
+    }
+
+    @Test
     void anonymousUsersCanReadEveryPublicCommunityEndpoint() throws Exception {
         AppUser author = userWithNickname("public-author", "공개작성자", "공개닉네임");
         CommunityPost post = savePost(author, CommunityPostCategory.FREE, "공개 게시글", "공개 본문");
@@ -83,8 +150,7 @@ class CommunityApiIntegrationTest {
                 .andExpect(jsonPath("$.data.comments[0].mine").value(false));
 
         mockMvc.perform(get("/api/v1/users/{userId}/community-profile", author.getId()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.profile.userId").value(author.getId()));
+                .andExpect(status().isNotFound());
     }
 
     @Test
@@ -565,104 +631,17 @@ class CommunityApiIntegrationTest {
     }
 
     @Test
-    void publicProfileCalculatesOnlyActiveActivityAndNeverExposesRealName() throws Exception {
-        String realName = "절대노출금지실명";
-        AppUser profileOwner = userWithNickname("profile-owner", realName, "프로필닉네임");
-        AppUser other = userWithNickname("profile-other", "프로필타인실명", "프로필타인");
-        AppUser reactor = userWithNickname("profile-reactor", "프로필반응실명", "프로필반응자");
-
-        CommunityPost firstActive = savePost(
-                profileOwner,
-                CommunityPostCategory.FREE,
-                "프로필 활성 글 1",
-                "프로필 활성 본문 1"
-        );
-        CommunityPost secondActive = savePost(
-                profileOwner,
-                CommunityPostCategory.QUESTION,
-                "프로필 활성 글 2",
-                "프로필 활성 본문 2"
-        );
-        CommunityPost deletedOwn = savePost(
-                profileOwner,
-                CommunityPostCategory.FREE,
-                "프로필 삭제 글",
-                "프로필 삭제 본문"
-        );
-        deletedOwn.softDelete();
-
-        CommunityPost otherActive = savePost(
-                other,
-                CommunityPostCategory.FREE,
-                "타인 활성 글",
-                "타인 활성 본문"
-        );
-        CommunityPost otherDeleted = savePost(
-                other,
-                CommunityPostCategory.FREE,
-                "타인 삭제 글",
-                "타인 삭제 본문"
-        );
-        otherDeleted.softDelete();
-
-        likeRepository.save(new CommunityPostLike(reactor, firstActive));
-        likeRepository.save(new CommunityPostLike(reactor, secondActive));
-        likeRepository.save(new CommunityPostLike(reactor, deletedOwn));
-
-        commentRepository.save(new CommunityComment(otherActive, profileOwner, "활성 작성 댓글"));
-        CommunityComment deletedComment = commentRepository.save(
-                new CommunityComment(otherActive, profileOwner, "삭제 작성 댓글")
-        );
-        deletedComment.softDelete();
-        commentRepository.save(new CommunityComment(otherDeleted, profileOwner, "삭제 글의 댓글"));
-        postRepository.flush();
-        likeRepository.flush();
-        commentRepository.flush();
-
-        mockMvc.perform(get("/api/v1/users/{userId}/community-profile", profileOwner.getId()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.profile.userId").value(profileOwner.getId()))
-                .andExpect(jsonPath("$.data.profile.nickname").value("프로필닉네임"))
-                .andExpect(jsonPath("$.data.profile.name").doesNotExist())
-                .andExpect(jsonPath("$.data.stats.writtenPostCount").value(2))
-                .andExpect(jsonPath("$.data.profile.badges[0].code").value("FIRST_POST"))
-                .andExpect(jsonPath("$.data.profile.badges[0].label").value("첫 글"))
-                .andExpect(jsonPath("$.data.stats.receivedLikeCount").value(2))
-                .andExpect(jsonPath("$.data.stats.writtenCommentCount").value(1))
-                .andExpect(jsonPath("$.data.posts.totalElements").value(2))
-                .andExpect(jsonPath("$.data.posts.items.length()").value(2))
-                .andExpect(content().string(not(containsString(realName))));
-    }
-
-    @Test
-    void publicProfileAwardsPopularAuthorAtFiveActiveReceivedBookmarks() throws Exception {
-        AppUser profileOwner = userWithNickname(
-                "badge-profile-owner",
-                "뱃지프로필실명",
-                "뱃지프로필"
-        );
-        CommunityPost post = savePost(
-                profileOwner,
-                CommunityPostCategory.FREE,
-                "인기 작성자 뱃지 글",
-                "인기 작성자 뱃지 본문"
-        );
-        for (int index = 0; index < 5; index++) {
-            AppUser bookmarker = userWithNickname(
-                    "badge-bookmarker-" + index,
-                    "뱃지북마커실명" + index,
-                    "뱃지북마커" + index
-            );
-            bookmarkRepository.save(new CommunityPostBookmark(bookmarker, post));
-        }
-        bookmarkRepository.flush();
-
-        mockMvc.perform(get("/api/v1/users/{userId}/community-profile", profileOwner.getId()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.profile.badges.length()").value(2))
-                .andExpect(jsonPath("$.data.profile.badges[0].code").value("FIRST_POST"))
-                .andExpect(jsonPath("$.data.profile.badges[1].code").value("POPULAR_AUTHOR"))
-                .andExpect(jsonPath("$.data.profile.badges[1].label").value("인기 작성자"));
+    void communityProfileIsDisabledForAnonymousOwnerAndOtherUsers() throws Exception {
+        AppUser owner = userWithNickname("profile-owner", "프로필실명", "프로필닉네임");
+        AppUser other = userWithNickname("profile-other", "타인실명", "타인닉네임");
+        mockMvc.perform(get("/api/v1/users/{userId}/community-profile", owner.getId()))
+                .andExpect(status().isNotFound());
+        mockMvc.perform(get("/api/v1/users/{userId}/community-profile", owner.getId()).with(as(owner)))
+                .andExpect(status().isNotFound());
+        mockMvc.perform(get("/api/v1/users/{userId}/community-profile", owner.getId()).with(as(other)))
+                .andExpect(status().isNotFound());
+        mockMvc.perform(get("/api/v1/users/{userId}/community-profile", Long.MAX_VALUE))
+                .andExpect(status().isNotFound());
     }
 
     @Test
@@ -679,22 +658,20 @@ class CommunityApiIntegrationTest {
 
         mockMvc.perform(get("/api/v1/posts").param("keyword", "익명 작성 글"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.posts[0].author.id").value(anonymousAuthor.getId()))
+                .andExpect(jsonPath("$.data.posts[0].author.id").value(org.hamcrest.Matchers.nullValue()))
                 .andExpect(jsonPath("$.data.posts[0].author.nickname").value("익명"))
                 .andExpect(jsonPath("$.data.posts[0].author.status").value("ACTIVE"))
                 .andExpect(content().string(not(containsString(realName))));
 
         mockMvc.perform(get("/api/v1/posts/{postId}/comments", post.getId()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.comments[0].author.id").value(anonymousAuthor.getId()))
+                .andExpect(jsonPath("$.data.comments[0].author.id").value(org.hamcrest.Matchers.nullValue()))
                 .andExpect(jsonPath("$.data.comments[0].author.nickname").value("익명"))
                 .andExpect(jsonPath("$.data.comments[0].author.status").value("ACTIVE"))
                 .andExpect(content().string(not(containsString(realName))));
 
         mockMvc.perform(get("/api/v1/users/{userId}/community-profile", anonymousAuthor.getId()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.profile.nickname").value("익명"))
-                .andExpect(jsonPath("$.data.profile.name").doesNotExist())
+                .andExpect(status().isNotFound())
                 .andExpect(content().string(not(containsString(realName))));
     }
 

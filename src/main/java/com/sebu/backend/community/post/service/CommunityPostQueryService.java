@@ -3,7 +3,7 @@ package com.sebu.backend.community.post.service;
 import com.sebu.backend.community.bookmark.domain.CommunityPostBookmarkId;
 import com.sebu.backend.community.bookmark.repository.CommunityPostBookmarkRepository;
 import com.sebu.backend.community.comment.repository.CommunityCommentRepository;
-import com.sebu.backend.community.common.CommunityAuthorMapper;
+import com.sebu.backend.community.common.CommunityAuthorAssembler;
 import com.sebu.backend.community.common.repository.PostCountProjection;
 import com.sebu.backend.community.exception.InvalidPostQueryException;
 import com.sebu.backend.community.exception.PostNotFoundException;
@@ -40,7 +40,7 @@ public class CommunityPostQueryService {
     private final CommunityPostLikeRepository likeRepository;
     private final CommunityPostBookmarkRepository bookmarkRepository;
     private final CurrentUserProvider currentUserProvider;
-    private final CommunityAuthorMapper authorMapper;
+    private final CommunityAuthorAssembler authorAssembler;
 
     @Transactional(readOnly = true)
     public PostListResponse findPosts(
@@ -67,13 +67,15 @@ public class CommunityPostQueryService {
                 ? Map.of()
                 : countMap(commentRepository.countActiveByPostIds(postIds));
         Set<Long> hotPostIds = findHotPostIds();
+        var authors = authorAssembler.toResponses(result.getContent().stream()
+                .map(CommunityPost::getAuthor).toList());
 
         List<PostListResponse.PostSummary> posts = result.getContent().stream()
                 .map(post -> new PostListResponse.PostSummary(
                         post.getId(),
                         post.getCategory(),
                         post.getTitle(),
-                        authorMapper.toResponse(post.getAuthor()),
+                        authors.get(post.getAuthor().getId()),
                         badges(post, hotPostIds),
                         likeCounts.getOrDefault(post.getId(), 0L),
                         commentCounts.getOrDefault(post.getId(), 0L),
@@ -114,7 +116,7 @@ public class CommunityPostQueryService {
                 post.getCategory(),
                 post.getTitle(),
                 post.getContent(),
-                authorMapper.toResponse(post.getAuthor()),
+                authorAssembler.toResponse(post.getAuthor()),
                 badges(post, findHotPostIds()),
                 post.getViewCount(),
                 likeCount,
