@@ -52,7 +52,7 @@ class CrawlingSchemaIntegrationTest {
     void csvSourcesAreSeededWithoutWhitespaceOrDuplicates() {
         List<CrawlSource> sources = crawlSourceRepository.findAll();
 
-        assertThat(sources).hasSize(12);
+        assertThat(sources).hasSize(42);
         assertThat(sources)
             .extracting(CrawlSource::getSourceUrl)
             .doesNotHaveDuplicates()

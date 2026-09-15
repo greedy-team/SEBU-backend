@@ -22,6 +22,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 class AerospaceCrawlParserMySqlMigrationTest {
+    private static final String PARSER_TARGET_VERSION = "41";
     private static final String DATABASE = "sebu_aerospace_migration_test";
     private static final String LOCAL_URL = "jdbc:mysql://127.0.0.1:13342/" + DATABASE;
     private static MySQLContainer<?> mysql;
@@ -62,15 +63,15 @@ class AerospaceCrawlParserMySqlMigrationTest {
     }
 
     @Test
-    void blankDatabaseAllowsEveryParserAndPassesHibernateValidationWithoutSeedingSources() {
-        flyway(null).migrate();
+    void blankDatabaseAllowsEveryParserBeforeLatestSchemaValidation() {
+        flyway(PARSER_TARGET_VERSION).migrate();
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM crawl_source", Integer.class)).isEqualTo(12);
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM professor_crawl_candidate", Integer.class)).isZero();
         assertAllParserTypesCanBeStored();
         assertInvalidParserTypesAreRejected();
-        validateHibernate();
-        flyway(null).validate();
-        assertThat(flyway(null).migrate().migrationsExecuted).isZero();
+        flyway(PARSER_TARGET_VERSION).validate();
+        assertThat(flyway(PARSER_TARGET_VERSION).migrate().migrationsExecuted).isZero();
+        upgradeToLatestAndValidateHibernate();
     }
 
     @Test
@@ -92,14 +93,14 @@ class AerospaceCrawlParserMySqlMigrationTest {
             "UPDATE professor_crawl_candidate SET parser_type_at_crawl='SEJONG_AEROSPACE'"))
             .isInstanceOf(DataAccessException.class);
 
-        flyway(null).migrate();
+        flyway(PARSER_TARGET_VERSION).migrate();
 
         assertThat(jdbc.queryForList("SELECT * FROM crawl_source ORDER BY id")).isEqualTo(sourcesBefore);
         assertThat(jdbc.queryForList("SELECT * FROM professor_crawl_candidate ORDER BY id"))
             .isEqualTo(candidatesBefore);
         assertAllParserTypesCanBeStored();
         assertInvalidParserTypesAreRejected();
-        validateHibernate();
+        upgradeToLatestAndValidateHibernate();
     }
 
     private void assertAllParserTypesCanBeStored() {
@@ -144,6 +145,16 @@ class AerospaceCrawlParserMySqlMigrationTest {
             configuration.target(target);
         }
         return configuration.load();
+    }
+
+    private void upgradeToLatestAndValidateHibernate() {
+        // Verify V41's parser contract before later catalogue seeds change row counts.
+        // Current entities must be validated against the latest schema, not historical V41.
+        Flyway latest = flyway(null);
+        latest.migrate();
+        validateHibernate();
+        latest.validate();
+        assertThat(latest.migrate().migrationsExecuted).isZero();
     }
 
     private void validateHibernate() {

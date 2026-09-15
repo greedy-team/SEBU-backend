@@ -106,7 +106,7 @@ class AerospaceProfessorCrawlIntegrationTest {
         CrawlSource existing = sourceRepository.findAll().getFirst();
         CrawlSource source = sourceRepository.saveAndFlush(new CrawlSource(
             existing.getDepartment(), "우주항공 파서 테스트 " + category,
-            "https://ae.sejong.ac.kr/shop_contents/myboard_list.htm?myboard_code=professor&category_idx=" + category,
+            "https://ae.sejong.ac.kr/shop_contents/myboard_list.htm?myboard_code=professor&category_idx=" + category + "&sebu_fixture=issue76",
             CrawlParserType.SEJONG_AEROSPACE
         ));
         createdSourceId = source.getId();

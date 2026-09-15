@@ -85,6 +85,8 @@ class LaboratoryResearchFieldDetailsIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        // Isolate API fixtures from deployment catalogue data; rolled back with this test.
+        jdbcTemplate.update("UPDATE laboratory SET deleted_at=CURRENT_TIMESTAMP WHERE deleted_at IS NULL");
         College college = collegeRepository.save(new College("연구분야 상세 테스트 대학"));
         department = departmentRepository.save(new Department(college, "연구분야 상세 테스트 학과"));
         professor = professorRepository.save(new Professor(department, "상세 테스트 교수", null));

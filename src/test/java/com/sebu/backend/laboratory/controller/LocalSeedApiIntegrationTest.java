@@ -14,11 +14,15 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
     "spring.flyway.locations=classpath:db/migration,classpath:db/local"
 })
 @AutoConfigureMockMvc
+@org.springframework.transaction.annotation.Transactional
 class LocalSeedApiIntegrationTest {
     @Autowired MockMvc mockMvc;
+    @Autowired org.springframework.jdbc.core.JdbcTemplate jdbc;
 
     @Test
     void localSeedProducesTheSpecifiedLaboratoryResponse() throws Exception {
+        // Keep the three local demo fixtures, independently of deployment catalogue rows.
+        jdbc.update("UPDATE laboratory SET deleted_at=CURRENT_TIMESTAMP WHERE name_source='GENERATED'");
         mockMvc.perform(get("/api/v1/laboratories"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.success").value(true))
