@@ -5,7 +5,8 @@ import com.sebu.backend.bookmark.repository.BookmarkRepository;
 import com.sebu.backend.community.bookmark.domain.CommunityPostBookmark;
 import com.sebu.backend.community.bookmark.repository.CommunityPostBookmarkRepository;
 import com.sebu.backend.community.comment.repository.CommunityCommentRepository;
-import com.sebu.backend.community.common.CommunityAuthorMapper;
+import com.sebu.backend.community.common.CommunityAuthorAssembler;
+import com.sebu.backend.community.common.dto.CommunityAuthorResponse;
 import com.sebu.backend.community.common.repository.PostCountProjection;
 import com.sebu.backend.community.like.repository.CommunityPostLikeRepository;
 import com.sebu.backend.community.post.domain.CommunityPost;
@@ -41,7 +42,7 @@ public class MyPageService {
     private final CommunityPostBookmarkRepository communityPostBookmarkRepository;
     private final CommunityPostLikeRepository communityPostLikeRepository;
     private final CommunityCommentRepository communityCommentRepository;
-    private final CommunityAuthorMapper communityAuthorMapper;
+    private final CommunityAuthorAssembler communityAuthorAssembler;
 
     public MyPageResponse getMyPage(Long userId) {
 
@@ -116,11 +117,14 @@ public class MyPageService {
                 ? Map.of()
                 : countMap(communityCommentRepository.countActiveByPostIds(postIds));
 
+        var authors = communityAuthorAssembler.toResponses(postBookmarks.stream()
+                .map(bookmark -> bookmark.getPost().getAuthor()).toList());
         List<MyPageResponse.BookmarkedPost> bookmarkedPosts = postBookmarks.stream()
                 .map(bookmark -> toBookmarkedPost(
                         bookmark,
                         likeCounts,
-                        commentCounts
+                        commentCounts,
+                        authors
                 ))
                 .toList();
 
@@ -230,7 +234,8 @@ public class MyPageService {
     private MyPageResponse.BookmarkedPost toBookmarkedPost(
             CommunityPostBookmark bookmark,
             Map<Long, Long> likeCounts,
-            Map<Long, Long> commentCounts
+            Map<Long, Long> commentCounts,
+            Map<Long, CommunityAuthorResponse> authors
     ) {
         CommunityPost post = bookmark.getPost();
 
@@ -240,7 +245,7 @@ public class MyPageService {
                         post.getId(),
                         post.getCategory(),
                         post.getTitle(),
-                        communityAuthorMapper.toResponse(post.getAuthor()),
+                        authors.get(post.getAuthor().getId()),
                         likeCounts.getOrDefault(post.getId(), 0L),
                         commentCounts.getOrDefault(post.getId(), 0L),
                         post.getViewCount(),

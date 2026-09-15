@@ -23,6 +23,19 @@ class SejongProfileLoginIntegrationTest {
     @Autowired EntityManager entityManager;
 
     @Test
+    void legacyLoginPreservesSchoolNameWithoutCreatingOrLinkingDepartment() {
+        long departmentCount = entityManager.createQuery("select count(d) from Department d", Long.class)
+            .getSingleResult();
+        var login = (AuthSessionService.LoginSession) authSessionService.login(
+            new SejongUserProfile("21019999", "기존전공사용자", "무인이동체공학전공"));
+        var user = appUserRepository.findById(login.userId()).orElseThrow();
+        assertThat(user.getMajorDepartment()).isNull();
+        assertThat(user.getSejongDepartmentName()).isEqualTo("무인이동체공학전공");
+        assertThat(entityManager.createQuery("select count(d) from Department d", Long.class)
+            .getSingleResult()).isEqualTo(departmentCount);
+    }
+
+    @Test
     void createsOnceUpdatesOnlyChangedSchoolFieldsAndPreservesGrade() {
         SejongUserProfile initial = profile("홍길동", "컴퓨터공학과");
         var first = (AuthSessionService.LoginSession) authSessionService.login(initial);
