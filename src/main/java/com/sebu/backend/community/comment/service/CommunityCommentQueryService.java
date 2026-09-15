@@ -3,7 +3,8 @@ package com.sebu.backend.community.comment.service;
 import com.sebu.backend.community.comment.domain.CommunityComment;
 import com.sebu.backend.community.comment.dto.CommentListResponse;
 import com.sebu.backend.community.comment.repository.CommunityCommentRepository;
-import com.sebu.backend.community.common.CommunityAuthorMapper;
+import com.sebu.backend.community.common.CommunityAuthorAssembler;
+import com.sebu.backend.community.common.dto.CommunityAuthorResponse;
 import com.sebu.backend.community.exception.InvalidPostQueryException;
 import com.sebu.backend.community.exception.PostNotFoundException;
 import com.sebu.backend.community.post.repository.CommunityPostRepository;
@@ -22,7 +23,7 @@ public class CommunityCommentQueryService {
     private final CommunityPostRepository postRepository;
     private final CommunityCommentRepository commentRepository;
     private final CurrentUserProvider currentUserProvider;
-    private final CommunityAuthorMapper authorMapper;
+    private final CommunityAuthorAssembler authorAssembler;
 
     @Transactional(readOnly = true)
     public CommentListResponse findComments(Long postId, int page, int size) {
@@ -38,9 +39,11 @@ public class CommunityCommentQueryService {
                         PageRequest.of(page, size)
                 );
 
+        var authors = authorAssembler.toResponses(result.getContent().stream()
+                .map(CommunityComment::getAuthor).toList());
         return new CommentListResponse(
                 result.getContent().stream()
-                        .map(comment -> toItem(comment, viewerId))
+                        .map(comment -> toItem(comment, viewerId, authors.get(comment.getAuthor().getId())))
                         .toList(),
                 result.getNumber(),
                 result.getSize(),
@@ -50,9 +53,14 @@ public class CommunityCommentQueryService {
     }
 
     CommentListResponse.CommentItem toItem(CommunityComment comment, Long viewerId) {
+        return toItem(comment, viewerId, authorAssembler.toResponse(comment.getAuthor()));
+    }
+
+    private CommentListResponse.CommentItem toItem(
+            CommunityComment comment, Long viewerId, CommunityAuthorResponse author) {
         return new CommentListResponse.CommentItem(
                 comment.getId(),
-                authorMapper.toResponse(comment.getAuthor()),
+                author,
                 comment.getContent(),
                 viewerId != null && comment.getAuthor().getId().equals(viewerId),
                 comment.getCreatedAt(),

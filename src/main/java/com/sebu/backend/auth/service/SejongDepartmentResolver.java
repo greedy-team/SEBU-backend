@@ -2,23 +2,20 @@ package com.sebu.backend.auth.service;
 
 import com.sebu.backend.global.logging.OperationalLog;
 import com.sebu.backend.department.domain.Department;
-import com.sebu.backend.department.repository.DepartmentRepository;
+import com.sebu.backend.department.service.AcademicAffiliationResolver;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-
-import java.util.List;
 
 @Component
 @RequiredArgsConstructor
 public class SejongDepartmentResolver {
-    private final DepartmentRepository departmentRepository;
+    private final AcademicAffiliationResolver affiliationResolver;
 
     public Department resolve(String departmentName) {
-        List<Department> matches = departmentRepository.findAllByName(departmentName.trim());
-        if (matches.size() == 1) {
-            return matches.getFirst();
+        var affiliation = affiliationResolver.resolve(departmentName);
+        if (affiliation.college() == null) {
+            OperationalLog.departmentUnresolved(affiliation.currentMatchCount());
         }
-        OperationalLog.departmentUnresolved(matches.size());
-        return null;
+        return affiliation.department();
     }
 }
