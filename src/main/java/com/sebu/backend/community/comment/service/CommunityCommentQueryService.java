@@ -28,9 +28,9 @@ public class CommunityCommentQueryService {
     @Transactional(readOnly = true)
     public CommentListResponse findComments(Long postId, int page, int size) {
         validatePage(page, size);
-        if (!postRepository.existsByIdAndDeletedAtIsNull(postId)) {
-            throw new PostNotFoundException();
-        }
+        var post = postRepository.findByIdAndDeletedAtIsNull(postId)
+                .orElseThrow(PostNotFoundException::new);
+        Long postAuthorId = post.getAuthor().getId();
 
         Long viewerId = currentUserProvider.currentUserId().orElse(null);
         Page<CommunityComment> result = commentRepository
@@ -43,7 +43,8 @@ public class CommunityCommentQueryService {
                 .map(CommunityComment::getAuthor).toList());
         return new CommentListResponse(
                 result.getContent().stream()
-                        .map(comment -> toItem(comment, viewerId, authors.get(comment.getAuthor().getId())))
+                        .map(comment -> toItem(comment, viewerId, postAuthorId,
+                                authors.get(comment.getAuthor().getId())))
                         .toList(),
                 result.getNumber(),
                 result.getSize(),
@@ -53,16 +54,18 @@ public class CommunityCommentQueryService {
     }
 
     CommentListResponse.CommentItem toItem(CommunityComment comment, Long viewerId) {
-        return toItem(comment, viewerId, authorAssembler.toResponse(comment.getAuthor()));
+        return toItem(comment, viewerId, comment.getPost().getAuthor().getId(),
+                authorAssembler.toResponse(comment.getAuthor()));
     }
 
     private CommentListResponse.CommentItem toItem(
-            CommunityComment comment, Long viewerId, CommunityAuthorResponse author) {
+            CommunityComment comment, Long viewerId, Long postAuthorId, CommunityAuthorResponse author) {
         return new CommentListResponse.CommentItem(
                 comment.getId(),
                 author,
                 comment.getContent(),
                 viewerId != null && comment.getAuthor().getId().equals(viewerId),
+                comment.getAuthor().getId().equals(postAuthorId),
                 comment.getCreatedAt(),
                 comment.getUpdatedAt()
         );

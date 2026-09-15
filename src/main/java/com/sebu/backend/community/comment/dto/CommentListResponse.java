@@ -17,6 +17,8 @@ public record CommentListResponse(
             CommunityAuthorResponse author,
             String content,
             boolean mine,
+            @io.swagger.v3.oas.annotations.media.Schema(description = "댓글 작성자가 게시글 작성자인지 여부. 조회자와 무관합니다.")
+            boolean isPostAuthor,
             LocalDateTime createdAt,
             LocalDateTime updatedAt
     ) {
