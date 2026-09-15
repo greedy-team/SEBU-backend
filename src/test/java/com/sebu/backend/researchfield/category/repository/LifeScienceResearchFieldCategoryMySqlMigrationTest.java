@@ -36,6 +36,7 @@ import static org.assertj.core.api.Assertions.tuple;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 class LifeScienceResearchFieldCategoryMySqlMigrationTest {
+    private static final String CATEGORY_TARGET_VERSION = "36";
     private static final int EXPECTED_CATEGORY_COUNT = 24;
     private static final int EXPECTED_REFERENCE_FIELD_COUNT = 193;
     private static final int EXPECTED_REFERENCE_PAIR_COUNT = 247;
@@ -156,7 +157,7 @@ class LifeScienceResearchFieldCategoryMySqlMigrationTest {
             fieldsBefore = findFields(connection);
         }
 
-        // Apply the two category migrations, then any newer unrelated migrations as well.
+        // Verify the V35/V36 data contract before newer migrations add other catalogues.
         assertThat(flyway("36").migrate().migrationsExecuted).isEqualTo(2);
         flyway(null).migrate();
 
@@ -299,6 +300,7 @@ class LifeScienceResearchFieldCategoryMySqlMigrationTest {
     }
 
     private void validateHibernateSchema() {
+        Flyway.configure().dataSource(dataSource).locations("classpath:db/migration").load().migrate();
         LocalContainerEntityManagerFactoryBean factory =
             new LocalContainerEntityManagerFactoryBean();
         factory.setDataSource(dataSource);
@@ -433,9 +435,7 @@ class LifeScienceResearchFieldCategoryMySqlMigrationTest {
             .dataSource(dataSource)
             .cleanDisabled(false)
             .locations("classpath:db/migration");
-        if (target != null) {
-            configuration.target(MigrationVersion.fromVersion(target));
-        }
+        configuration.target(MigrationVersion.fromVersion(target == null ? CATEGORY_TARGET_VERSION : target));
         return configuration.load();
     }
 

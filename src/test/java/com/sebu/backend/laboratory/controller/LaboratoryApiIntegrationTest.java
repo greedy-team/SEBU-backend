@@ -92,13 +92,13 @@ class LaboratoryApiIntegrationTest {
         laboratoryDepartmentRepository.save(new LaboratoryDepartment(lab2, computer));
         laboratoryDepartmentRepository.save(new LaboratoryDepartment(deleted, computer));
         ResearchField machineLearning = researchFieldRepository.saveAndFlush(
-            new ResearchField("머신러닝")
+            new ResearchField("API테스트 머신러닝")
         );
         ResearchField aiField = researchFieldRepository.saveAndFlush(
-            new ResearchField("인공지능")
+            new ResearchField("API테스트 인공지능")
         );
         ResearchField computerVision = researchFieldRepository.saveAndFlush(
-            new ResearchField("컴퓨터 비전")
+            new ResearchField("API테스트 컴퓨터 비전")
         );
         mapCategory(machineLearning, "AI_ML");
         mapCategory(aiField, "AI_ML");
