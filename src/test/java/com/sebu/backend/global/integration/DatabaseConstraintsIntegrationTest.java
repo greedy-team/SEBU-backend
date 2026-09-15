@@ -138,7 +138,7 @@ class DatabaseConstraintsIntegrationTest {
 
     @Test
     void professorEmailIsUniqueButMultipleNullsAreAllowed() {
-        College college = collegeRepository.save(new College("공과대학"));
+        College college = collegeRepository.save(new College("이메일제약 테스트 공과대학"));
         Department department = departmentRepository.save(new Department(college, "컴퓨터공학과"));
         professorRepository.save(new Professor(department, "교수1", null));
         professorRepository.save(new Professor(department, "교수2", null));

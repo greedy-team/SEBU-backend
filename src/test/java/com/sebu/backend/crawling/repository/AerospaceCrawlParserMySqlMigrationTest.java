@@ -142,6 +142,9 @@ class AerospaceCrawlParserMySqlMigrationTest {
             .locations("classpath:db/migration").cleanDisabled(false);
         if (target != null) {
             configuration.target(target);
+        } else {
+            // This contract verifies V41's parser-only change, before later catalogue data.
+            configuration.target("41");
         }
         return configuration.load();
     }

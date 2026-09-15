@@ -49,7 +49,7 @@ public class BookmarkServiceTest {
     EntityManager entityManager;
     @Test
     void softDeletedLaboratoryIsNotBookmarkable() {
-        College college = collegeRepository.save(new College("공과대학"));
+        College college = collegeRepository.save(new College("북마크삭제 테스트 공과대학"));
         Department department = departmentRepository.save(new Department(college, "전자공학과"));
         Professor professor = professorRepository.save(new Professor(department, "이교수", null));
         Laboratory laboratory = laboratoryManagementService.create(

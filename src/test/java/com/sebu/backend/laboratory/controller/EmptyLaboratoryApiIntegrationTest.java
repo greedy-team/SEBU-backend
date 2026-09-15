@@ -19,10 +19,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Transactional
 class EmptyLaboratoryApiIntegrationTest {
     @Autowired MockMvc mockMvc;
+    @Autowired org.springframework.jdbc.core.JdbcTemplate jdbc;
     @MockitoBean CurrentUserProvider currentUserProvider;
 
     @Test
     void returnsOkWithEmptyArray() throws Exception {
+        // Explicit empty fixture; deployment catalogue rows are restored by rollback.
+        jdbc.update("UPDATE laboratory SET deleted_at=CURRENT_TIMESTAMP WHERE deleted_at IS NULL");
         when(currentUserProvider.currentUserId()).thenReturn(Optional.empty());
         mockMvc.perform(get("/api/v1/laboratories"))
             .andExpect(status().isOk())
