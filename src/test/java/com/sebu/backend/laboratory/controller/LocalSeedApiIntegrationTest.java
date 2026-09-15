@@ -27,7 +27,7 @@ class LocalSeedApiIntegrationTest {
             .andExpect(jsonPath("$.data.laboratories[0].name").value("인공지능연구실"))
             .andExpect(jsonPath("$.data.laboratories[0].nameSource").value("OFFICIAL"))
             .andExpect(jsonPath("$.data.laboratories[0].affiliations.length()").value(1))
-            .andExpect(jsonPath("$.data.laboratories[0].affiliations[0].department.name").value("인공지능학과"))
+            .andExpect(jsonPath("$.data.laboratories[0].affiliations[0].department.name").value("인공지능데이터사이언스학과"))
             .andExpect(jsonPath("$.data.laboratories[0].researchFields.length()").value(2))
             .andExpect(jsonPath("$.data.laboratories[0].researchFieldCategories.length()").value(1))
             .andExpect(jsonPath("$.data.laboratories[0].researchFieldCategories[0].code").value("AI_ML"))
