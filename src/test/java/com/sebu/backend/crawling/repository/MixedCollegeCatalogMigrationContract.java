@@ -50,6 +50,33 @@ abstract class MixedCollegeCatalogMigrationContract {
     }
 
     @Test
+    void upgradeFromCommunityCollegeGroupsPreservesAcademicCatalogAndUserAffiliation() {
+        flyway("43").migrate();
+        jdbc.update("""
+            INSERT INTO app_user (provider, provider_user_id, major_department_id, sejong_department_name)
+            VALUES ('SEJONG', 'v44-affiliation-test', ?, 'AI융합전자공학과')
+            """, department());
+        var colleges = jdbc.queryForList("SELECT * FROM college ORDER BY id");
+        var departments = jdbc.queryForList("SELECT * FROM department ORDER BY id");
+        var users = jdbc.queryForList("SELECT * FROM app_user ORDER BY id");
+        assertThat(colleges).hasSize(9);
+        assertThat(departments).hasSize(64);
+        assertThat(jdbc.queryForObject(
+            "SELECT COUNT(*) FROM college WHERE community_group IS NOT NULL", Integer.class))
+            .isEqualTo(9);
+
+        var migration = flyway("44").migrate();
+
+        assertThat(migration.migrationsExecuted).isEqualTo(1);
+        assertThat(jdbc.queryForList("SELECT * FROM college ORDER BY id")).isEqualTo(colleges);
+        assertThat(jdbc.queryForList("SELECT * FROM department ORDER BY id")).isEqualTo(departments);
+        assertThat(jdbc.queryForList("SELECT * FROM app_user ORDER BY id")).isEqualTo(users);
+        assertCatalogue();
+        validateHibernate();
+        flyway("44").validate();
+    }
+
+    @Test
     void upgradePreservesExistingProfilesIdsAndResearchLinksWhileAddingSharedAffiliations() {
         flyway("41").migrate();
         long department = department();

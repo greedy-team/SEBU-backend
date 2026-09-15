@@ -16,14 +16,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 abstract class CurrentAcademicCatalogMigrationAssertions {
+    private static final String CATALOG_TARGET_VERSION = "43";
+
     protected abstract DriverManagerDataSource dataSource();
 
     protected Flyway flyway(String target) {
+        // This contract covers V42/V43; later catalogue imports have their own tests.
         var configuration = Flyway.configure().dataSource(dataSource())
-            .locations("classpath:db/migration");
-        if (target != null) {
-            configuration.target(target);
-        }
+            .locations("classpath:db/migration")
+            .target(target == null ? CATALOG_TARGET_VERSION : target);
         return configuration.load();
     }
 
