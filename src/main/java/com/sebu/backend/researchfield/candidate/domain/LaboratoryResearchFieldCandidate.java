@@ -371,11 +371,11 @@ public class LaboratoryResearchFieldCandidate extends BaseTimeEntity {
 
     private void ensureManualSplitSourceReviewable() {
         ensureReviewable();
-        if (extractionMethod != ResearchFieldExtractionMethod.LONG_TEXT) {
-            throw new IllegalStateException("LONG_TEXT_SOURCE_REQUIRED");
+        if (isManualSplit()) {
+            throw new IllegalStateException("AUTOMATIC_SPLIT_SOURCE_REQUIRED");
         }
-        if (candidateName != null) {
-            throw new IllegalStateException("UNRESOLVED_SOURCE_REQUIRED");
+        if (hasBeenPromoted()) {
+            throw new IllegalStateException("PROMOTED_SOURCE_CANNOT_BE_SPLIT");
         }
     }
 

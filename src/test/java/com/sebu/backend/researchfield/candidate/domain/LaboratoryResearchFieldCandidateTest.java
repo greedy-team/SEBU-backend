@@ -7,6 +7,8 @@ import com.sebu.backend.laboratory.domain.RecruitmentStatus;
 import com.sebu.backend.professor.domain.Professor;
 import com.sebu.backend.researchfield.domain.ResearchField;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 
 import java.time.LocalDateTime;
 
@@ -279,6 +281,67 @@ class LaboratoryResearchFieldCandidateTest {
             EXTRACTED_AT.plusHours(4)
         );
         assertThat(candidate.needsPromotion()).isFalse();
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = ResearchFieldExtractionMethod.class, names = {"WHOLE_TEXT", "DELIMITED", "LONG_TEXT"})
+    void allowsExplicitManualReviewOfCompoundAutomaticCandidates(ResearchFieldExtractionMethod method) {
+        LaboratoryResearchFieldCandidate source = new LaboratoryResearchFieldCandidate(
+            laboratory(),
+            new ResearchFieldCandidateDraft(FIELD_KEY, "반도체 태양전지", "반도체 태양전지", method, 0),
+            DESCRIPTION_HASH, "sejong-v2", EXTRACTED_AT
+        );
+
+        LaboratoryResearchFieldCandidate split = split(source);
+        source.rejectAfterManualSplit("reviewer", "복합 분야 분리", EXTRACTED_AT.plusHours(1));
+
+        assertThat(split.getSplitFromCandidate()).isSameAs(source);
+        assertThat(split.getReviewStatus()).isEqualTo(ResearchFieldCandidateReviewStatus.PENDING);
+        assertThat(source.getRawFieldText()).isEqualTo("반도체 태양전지");
+        assertThat(source.getCandidateName()).isEqualTo("반도체 태양전지");
+        assertThat(source.getExtractionMethod()).isEqualTo(method);
+        assertThat(source.getReviewStatus()).isEqualTo(ResearchFieldCandidateReviewStatus.REJECTED);
+    }
+
+    @Test
+    void cannotSplitApprovedRejectedStaleOrManuallySplitCandidates() {
+        LaboratoryResearchFieldCandidate approved = candidate("복합 분야");
+        approved.approve("reviewer", null, EXTRACTED_AT);
+        LaboratoryResearchFieldCandidate rejected = candidate("복합 분야");
+        rejected.reject("reviewer", null, EXTRACTED_AT);
+        LaboratoryResearchFieldCandidate stale = candidate("복합 분야");
+        stale.markStale();
+        LaboratoryResearchFieldCandidate child = split(candidate("복합 분야"));
+
+        assertThatThrownBy(() -> split(approved)).hasMessage("CANDIDATE_ALREADY_REVIEWED");
+        assertThatThrownBy(() -> split(rejected)).hasMessage("CANDIDATE_ALREADY_REVIEWED");
+        assertThatThrownBy(() -> split(stale)).hasMessage("STALE_CANDIDATE_NOT_REVIEWABLE");
+        assertThatThrownBy(() -> split(child)).hasMessage("AUTOMATIC_SPLIT_SOURCE_REQUIRED");
+        assertThatThrownBy(() -> child.rejectAfterManualSplit("reviewer", null, EXTRACTED_AT))
+            .hasMessage("AUTOMATIC_SPLIT_SOURCE_REQUIRED");
+    }
+
+    @Test
+    void cannotSplitAPreviouslyPromotedCandidateThatReturnedToPending() {
+        LaboratoryResearchFieldCandidate source = candidate("복합 분야");
+        source.approve("reviewer", null, EXTRACTED_AT);
+        source.recordPromotion(new ResearchField("복합 분야"), EXTRACTED_AT.plusMinutes(1));
+        source.markStale();
+        source.refreshFromExtraction(draft("복합 분야"), "c".repeat(64), "sejong-v2", EXTRACTED_AT.plusHours(1));
+
+        assertThatThrownBy(() -> split(source)).hasMessage("PROMOTED_SOURCE_CANNOT_BE_SPLIT");
+        assertThatThrownBy(() -> source.rejectAfterManualSplit("reviewer", null, EXTRACTED_AT.plusHours(2)))
+            .hasMessage("PROMOTED_SOURCE_CANNOT_BE_SPLIT");
+        assertThat(source.getReviewStatus()).isEqualTo(ResearchFieldCandidateReviewStatus.PENDING);
+        assertThat(source.getPromotedResearchField().getName()).isEqualTo("복합 분야");
+    }
+
+    private LaboratoryResearchFieldCandidate split(LaboratoryResearchFieldCandidate source) {
+        return LaboratoryResearchFieldCandidate.manualSplit(
+            source,
+            new ResearchFieldCandidateDraft("c".repeat(64), "반도체", "반도체", ResearchFieldExtractionMethod.MANUAL_SPLIT, 1),
+            "manual-split-csv-v1", EXTRACTED_AT.plusHours(1)
+        );
     }
 
     private LaboratoryResearchFieldCandidate candidate(String candidateName) {
