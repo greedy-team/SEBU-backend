@@ -33,7 +33,7 @@ EXPOSE 8080
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
     CMD curl -fsS -H 'X-Forwarded-Proto: https' \
-        http://127.0.0.1:8080/api/v1/laboratories \
-        | grep -q '"success":true' || exit 1
+        http://127.0.0.1:8080/actuator/health/readiness \
+        | grep -q '"status":"UP"' || exit 1
 
 ENTRYPOINT ["java", "-jar", "/app/app.jar"]
