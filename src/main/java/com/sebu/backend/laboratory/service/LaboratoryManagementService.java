@@ -53,6 +53,13 @@ public class LaboratoryManagementService {
         findActiveLaboratory(laboratoryId).softDelete();
     }
 
+    @Transactional
+    public Laboratory updateWebsiteManually(Long laboratoryId, String websiteUrl) {
+        Laboratory laboratory = findActiveLaboratory(laboratoryId);
+        laboratory.updateWebsiteManually(websiteUrl);
+        return laboratory;
+    }
+
     private Professor findProfessor(Long professorId) {
         return professorRepository.findById(professorId)
             .orElseThrow(() -> new IllegalArgumentException("Professor not found"));

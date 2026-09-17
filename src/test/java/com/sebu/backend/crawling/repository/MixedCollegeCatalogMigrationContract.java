@@ -34,7 +34,6 @@ abstract class MixedCollegeCatalogMigrationContract {
         assertCatalogue();
         assertThat(count("professor_crawl_candidate")).isZero();
         assertThat(count("laboratory_research_field_candidate")).isZero();
-        validateHibernate();
         flyway("44").validate();
         assertThat(flyway("44").migrate().migrationsExecuted).isZero();
 
@@ -47,6 +46,8 @@ abstract class MixedCollegeCatalogMigrationContract {
         assertCatalogue();
         assertThat(jdbc.queryForList("SELECT * FROM professor ORDER BY id")).isEqualTo(professors);
         assertThat(jdbc.queryForList("SELECT * FROM laboratory ORDER BY id")).isEqualTo(laboratories);
+        flyway("46").migrate();
+        validateHibernate();
     }
 
     @Test
@@ -72,8 +73,9 @@ abstract class MixedCollegeCatalogMigrationContract {
         assertThat(jdbc.queryForList("SELECT * FROM department ORDER BY id")).isEqualTo(departments);
         assertThat(jdbc.queryForList("SELECT * FROM app_user ORDER BY id")).isEqualTo(users);
         assertCatalogue();
-        validateHibernate();
         flyway("44").validate();
+        flyway("46").migrate();
+        validateHibernate();
     }
 
     @Test
@@ -104,6 +106,7 @@ abstract class MixedCollegeCatalogMigrationContract {
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM laboratory_research_field WHERE laboratory_id=9002 AND research_field_id=9003", Integer.class)).isEqualTo(1);
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM professor_department WHERE professor_id=9001", Integer.class)).isEqualTo(2);
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM laboratory_department WHERE laboratory_id=9002", Integer.class)).isEqualTo(2);
+        flyway("46").migrate();
         validateHibernate();
     }
 

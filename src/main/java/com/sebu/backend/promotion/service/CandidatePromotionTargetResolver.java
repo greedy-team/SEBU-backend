@@ -4,6 +4,7 @@ import com.sebu.backend.crawling.domain.ProfessorCrawlCandidate;
 import com.sebu.backend.laboratory.domain.Laboratory;
 import com.sebu.backend.laboratory.domain.LaboratoryNameSource;
 import com.sebu.backend.laboratory.domain.RecruitmentStatus;
+import com.sebu.backend.laboratory.domain.WebsiteUrlSource;
 import com.sebu.backend.laboratory.repository.LaboratoryRepository;
 import com.sebu.backend.professor.domain.Professor;
 import com.sebu.backend.professor.repository.ProfessorRepository;
@@ -252,7 +253,8 @@ class CandidatePromotionTargetResolver {
             candidate.getHomepageUrl(),
             candidate.getResearchIntroduction(),
             RecruitmentStatus.UNKNOWN,
-            laboratoryName.source()
+            laboratoryName.source(),
+            WebsiteUrlSource.CRAWLED
         ));
     }
 

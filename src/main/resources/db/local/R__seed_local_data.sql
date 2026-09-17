@@ -31,23 +31,23 @@ SELECT id, '박지훈', 'jihun.park@example.ac.kr' FROM department WHERE name = 
 INSERT INTO professor (department_id, name, email)
 SELECT id, '이서연', NULL FROM department WHERE name = '인공지능데이터사이언스학과';
 
-INSERT INTO laboratory (professor_id, department_id, name, name_source, website_url, recruitment_status)
-SELECT p.id, d.id, '인공지능연구실', 'OFFICIAL', 'https://ai-lab.example.ac.kr', 'RECRUITING'
+INSERT INTO laboratory (professor_id, department_id, name, name_source, website_url, website_url_source, recruitment_status)
+SELECT p.id, d.id, '인공지능연구실', 'OFFICIAL', 'https://ai-lab.example.ac.kr', 'MANUAL', 'RECRUITING'
 FROM professor p JOIN department d ON d.id = p.department_id
 WHERE p.name = '김민준';
 
-INSERT INTO laboratory (professor_id, department_id, name, name_source, website_url, recruitment_status)
-SELECT p.id, d.id, '컴퓨터비전연구실', 'OFFICIAL', 'https://vision-lab.example.ac.kr', 'ALWAYS_OPEN'
+INSERT INTO laboratory (professor_id, department_id, name, name_source, website_url, website_url_source, recruitment_status)
+SELECT p.id, d.id, '컴퓨터비전연구실', 'OFFICIAL', 'https://vision-lab.example.ac.kr', 'MANUAL', 'ALWAYS_OPEN'
 FROM professor p JOIN department d ON d.id = p.department_id
 WHERE p.name = '박지훈';
 
-INSERT INTO laboratory (professor_id, department_id, name, name_source, website_url, recruitment_status)
-SELECT p.id, d.id, '데이터사이언스랩', 'OFFICIAL', NULL, 'UNKNOWN'
+INSERT INTO laboratory (professor_id, department_id, name, name_source, website_url, website_url_source, recruitment_status)
+SELECT p.id, d.id, '데이터사이언스랩', 'OFFICIAL', NULL, NULL, 'UNKNOWN'
 FROM professor p JOIN department d ON d.id = p.department_id
 WHERE p.name = '이서연';
 
-INSERT INTO laboratory (professor_id, department_id, name, name_source, website_url, recruitment_status, deleted_at)
-SELECT p.id, d.id, '삭제된연구실', 'OFFICIAL', NULL, 'CLOSED', CURRENT_TIMESTAMP
+INSERT INTO laboratory (professor_id, department_id, name, name_source, website_url, website_url_source, recruitment_status, deleted_at)
+SELECT p.id, d.id, '삭제된연구실', 'OFFICIAL', NULL, NULL, 'CLOSED', CURRENT_TIMESTAMP
 FROM professor p JOIN department d ON d.id = p.department_id
 WHERE p.name = '박지훈';
 
