@@ -48,6 +48,10 @@ public class Laboratory extends BaseTimeEntity {
     @Column(name = "website_url", length = 2048)
     private String websiteUrl;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "website_url_source", length = 20)
+    private WebsiteUrlSource websiteUrlSource;
+
     @Column(length = 2000)
     private String description;
 
@@ -72,7 +76,8 @@ public class Laboratory extends BaseTimeEntity {
             websiteUrl,
             null,
             recruitmentStatus,
-            LaboratoryNameSource.OFFICIAL
+            LaboratoryNameSource.OFFICIAL,
+            WebsiteUrlSource.MANUAL
         );
     }
 
@@ -91,7 +96,8 @@ public class Laboratory extends BaseTimeEntity {
             websiteUrl,
             description,
             recruitmentStatus,
-            LaboratoryNameSource.OFFICIAL
+            LaboratoryNameSource.OFFICIAL,
+            WebsiteUrlSource.MANUAL
         );
     }
 
@@ -104,10 +110,39 @@ public class Laboratory extends BaseTimeEntity {
         RecruitmentStatus recruitmentStatus,
         LaboratoryNameSource nameSource
     ) {
+        this(
+            professor,
+            department,
+            name,
+            websiteUrl,
+            description,
+            recruitmentStatus,
+            nameSource,
+            WebsiteUrlSource.MANUAL
+        );
+    }
+
+    public Laboratory(
+        Professor professor,
+        Department department,
+        String name,
+        String websiteUrl,
+        String description,
+        RecruitmentStatus recruitmentStatus,
+        LaboratoryNameSource nameSource,
+        WebsiteUrlSource websiteUrlSource
+    ) {
         validateProfessorDepartment(professor, department);
         this.professor = professor;
         this.department = department;
-        applyDetails(name, websiteUrl, description, recruitmentStatus, nameSource);
+        applyDetails(
+            name,
+            websiteUrl,
+            description,
+            recruitmentStatus,
+            nameSource,
+            websiteUrlSource
+        );
     }
 
     public boolean hasPromotionDetails(
@@ -117,7 +152,7 @@ public class Laboratory extends BaseTimeEntity {
         LaboratoryNameSource nameSource
     ) {
         return Objects.equals(this.name, requireText(name, "LABORATORY_NAME_REQUIRED"))
-            && Objects.equals(this.websiteUrl, normalizeNullable(websiteUrl))
+            && hasPromotionWebsite(websiteUrl)
             && Objects.equals(this.description, normalizeNullable(description))
             && this.nameSource == Objects.requireNonNull(nameSource, "LABORATORY_NAME_SOURCE_REQUIRED");
     }
@@ -132,7 +167,7 @@ public class Laboratory extends BaseTimeEntity {
             throw new IllegalStateException("DELETED_LABORATORY_CANNOT_BE_PROMOTED");
         }
         this.name = requireText(name, "LABORATORY_NAME_REQUIRED");
-        this.websiteUrl = normalizeNullable(websiteUrl);
+        updateWebsiteFromPromotion(websiteUrl);
         this.description = normalizeNullable(description);
         this.nameSource = Objects.requireNonNull(nameSource, "LABORATORY_NAME_SOURCE_REQUIRED");
     }
@@ -155,11 +190,22 @@ public class Laboratory extends BaseTimeEntity {
         );
 
         boolean changed = mergeName(normalizedName, normalizedNameSource);
-        MergeValue websiteMerge = mergeNullableValue(this.websiteUrl, normalizedWebsiteUrl);
+        MergeValue websiteMerge = mergeWebsiteFromPromotion(normalizedWebsiteUrl);
         MergeValue descriptionMerge = mergeNullableValue(this.description, normalizedDescription);
         this.websiteUrl = websiteMerge.value();
+        if (websiteMerge.changed()) {
+            this.websiteUrlSource = WebsiteUrlSource.CRAWLED;
+        }
         this.description = descriptionMerge.value();
         return changed || websiteMerge.changed() || descriptionMerge.changed();
+    }
+
+    public void updateWebsiteManually(String websiteUrl) {
+        if (isDeleted()) {
+            throw new IllegalStateException("DELETED_LABORATORY_CANNOT_BE_UPDATED");
+        }
+        this.websiteUrl = requireText(websiteUrl, "LABORATORY_WEBSITE_URL_REQUIRED");
+        this.websiteUrlSource = WebsiteUrlSource.MANUAL;
     }
 
     public void softDelete() {
@@ -188,16 +234,46 @@ public class Laboratory extends BaseTimeEntity {
         String websiteUrl,
         String description,
         RecruitmentStatus recruitmentStatus,
-        LaboratoryNameSource nameSource
+        LaboratoryNameSource nameSource,
+        WebsiteUrlSource websiteUrlSource
     ) {
         this.name = requireText(name, "LABORATORY_NAME_REQUIRED");
         this.websiteUrl = normalizeNullable(websiteUrl);
+        this.websiteUrlSource = this.websiteUrl == null
+            ? null
+            : Objects.requireNonNull(websiteUrlSource, "LABORATORY_WEBSITE_URL_SOURCE_REQUIRED");
         this.description = normalizeNullable(description);
         this.recruitmentStatus = Objects.requireNonNull(
             recruitmentStatus,
             "RECRUITMENT_STATUS_REQUIRED"
         );
         this.nameSource = Objects.requireNonNull(nameSource, "LABORATORY_NAME_SOURCE_REQUIRED");
+    }
+
+    private boolean hasPromotionWebsite(String requestedWebsiteUrl) {
+        String normalizedWebsiteUrl = normalizeNullable(requestedWebsiteUrl);
+        return websiteUrlSource == WebsiteUrlSource.MANUAL
+            || normalizedWebsiteUrl == null
+            || Objects.equals(websiteUrl, normalizedWebsiteUrl);
+    }
+
+    private void updateWebsiteFromPromotion(String requestedWebsiteUrl) {
+        if (websiteUrlSource == WebsiteUrlSource.MANUAL) {
+            return;
+        }
+        String normalizedWebsiteUrl = normalizeNullable(requestedWebsiteUrl);
+        if (normalizedWebsiteUrl == null) {
+            return;
+        }
+        websiteUrl = normalizedWebsiteUrl;
+        websiteUrlSource = WebsiteUrlSource.CRAWLED;
+    }
+
+    private MergeValue mergeWebsiteFromPromotion(String requestedWebsiteUrl) {
+        if (websiteUrlSource == WebsiteUrlSource.MANUAL || requestedWebsiteUrl == null) {
+            return new MergeValue(websiteUrl, false);
+        }
+        return mergeNullableValue(websiteUrl, requestedWebsiteUrl);
     }
 
     private boolean mergeName(String requestedName, LaboratoryNameSource requestedSource) {

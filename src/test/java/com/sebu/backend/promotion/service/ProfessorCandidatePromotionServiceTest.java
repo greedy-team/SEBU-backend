@@ -15,6 +15,8 @@ import com.sebu.backend.professor.domain.Professor;
 import com.sebu.backend.professor.repository.ProfessorRepository;
 import com.sebu.backend.promotion.dto.PromotionResult;
 import com.sebu.backend.laboratory.domain.LaboratoryNameSource;
+import com.sebu.backend.laboratory.domain.WebsiteUrlSource;
+import com.sebu.backend.laboratory.repository.LaboratoryRepository;
 import com.sebu.backend.laboratory.service.LaboratoryQueryService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,6 +57,9 @@ class ProfessorCandidatePromotionServiceTest {
 
     @Autowired
     ProfessorRepository professorRepository;
+
+    @Autowired
+    LaboratoryRepository laboratoryRepository;
 
     @Autowired
     JdbcTemplate jdbcTemplate;
@@ -423,6 +428,55 @@ class ProfessorCandidatePromotionServiceTest {
             .containsEntry("description", "갱신된 연구 소개")
             .containsEntry("website_url", "https://example.com/updated-" + suffix)
             .containsEntry("recruitment_status", "RECRUITING");
+    }
+
+    @Test
+    void reappliedReviewPreservesManuallyVerifiedWebsiteWhenCrawlLosesTheUrl() {
+        CrawlSource source = newSource();
+        String suffix = uniqueSuffix();
+        String professorName = "수동URL보존" + suffix;
+        String email = "manual-url-preserved-" + suffix + "@sejong.ac.kr";
+        ProfessorCrawlCandidate candidate = approvedCandidate(
+            source,
+            data(professorName, email, null)
+        );
+        assertThat(promotionService.promote(source.getId()).createdCount()).isOne();
+        Long laboratoryId = laboratoryId(candidate.getId());
+        var laboratory = laboratoryRepository.findById(laboratoryId).orElseThrow();
+        assertThat(laboratory.getWebsiteUrlSource()).isEqualTo(WebsiteUrlSource.CRAWLED);
+        laboratory.updateWebsiteManually("https://sdl.sejong.ac.kr/");
+        laboratoryRepository.saveAndFlush(laboratory);
+
+        ProfessorCrawlCandidate reviewedAgain = candidateRepository.findById(candidate.getId())
+            .orElseThrow();
+        LocalDateTime recrawledAt = LocalDateTime.now().plusMinutes(1);
+        reviewedAgain.refreshFromCrawl(
+            new ProfessorCrawlData(
+                professorName,
+                "교수",
+                email,
+                null,
+                "재크롤링으로 갱신된 연구 소개",
+                null
+            ),
+            CrawlSourceProvenance.from(source),
+            recrawledAt
+        );
+        reviewedAgain.approve("검수자", "URL 누락 재검수", recrawledAt.plusMinutes(1));
+        candidateRepository.saveAndFlush(reviewedAgain);
+
+        PromotionResult result = promotionService.promote(source.getId());
+
+        assertThat(result.updatedCount()).isOne();
+        assertThat(result.failures()).isEmpty();
+        assertThat(jdbcTemplate.queryForMap("""
+            SELECT website_url, website_url_source, description
+            FROM laboratory
+            WHERE id = ?
+            """, laboratoryId))
+            .containsEntry("website_url", "https://sdl.sejong.ac.kr/")
+            .containsEntry("website_url_source", "MANUAL")
+            .containsEntry("description", "재크롤링으로 갱신된 연구 소개");
     }
 
     @Test
