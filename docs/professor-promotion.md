@@ -40,6 +40,13 @@ promotion 일회성 실행
 이때 모집 상태처럼 이후 사람이 관리하는 값은 덮어쓰지 않습니다. 같은 승인본을
 다시 실행해도 본 데이터가 중복 생성되지 않습니다.
 
+홈페이지는 출처를 함께 저장합니다. 후보 승격으로 반영한 URL은
+`website_url_source = CRAWLED`, 관리 서비스에서 검증하여 입력한 URL은
+`website_url_source = MANUAL`입니다. `MANUAL` URL은 이후 후보 승격으로
+덮어쓰지 않으며, 재크롤링에서 홈페이지가 `NULL`이 되어도 기존 URL을 삭제하지
+않습니다. URL이 없는 연구실은 `website_url`과 `website_url_source`가 모두
+`NULL`입니다.
+
 이메일이 같은 후보는 교수 이름까지 같을 때 하나의 `professor`와 `laboratory`를
 공유합니다. 각 학과 소속은 `professor_department`와 `laboratory_department`에 따로
 저장하므로 겸임 교수도 후보를 버리지 않고 모두 승격할 수 있습니다. 대표 학과는 기존
