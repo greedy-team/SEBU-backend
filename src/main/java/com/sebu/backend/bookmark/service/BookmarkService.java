@@ -196,7 +196,8 @@ public class BookmarkService {
 
                 new BookmarkedLaboratoriesResponse.ProfessorSummary(
                         result.professor().id().toString(),
-                        result.professor().name()
+                        result.professor().name(),
+                        result.professor().email()
                 ),
 
                 result.researchFields(),

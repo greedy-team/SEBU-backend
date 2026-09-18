@@ -213,7 +213,8 @@ public class MyPageService {
         MyPageResponse.ProfessorSummary professorSummary =
                 new MyPageResponse.ProfessorSummary(
                         laboratory.professor().id().toString(),
-                        laboratory.professor().name()
+                        laboratory.professor().name(),
+                        laboratory.professor().email()
                 );
 
         return new MyPageResponse.LaboratorySummary(
