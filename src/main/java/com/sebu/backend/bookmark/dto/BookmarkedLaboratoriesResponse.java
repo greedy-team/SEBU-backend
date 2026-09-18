@@ -40,7 +40,8 @@ public record BookmarkedLaboratoriesResponse(
 
     public record ProfessorSummary(
             String id,
-            String name
+            String name,
+            String email
     ) {
     }
 }

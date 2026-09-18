@@ -15,15 +15,17 @@ import com.sebu.backend.professor.repository.ProfessorRepository;
 import com.sebu.backend.user.domain.AppUser;
 import com.sebu.backend.user.repository.AppUserRepository;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
+import static com.sebu.backend.support.CookieApiRequests.delete;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
-import static com.sebu.backend.support.CookieApiRequests.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -54,6 +56,36 @@ class BookmarkControllerIntegrationTest {
 
     @Autowired
     BookmarkRepository bookmarkRepository;
+
+    @ParameterizedTest
+    @CsvSource(value = {
+            "/api/v1/users/me/bookmarked-laboratories, $.data.items, professor@example.com",
+            "/api/v1/users/me/bookmarked-laboratories, $.data.items, NULL",
+            "/api/v1/users/me/mypage, $.data.bookmarkedLaboratories.items, professor@example.com",
+            "/api/v1/users/me/mypage, $.data.bookmarkedLaboratories.items, NULL"
+    }, nullValues = "NULL")
+    void 북마크_조회는_교수_이메일을_null도_포함하여_반환한다(
+            String endpoint, String itemsPath, String email
+    ) throws Exception {
+        AppUser user = appUserRepository.save(new AppUser("bookmark-email@example.com"));
+        College college = collegeRepository.save(new College("이메일대학"));
+        Department department = departmentRepository.save(new Department(college, "이메일학과"));
+        Professor professor = professorRepository.save(new Professor(department, "이메일교수", email));
+        Laboratory laboratory = laboratoryRepository.save(new Laboratory(
+                professor, department, "이메일 연구실", null, RecruitmentStatus.RECRUITING
+        ));
+        bookmarkRepository.save(new Bookmark(user, laboratory));
+
+        mockMvc.perform(get(endpoint)
+                        .with(jwt().jwt(jwt -> jwt.subject(user.getId().toString()).claim("role", "USER"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath(itemsPath + "[0].laboratory.professor.id").value(professor.getId().toString()))
+                .andExpect(jsonPath(itemsPath + "[0].laboratory.professor.name").value("이메일교수"))
+                .andExpect(jsonPath(itemsPath + "[0].laboratory.professor")
+                        .value(org.hamcrest.Matchers.hasKey("email")))
+                .andExpect(jsonPath(itemsPath + "[0].laboratory.professor.email")
+                        .value(org.hamcrest.Matchers.is(email)));
+    }
 
     @Test
     void 로그인한_사용자는_북마크한_랩실을_조회할_수_있다() throws Exception {
