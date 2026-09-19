@@ -64,8 +64,10 @@ class MonitoringIntegrationTest {
 
         assertThat(body).contains("http_server_requests_seconds_count", "http_server_requests_seconds_bucket",
             "uri=\"/api/v1/laboratories\"", "uri=\"/api/v1/research-field-categories\"",
-            "jvm_memory_used_bytes", "jvm_memory_max_bytes", "hikaricp_connections_active");
-        assertThat(body).doesNotContain("jvm_threads_", "system_cpu_", "process_cpu_", "disk_",
+            "jvm_memory_used_bytes", "jvm_memory_max_bytes", "jvm_buffer_memory_used_bytes",
+            "jvm_threads_live_threads", "process_cpu_usage", "process_uptime_seconds",
+            "hikaricp_connections_active");
+        assertThat(body).doesNotContain("system_cpu_", "disk_",
             "uri=\"/actuator", "http_server_requests_active", "exception=", "error=", "outcome=");
         assertThat(registry.find("http.server.requests").timers().stream().mapToLong(Timer::count).sum())
             .isEqualTo(requestCount);

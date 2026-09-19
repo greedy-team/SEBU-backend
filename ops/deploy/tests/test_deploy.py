@@ -5,7 +5,7 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 import zipfile
 
 MODULE = Path(__file__).resolve().parents[1] / 'deploy.py'
@@ -19,6 +19,10 @@ REVISION = 'c' * 40
 MIGRATIONS = 'd' * 64
 ENV = ('SPRING_PROFILES_ACTIVE=prod\nDB_URL=jdbc:mysql://sebu-mysql:3306/sebu\n'
        'DB_USERNAME=app\nDB_PASSWORD=fake-only-$#=password\nJWT_SECRET_BASE64=fake-only\n')
+MONITORING_TOKEN = 'test-only-monitoring-secret-with-at-least-43-characters'
+MONITORING_ENV = ENV.replace(
+    'SPRING_PROFILES_ACTIVE=prod\n',
+    f'SPRING_PROFILES_ACTIVE=prod,monitoring\nMONITORING_TOKEN={MONITORING_TOKEN}\n')
 
 
 class FakeDocker:
@@ -240,6 +244,36 @@ class DeploymentTests(unittest.TestCase):
             self.deployer.deploy()
         self.assert_not_stopped()
 
+    def test_deploy_allows_enabling_monitoring_from_existing_prod(self):
+        self.env.write_text(MONITORING_ENV, encoding='utf-8')
+        self.deployer.deploy(DIGEST)
+        self.assertTrue((self.state / 'current.json').exists())
+        self.assertTrue(any(call[0] == 'run' for call in self.docker.calls))
+
+    def test_preflight_accepts_an_existing_monitoring_container(self):
+        self.env.write_text(MONITORING_ENV, encoding='utf-8')
+        self.docker.containers['sebu-backend']['Config']['Env'] = MONITORING_ENV.strip().splitlines()
+        self.assertEqual(self.deployer.preflight()['Image'], 'sha256:old-image')
+
+    def test_health_uses_readiness_internally_and_public_representative_api(self):
+        readiness = MagicMock(status=200)
+        readiness.read.return_value = b'{"status":"UP"}'
+        readiness.__enter__.return_value = readiness
+        public = MagicMock(status=200)
+        public.read.return_value = b'{"success":true}'
+        public.__enter__.return_value = public
+        opener = Mock()
+        opener.open.side_effect = [readiness, public]
+
+        with patch.object(d.urllib.request, 'build_opener', return_value=opener):
+            self.assertTrue(d.Deployer.health(self.deployer))
+
+        requested = [call.args[0].full_url for call in opener.open.call_args_list]
+        self.assertEqual(requested, [
+            'http://127.0.0.1:8080/actuator/health/readiness',
+            self.config['public_health_url'],
+        ])
+
     def test_capture_keeps_literal_secret_characters_and_never_overwrites(self):
         self.env.unlink()
         d.capture_env(self.config, self.docker)
@@ -305,12 +339,29 @@ class UtilityTests(unittest.TestCase):
         for text in ('A', 'A=1\nA=2', 'bad key=x'):
             with self.assertRaises(d.DeployError):
                 d.parse_env(text)
-        for name, value in [('SPRING_PROFILES_ACTIVE', 'local'), ('DB_PASSWORD', ''),
+        for name, value in [('SPRING_PROFILES_ACTIVE', 'local'),
+                            ('SPRING_PROFILES_ACTIVE', 'prod,local'),
+                            ('SPRING_PROFILES_ACTIVE', 'prod,monitoring,monitoring'),
+                            ('SPRING_PROFILES_ACTIVE', 'prod, monitoring'), ('DB_PASSWORD', ''),
                             ('SPRING_FLYWAY_ENABLED', 'false'), ('SPRING_JPA_HIBERNATE_DDL_AUTO', 'update')]:
             env = d.parse_env(ENV)
             env[name] = value
             with self.assertRaises(d.DeployError):
                 d.validate_env(env)
+
+    def test_monitoring_env_requires_a_separate_valid_token(self):
+        for token in ('', 'too-short', 'a' * 43 + ':', 'a' * 257,
+                      'a' * 20 + '\n' + 'b' * 23, 'a' * 43 + '=suffix'):
+            env = d.parse_env(MONITORING_ENV)
+            env['MONITORING_TOKEN'] = token
+            with self.subTest(token_length=len(token)):
+                with self.assertRaises(d.DeployError):
+                    d.validate_env(env)
+
+        for profiles in ('prod,monitoring', 'monitoring,prod'):
+            env = d.parse_env(MONITORING_ENV)
+            env['SPRING_PROFILES_ACTIVE'] = profiles
+            d.validate_env(env)
 
     def test_redirect_is_not_accepted_as_health(self):
         self.assertIsNone(d.NoRedirect().redirect_request(None, None, 302, '', {}, 'https://example.com'))

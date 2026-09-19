@@ -24,7 +24,11 @@ management:
       http.server.requests.active: false
       jvm.memory.used: true
       jvm.memory.max: true
+      jvm.buffer.memory.used: true
       jvm.gc.pause: true
+      jvm.threads.live: true
+      process.cpu.usage: true
+      process.uptime: true
       hikaricp.connections.active: true
       hikaricp.connections.max: true
       hikaricp.connections.pending: true
