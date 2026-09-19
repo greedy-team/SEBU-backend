@@ -12,14 +12,16 @@ cleanup() {
   # -v removes only this disposable container's anonymous MySQL volume.
   [[ -z "$mysql_id" ]] || docker rm --force --volumes "$mysql_id" >/dev/null 2>&1 || true
   docker network rm "$network" >/dev/null 2>&1 || true
-  rm -f -- "$scratch/mysql.env" "$scratch/app.env" "$scratch/response.json"
+  rm -f -- "$scratch/mysql.env" "$scratch/app.env" "$scratch/health.json" \
+    "$scratch/response.json" "$scratch/metrics.prom"
   rmdir -- "$scratch"
 }
 trap cleanup EXIT
 db_password=$(openssl rand -hex 24)
+monitoring_token=$(openssl rand -base64 32)
 printf 'MYSQL_ROOT_PASSWORD=%s\nMYSQL_DATABASE=sebu\n' "$db_password" > "$scratch/mysql.env"
-printf 'SPRING_PROFILES_ACTIVE=prod\nDB_URL=jdbc:mysql://sebu-ci-mysql:3306/sebu?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=Asia/Seoul\nDB_USERNAME=root\nDB_PASSWORD=%s\nJWT_SECRET_BASE64=%s\nJAVA_TOOL_OPTIONS=-Xms128m -Xmx384m -XX:MaxMetaspaceSize=192m -XX:ReservedCodeCacheSize=64m\n' \
-  "$db_password" "$(openssl rand -base64 32)" > "$scratch/app.env"
+printf 'SPRING_PROFILES_ACTIVE=prod,monitoring\nDB_URL=jdbc:mysql://sebu-ci-mysql:3306/sebu?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=Asia/Seoul\nDB_USERNAME=root\nDB_PASSWORD=%s\nJWT_SECRET_BASE64=%s\nMONITORING_TOKEN=%s\nJAVA_TOOL_OPTIONS=-Xms128m -Xmx384m -XX:MaxMetaspaceSize=192m -XX:ReservedCodeCacheSize=64m\n' \
+  "$db_password" "$(openssl rand -base64 32)" "$monitoring_token" > "$scratch/app.env"
 unset db_password
 docker network create "$network" >/dev/null
 mysql_id=$(docker run --detach --network "$network" --network-alias sebu-ci-mysql \
@@ -44,10 +46,25 @@ for ((attempt=1; attempt<=120; attempt++)); do
   fi
   status=$(curl --silent --max-time 5 --output "$scratch/response.json" --write-out '%{http_code}' \
     -H 'X-Forwarded-Proto: https' "http://$address/api/v1/laboratories" || true)
-  if [[ "$status" == 200 ]] && python3 -c 'import json,sys; sys.exit(0 if json.load(open(sys.argv[1])).get("success") is True else 1)' "$scratch/response.json"; then
+  health_status=$(curl --silent --max-time 5 --output "$scratch/health.json" --write-out '%{http_code}' \
+    -H 'X-Forwarded-Proto: https' "http://$address/actuator/health/readiness" || true)
+  if [[ "$status" == 200 && "$health_status" == 200 ]] \
+      && python3 -c 'import json,sys; sys.exit(0 if json.load(open(sys.argv[1])).get("success") is True else 1)' "$scratch/response.json" \
+      && python3 -c 'import json,sys; sys.exit(0 if json.load(open(sys.argv[1])) == {"status": "UP"} else 1)' "$scratch/health.json"; then
+    unauthorized=$(curl --silent --max-time 5 --output /dev/null --write-out '%{http_code}' \
+      -H 'X-Forwarded-Proto: https' "http://$address/actuator/prometheus" || true)
+    authorized=$(curl --silent --max-time 5 --output "$scratch/metrics.prom" --write-out '%{http_code}' \
+      -H 'X-Forwarded-Proto: https' -H "Authorization: Bearer $monitoring_token" \
+      "http://$address/actuator/prometheus" || true)
+    [[ "$unauthorized" == 401 && "$authorized" == 200 ]] || {
+      echo 'Monitoring endpoint authentication failed'; exit 1;
+    }
+    grep -q 'http_server_requests_seconds_count' "$scratch/metrics.prom" || {
+      echo 'Monitoring endpoint did not export HTTP metrics'; exit 1;
+    }
     failed=$(docker exec "$mysql_id" sh -ec 'MYSQL_PWD="$MYSQL_ROOT_PASSWORD" mysql -uroot -Nse "SELECT COUNT(*) FROM sebu.flyway_schema_history WHERE success = 0"')
     [[ "$failed" == 0 ]] || { echo 'Flyway history contains failed migrations'; exit 1; }
-    echo 'PASS: MySQL 8.0 + prod Flyway + Hibernate validate + HTTP 200/success=true'
+    echo 'PASS: MySQL 8.0 + prod monitoring + readiness + authenticated metrics + representative API'
     exit 0
   fi
   sleep 2

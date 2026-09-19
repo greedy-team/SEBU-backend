@@ -1,0 +1,35 @@
+management:
+  endpoints:
+    access:
+      default: none
+    web:
+      exposure:
+        include: health,prometheus
+      discovery:
+        enabled: false
+    jmx:
+      exposure:
+        exclude: "*"
+  endpoint:
+    prometheus:
+      access: read-only
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+  metrics:
+    enable:
+      all: false
+      http.server.requests: true
+      http.server.requests.active: false
+      jvm.memory.used: true
+      jvm.memory.max: true
+      jvm.buffer.memory.used: true
+      jvm.gc.pause: true
+      jvm.threads.live: true
+      process.cpu.usage: true
+      process.uptime: true
+      hikaricp.connections.active: true
+      hikaricp.connections.max: true
+      hikaricp.connections.pending: true
+      hikaricp.connections.timeout: true

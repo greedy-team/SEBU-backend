@@ -11,6 +11,35 @@ springdoc:
     csrf:
       enabled: true
 
+# Only the DB readiness probe is available by default. Metrics require "monitoring".
+management:
+  endpoints:
+    access:
+      default: none
+    web:
+      exposure:
+        include: health
+      discovery:
+        enabled: false
+    jmx:
+      exposure:
+        exclude: "*"
+  endpoint:
+    health:
+      access: read-only
+      show-details: never
+      show-components: never
+      group:
+        readiness:
+          include: db
+  prometheus:
+    metrics:
+      export:
+        enabled: false
+  metrics:
+    enable:
+      all: false
+
 app:
   auth:
     token:

@@ -26,7 +26,9 @@ import zipfile
 
 DIGEST = re.compile(r"sha256:[0-9a-f]{64}\Z")
 SHA = re.compile(r"[0-9a-f]{40}\Z")
+MONITORING_TOKEN_PATTERN = re.compile(r"[A-Za-z0-9._~+/-]+=*\Z")
 REQUIRED_ENV = ("DB_URL", "DB_USERNAME", "DB_PASSWORD", "JWT_SECRET_BASE64")
+ALLOWED_PROFILE_SETS = ({"prod"}, {"prod", "monitoring"})
 MYSQL_AUTH = '''
 set -eu
 if [ -n "${MYSQL_ROOT_PASSWORD_FILE:-}" ]; then
@@ -203,8 +205,9 @@ class Deployer:
             raise DeployError("Insufficient disk space; remove only reviewed old images/backups")
         previous = self.docker.inspect(c["container"])
         live_env = parse_env("\n".join(previous["Config"]["Env"]))
-        if live_env.get("DB_URL") != env["DB_URL"] or live_env.get("SPRING_PROFILES_ACTIVE") != "prod":
-            raise DeployError("Saved DB target/profile differs from the existing backend; review before deployment")
+        validate_env(live_env)
+        if live_env.get("DB_URL") != env["DB_URL"]:
+            raise DeployError("Saved DB target differs from the existing backend; review before deployment")
         if not previous["State"]["Running"] or previous["State"].get("Health", {}).get("Status") != "healthy":
             raise DeployError("Existing backend is not running and healthy; manual inspection required")
         if previous.get("Mounts"):
@@ -244,11 +247,16 @@ class Deployer:
                 return False
             if container["State"].get("Health", {}).get("Status") == "healthy":
                 try:
-                    urls = (f"http://127.0.0.1:{c['port']}/api/v1/laboratories", c["public_health_url"])
-                    for url in urls:
+                    checks = (
+                        (f"http://127.0.0.1:{c['port']}/actuator/health/readiness", "status", "UP"),
+                        (c["public_health_url"], "success", True),
+                    )
+                    for url, field, expected in checks:
                         request = urllib.request.Request(url, headers={"X-Forwarded-Proto": "https"})
                         with urllib.request.build_opener(NoRedirect).open(request, timeout=10) as response:
-                            if response.status != 200 or json.load(response).get("success") is not True:
+                            actual = json.load(response).get(field)
+                            if (response.status != 200 or actual != expected
+                                    or type(actual) is not type(expected)):
                                 raise ValueError("API is not ready")
                     return True
                 except (OSError, ValueError):
@@ -387,10 +395,19 @@ def parse_env(text):
 
 
 def validate_env(env):
-    if env.get("SPRING_PROFILES_ACTIVE") != "prod":
-        raise DeployError("Only the prod profile is permitted; never deploy local seed data")
+    profile_value = env.get("SPRING_PROFILES_ACTIVE", "")
+    profiles = profile_value.split(",")
+    profile_set = set(profiles)
+    if (any(not profile or profile.strip() != profile for profile in profiles)
+            or len(profile_set) != len(profiles)
+            or profile_set not in ALLOWED_PROFILE_SETS):
+        raise DeployError("Only prod or prod,monitoring profiles are permitted; never deploy local seed data")
     if any(not env.get(key) for key in REQUIRED_ENV):
         raise DeployError("Missing required DB/JWT environment values (values are not logged)")
+    if "monitoring" in profile_set:
+        token = env.get("MONITORING_TOKEN", "")
+        if not 43 <= len(token) <= 256 or not MONITORING_TOKEN_PATTERN.fullmatch(token):
+            raise DeployError("Monitoring requires a valid separate MONITORING_TOKEN (value is not logged)")
     if env.get("SPRING_FLYWAY_ENABLED", "true").lower() != "true":
         raise DeployError("Flyway must remain enabled")
     if env.get("SPRING_JPA_HIBERNATE_DDL_AUTO", "validate") != "validate":
