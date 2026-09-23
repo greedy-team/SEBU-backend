@@ -32,6 +32,8 @@ import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfFilter;
 import org.springframework.security.web.authentication.session.NullAuthenticatedSessionStrategy;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
@@ -76,6 +78,7 @@ public class SecurityConfiguration {
             BearerTokenResolver bearerTokenResolver,
             AuthTransportProperties transportProperties,
             AuthCsrfProperties csrfProperties,
+            UrlBasedCorsConfigurationSource corsConfigurationSource,
             CookieCsrfTokenRepository csrfTokenRepository,
             ApiAccessDeniedHandler accessDeniedHandler
     ) throws Exception {
@@ -85,6 +88,7 @@ public class SecurityConfiguration {
         }
 
         http
+                .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .csrf(csrf -> csrf.csrfTokenRepository(csrfTokenRepository)
                     .csrfTokenRequestHandler(new SpaCsrfTokenRequestHandler())
                     // JWT authentication happens on every request. Only the JSON login/logout
@@ -184,6 +188,22 @@ public class SecurityConfiguration {
                 .logout(AbstractHttpConfigurer::disable);
 
         return http.build();
+    }
+
+    @Bean
+    UrlBasedCorsConfigurationSource corsConfigurationSource(AuthCsrfProperties properties) {
+        CorsConfiguration configuration = new CorsConfiguration();
+        // Keep CORS and CSRF trust aligned using the same exact-origin allowlist.
+        configuration.setAllowedOrigins(List.copyOf(properties.allowedOrigins()));
+        configuration.setAllowedMethods(List.of("GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(List.of("Content-Type", "Accept", "X-XSRF-TOKEN"));
+        configuration.setExposedHeaders(List.of("Retry-After", "X-Request-ID"));
+        configuration.setAllowCredentials(true);
+        configuration.setMaxAge(3600L);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/api/**", configuration);
+        return source;
     }
 
     @Bean

@@ -23,6 +23,7 @@ spring:
 app:
   auth:
     csrf:
+      # Local CORS and CSRF origins replace the deployment allowlist.
       allowed-origins:
         - http://localhost:5173
         - http://localhost:8080

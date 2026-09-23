@@ -48,6 +48,7 @@ app:
       refresh-token-expiration: 14d
       absolute-session-expiration: 30d
     csrf:
+      # Shared exact-origin allowlist for CORS and CSRF.
       allowed-origins:
         - https://sebu-frontend.vercel.app
     retention:
