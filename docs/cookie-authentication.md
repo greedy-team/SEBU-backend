@@ -52,8 +52,26 @@ Refresh 응답 data는 `{ "expiresIn": 1800 }`이다. 절대 만료 직전에는
 5. Spring 리소스 서버의 Bearer 요청 CSRF 자동 예외를 제거했다. **Access 쿠키가 있는 요청도 CSRF가 필수**다. GET/HEAD/OPTIONS/TRACE는 상태 변경을 하지 않아야 한다.
 
 기본 허용 출처는 `https://sebu-frontend.vercel.app`이다. local 프로필은 `http://localhost:5173`, `http://localhost:8080`을 허용한다.
-추가 배포 주소는 `app.auth.csrf.allowed-origins`로 명시한다. Vercel 전체 와일드카드를 허용하지 않는다.
-프론트의 동일 출처 `/api` 프록시 구조를 전제로 한다. 브라우저에서 API 호스트로 직접 cross-origin 호출하는 구조로 바꾸면 별도로 CORS·쿠키 정책을 검토해야 한다.
+추가 배포 주소는 `app.auth.csrf.allowed-origins`로 명시한다. 이 목록을 CORS와 CSRF 출처 검증에서 함께 사용하며, Vercel 전체 와일드카드를 허용하지 않는다. local 프로필은 배포 주소 목록을 로컬 주소 목록으로 교체한다.
+
+`/api/**`에는 Spring Security CORS 처리를 적용한다. 허용된 출처의 preflight `OPTIONS` 요청은 인증 없이 처리하며, 실제 요청의 인증과 CSRF 검증은 유지한다.
+
+- 허용 메서드: `GET`, `HEAD`, `POST`, `PUT`, `PATCH`, `DELETE`, `OPTIONS`
+- 허용 요청 헤더: `Content-Type`, `Accept`, `X-XSRF-TOKEN`
+- 브라우저에 노출하는 응답 헤더: `Retry-After`, `X-Request-ID`
+- 자격 증명 허용: `Access-Control-Allow-Credentials: true`, preflight 캐시 최대 3600초
+
+인증이 필요 없는 연구실 목록 등 공개 GET은 허용된 프론트 출처에서 백엔드 URL로 직접 호출할 수 있다. 예를 들어 비로그인 조회는 다음과 같다.
+
+```javascript
+fetch("https://sebu-dev-api.duckdns.org/api/v1/laboratories", {
+  credentials: "omit"
+});
+```
+
+이 호출에는 로그인 사용자의 북마크 상태가 포함되지 않는다. 프론트가 `/api/...` 상대 주소를 계속 사용하면 기존 프록시를 그대로 거친다. CORS 설정은 백엔드 배포 후 적용된다.
+
+쿠키 인증은 여전히 프론트의 동일 출처 `/api` 프록시 구조를 전제로 한다. `SameSite=Lax`와 Domain 미지정 정책은 변경하지 않았다. 서로 다른 사이트인 Vercel 프론트와 DuckDNS API 사이의 인증 요청은 CORS 허용과 `credentials: "include"`만으로 전환할 수 없으며, 쿠키 전송 정책과 프론트의 CSRF 토큰 읽기 방식까지 함께 설계해야 한다.
 실제 프록시가 여러 Set-Cookie 헤더를 각각 보존하는지도 배포 후 확인해야 한다.
 PowerShell 등 직접 호출에서도 쿠키 저장소, 허용된 Origin, CSRF 헤더를 함께 보내야 한다. Authorization 헤더만으로는 인증되지 않는다.
 Swagger는 `/auth/csrf`를 먼저 실행하고 로그인한다. 토큰을 Bearer 입력란에 붙여 넣는 방식은 더 이상 사용하지 않는다.
