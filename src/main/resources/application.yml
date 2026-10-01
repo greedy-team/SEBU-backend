@@ -51,6 +51,8 @@ app:
       # Shared exact-origin allowlist for CORS and CSRF.
       allowed-origins:
         - https://sebu-frontend.vercel.app
+        - https://sebu.kr
+        - https://www.sebu.kr
     retention:
       purge-cron: "0 10 3 * * *"
       batch-size: 500

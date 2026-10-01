@@ -24,6 +24,8 @@ app:
     csrf:
       allowed-origins:
         - https://sebu-frontend.vercel.app
+        - https://sebu.kr
+        - https://www.sebu.kr
     retention:
       purge-cron: "-"
     account:

@@ -51,7 +51,7 @@ Refresh 응답 data는 `{ "expiresIn": 1800 }`이다. 절대 만료 직전에는
 4. Origin을 허용 목록과 정확히 비교한다. Origin이 없으면 Referer의 출처를 확인하고, 둘 다 없거나 `Origin: null`이면 거부한다.
 5. Spring 리소스 서버의 Bearer 요청 CSRF 자동 예외를 제거했다. **Access 쿠키가 있는 요청도 CSRF가 필수**다. GET/HEAD/OPTIONS/TRACE는 상태 변경을 하지 않아야 한다.
 
-기본 허용 출처는 `https://sebu-frontend.vercel.app`이다. local 프로필은 `http://localhost:5173`, `http://localhost:8080`을 허용한다.
+기본 허용 출처는 `https://sebu-frontend.vercel.app`, `https://sebu.kr`, `https://www.sebu.kr`이다. local 프로필은 `http://localhost:5173`, `http://localhost:8080`을 허용한다.
 추가 배포 주소는 `app.auth.csrf.allowed-origins`로 명시한다. Vercel 전체 와일드카드를 허용하지 않는다.
 프론트의 동일 출처 `/api` 프록시 구조를 전제로 한다. 브라우저에서 API 호스트로 직접 cross-origin 호출하는 구조로 바꾸면 별도로 CORS·쿠키 정책을 검토해야 한다.
 실제 프록시가 여러 Set-Cookie 헤더를 각각 보존하는지도 배포 후 확인해야 한다.
