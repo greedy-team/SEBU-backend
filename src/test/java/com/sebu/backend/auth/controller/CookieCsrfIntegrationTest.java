@@ -6,6 +6,8 @@ import com.sebu.backend.auth.repository.RefreshTokenRepository;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -63,6 +65,34 @@ class CookieCsrfIntegrationTest {
         verifyNoInteractions(sejongAuthenticator);
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {"https://sebu-frontend.vercel.app", "https://sebu.kr", "https://www.sebu.kr"})
+    void trustedOriginsAllowCredentialedLoginAndStillRequireCsrf(String origin) throws Exception {
+        mvc.perform(options("/api/v1/auth/sejong/login")
+                .header("Origin", origin)
+                .header("Access-Control-Request-Method", "POST")
+                .header("Access-Control-Request-Headers", "Content-Type,X-XSRF-TOKEN"))
+            .andExpect(status().isOk())
+            .andExpect(header().string("Access-Control-Allow-Origin", origin))
+            .andExpect(header().string("Access-Control-Allow-Credentials", "true"));
+
+        mvc.perform(post("/api/v1/auth/sejong/login").header("Origin", origin)
+                .contentType(MediaType.APPLICATION_JSON).content("{}"))
+            .andExpect(status().isForbidden())
+            .andExpect(jsonPath("$.error.code").value("CSRF_TOKEN_INVALID"));
+        verifyNoInteractions(sejongAuthenticator);
+
+        Cookie csrf = csrf();
+        mvc.perform(post("/api/v1/auth/sejong/login").header("Origin", origin)
+                .cookie(csrf).header("X-XSRF-TOKEN", csrf.getValue())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"studentId\":\"21012345\",\"password\":\"test-only-password\"}"))
+            .andExpect(status().isOk())
+            .andExpect(header().string("Access-Control-Allow-Origin", origin))
+            .andExpect(cookie().exists("access_token"))
+            .andExpect(cookie().exists("refresh_token"));
+    }
+
     @Test
     void rejectsMismatchedCsrfAndDoesNotAcceptTokenOnlyInQuery() throws Exception {
         Cookie csrf = csrf();
@@ -77,7 +107,9 @@ class CookieCsrfIntegrationTest {
     @Test
     void rejectsForeignNullMissingAndLookalikeOriginsEvenWithValidCsrf() throws Exception {
         Cookie csrf = csrf();
-        for (String origin : new String[]{"https://evil.example", "null", ORIGIN + ".evil.example", "https://other-preview.vercel.app"}) {
+        for (String origin : new String[]{"https://evil.example", "null", ORIGIN + ".evil.example",
+                "https://other-preview.vercel.app", "https://sebu.kr.evil.example",
+                "https://www.sebu.kr.evil.example", "https://preview.sebu.kr", "http://www.sebu.kr"}) {
             mvc.perform(post("/api/v1/auth/logout").header("Origin", origin)
                     .cookie(csrf).header("X-XSRF-TOKEN", csrf.getValue()))
                 .andExpect(status().isForbidden());
