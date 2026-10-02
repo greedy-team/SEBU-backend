@@ -20,7 +20,8 @@ public record ResearchFieldCategoriesResult(List<CategoryResult> categories) {
         String code,
         String name,
         String description,
-        int displayOrder
+        int displayOrder,
+        Long parentId
     ) {
         private static CategoryResult from(ResearchFieldCategory category) {
             return new CategoryResult(
@@ -28,7 +29,8 @@ public record ResearchFieldCategoriesResult(List<CategoryResult> categories) {
                 category.getCode(),
                 category.getName(),
                 category.getDescription(),
-                category.getDisplayOrder()
+                category.getDisplayOrder(),
+                category.getParentId()
             );
         }
     }

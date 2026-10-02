@@ -4,9 +4,11 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -18,13 +20,16 @@ class ResearchFieldCategoryApiIntegrationTest {
     @Autowired
     MockMvc mockMvc;
 
+    @Autowired
+    JdbcTemplate jdbcTemplate;
+
     @Test
     void anonymousUserCanReadAllCategoriesInDisplayOrder() throws Exception {
         mockMvc.perform(get("/api/v1/research-field-categories"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.error").doesNotExist())
-            .andExpect(jsonPath("$.data.categories.length()").value(32))
+            .andExpect(jsonPath("$.data.categories.length()").value(52))
             .andExpect(jsonPath("$.data.categories[0].code").value("AI_ML"))
             .andExpect(jsonPath("$.data.categories[0].name")
                 .value("인공지능·기계학습"))
@@ -66,6 +71,32 @@ class ResearchFieldCategoryApiIntegrationTest {
             .andExpect(jsonPath("$.data.categories[30].code").value("DESIGN_ARTS"))
             .andExpect(jsonPath("$.data.categories[31].code").value("PSYCHOLOGY_BEHAVIOR"))
             .andExpect(jsonPath("$.data.categories[31].name").value("심리·인지·행동"))
-            .andExpect(jsonPath("$.data.categories[31].displayOrder").value(32));
+            .andExpect(jsonPath("$.data.categories[31].displayOrder").value(32))
+            .andExpect(jsonPath("$.data.categories[7].parentId").isEmpty())
+            .andExpect(jsonPath("$.data.categories[32].code")
+                .value("ROBOT_AUTONOMOUS_ROBOTICS"))
+            .andExpect(jsonPath("$.data.categories[32].name")
+                .value("로봇공학·메카트로닉스"))
+            .andExpect(jsonPath("$.data.categories[32].parentId").value(8))
+            .andExpect(jsonPath("$.data.categories[51].displayOrder").value(52))
+            .andExpect(jsonPath("$.data.categories[51].parentId").value(8));
+    }
+
+    @Test
+    void robotFieldsAreMappedOnlyToSpecificChildCategories() {
+        Integer parentMappings = jdbcTemplate.queryForObject("""
+            SELECT COUNT(*) FROM research_field_category_mapping mapping
+            JOIN research_field_category category ON category.id = mapping.category_id
+            WHERE category.code = 'ROBOT_AUTONOMOUS'
+            """, Integer.class);
+        assertThat(parentMappings).isZero();
+
+        String fieldRobotsCode = jdbcTemplate.queryForObject("""
+            SELECT category.code FROM research_field_category_mapping mapping
+            JOIN research_field field ON field.id = mapping.research_field_id
+            JOIN research_field_category category ON category.id = mapping.category_id
+            WHERE field.name = '건설작업로봇' AND category.parent_id IS NOT NULL
+            """, String.class);
+        assertThat(fieldRobotsCode).isEqualTo("ROBOT_AUTONOMOUS_FIELD_ROBOTS");
     }
 }

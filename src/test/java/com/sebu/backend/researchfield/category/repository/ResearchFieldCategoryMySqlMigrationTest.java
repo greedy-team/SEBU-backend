@@ -76,6 +76,38 @@ class ResearchFieldCategoryMySqlMigrationTest {
     }
 
     @Test
+    void v46UpgradePreservesMappingsAndMovesRobotFieldsToChildren() throws Exception {
+        flyway("46").migrate();
+        long mappingCount;
+        long robotParentId;
+        try (Connection connection = connection()) {
+            mappingCount = count(connection, "SELECT COUNT(*) FROM research_field_category_mapping");
+            robotParentId = findCategoryId(connection, "ROBOT_AUTONOMOUS");
+            assertMapping(connection, "건설작업로봇", "ROBOT_AUTONOMOUS");
+        }
+
+        flyway(null).migrate();
+
+        try (Connection connection = connection()) {
+            assertThat(findCategoryId(connection, "ROBOT_AUTONOMOUS")).isEqualTo(robotParentId);
+            assertThat(count(connection, "SELECT COUNT(*) FROM research_field_category"))
+                .isEqualTo(52);
+            assertThat(count(connection, "SELECT COUNT(*) FROM research_field_category_mapping"))
+                .isEqualTo(mappingCount);
+            assertThat(count(connection, """
+                SELECT COUNT(*) FROM research_field_category
+                WHERE parent_id = ?
+                """, robotParentId)).isEqualTo(20);
+            assertThat(count(connection, """
+                SELECT COUNT(*) FROM research_field_category_mapping
+                WHERE category_id = ?
+                """, robotParentId)).isZero();
+            assertMapping(connection, "건설작업로봇", "ROBOT_AUTONOMOUS_FIELD_ROBOTS");
+            assertMapping(connection, "로봇 공학", "ROBOT_AUTONOMOUS_ROBOTICS");
+        }
+    }
+
+    @Test
     void blankDatabaseAtV34CreatesCategoriesWithoutInventingResearchFields() throws Exception {
         flyway("34").migrate();
 
@@ -846,6 +878,18 @@ class ResearchFieldCategoryMySqlMigrationTest {
             "SELECT id FROM research_field WHERE name = ?"
         )) {
             statement.setString(1, name);
+            try (ResultSet result = statement.executeQuery()) {
+                assertThat(result.next()).isTrue();
+                return result.getLong("id");
+            }
+        }
+    }
+
+    private long findCategoryId(Connection connection, String code) throws SQLException {
+        try (PreparedStatement statement = connection.prepareStatement(
+            "SELECT id FROM research_field_category WHERE code = ?"
+        )) {
+            statement.setString(1, code);
             try (ResultSet result = statement.executeQuery()) {
                 assertThat(result.next()).isTrue();
                 return result.getLong("id");

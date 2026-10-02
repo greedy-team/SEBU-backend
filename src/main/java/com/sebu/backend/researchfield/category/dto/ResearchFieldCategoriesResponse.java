@@ -18,7 +18,8 @@ public record ResearchFieldCategoriesResponse(List<CategoryResponse> categories)
         String code,
         String name,
         String description,
-        int displayOrder
+        int displayOrder,
+        Long parentId
     ) {
         private static CategoryResponse from(
             ResearchFieldCategoriesResult.CategoryResult result
@@ -28,7 +29,8 @@ public record ResearchFieldCategoriesResponse(List<CategoryResponse> categories)
                 result.code(),
                 result.name(),
                 result.description(),
-                result.displayOrder()
+                result.displayOrder(),
+                result.parentId()
             );
         }
     }

@@ -31,4 +31,7 @@ public class ResearchFieldCategory extends BaseTimeEntity {
 
     @Column(name = "display_order", nullable = false, unique = true)
     private int displayOrder;
+
+    @Column(name = "parent_id")
+    private Long parentId;
 }

@@ -18,6 +18,7 @@ public interface LaboratoryResearchFieldCategoryQueryRepository
             category.id AS categoryId,
             category.code AS categoryCode,
             category.name AS categoryName,
+            category.parent_id AS parentId,
             category.display_order AS displayOrder
         FROM laboratory_research_field laboratory_field
         JOIN research_field_category_mapping mapping

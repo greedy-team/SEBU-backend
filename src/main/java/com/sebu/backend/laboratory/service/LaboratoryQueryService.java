@@ -312,7 +312,8 @@ public class LaboratoryQueryService {
         return new ResearchFieldCategoryResult(
                 category.getCategoryId(),
                 category.getCategoryCode(),
-                category.getCategoryName()
+                category.getCategoryName(),
+                category.getParentId()
         );
     }
 

@@ -136,6 +136,29 @@ class LaboratoryResearchFieldDetailsIntegrationTest {
     }
 
     @Test
+    void returnsParentIdForMappedChildCategory() throws Exception {
+        Long parentId = jdbcTemplate.queryForObject(
+            "SELECT id FROM research_field_category WHERE code = 'ROBOT_AUTONOMOUS'",
+            Long.class
+        );
+        jdbcTemplate.update(
+            "UPDATE research_field_category SET parent_id = ? WHERE id = ?",
+            parentId, earlyCategoryId
+        );
+
+        JsonNode main = laboratory(
+            requestData(get("/api/v1/laboratories")).path("laboratories"),
+            mainLaboratory.getId()
+        );
+        assertThat(longValues(main.path("researchFieldDetails").get(0).path("categoryIds")))
+            .contains(earlyCategoryId);
+        assertThat(main.path("researchFieldCategories").get(0).path("parentId").longValue())
+            .isEqualTo(parentId);
+        assertThat(main.path("researchFieldCategories").get(1).path("parentId").isNull())
+            .isTrue();
+    }
+
+    @Test
     void preservesUnmappedFieldsAndReturnsEmptyArraysForLaboratoriesWithoutFields() throws Exception {
         JsonNode laboratories = requestData(get("/api/v1/laboratories")).path("laboratories");
         JsonNode unmapped = laboratory(laboratories, unmappedLaboratory.getId());

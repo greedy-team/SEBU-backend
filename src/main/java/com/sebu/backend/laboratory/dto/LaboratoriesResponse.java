@@ -145,7 +145,8 @@ public record LaboratoriesResponse(
     public record ResearchFieldCategoryResponse(
             Long id,
             String code,
-            String name
+            String name,
+            Long parentId
     ) {
 
         private static ResearchFieldCategoryResponse from(
@@ -154,7 +155,8 @@ public record LaboratoriesResponse(
             return new ResearchFieldCategoryResponse(
                     category.id(),
                     category.code(),
-                    category.name()
+                    category.name(),
+                    category.parentId()
             );
         }
     }

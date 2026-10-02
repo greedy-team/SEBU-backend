@@ -11,5 +11,7 @@ public interface LaboratoryResearchFieldCategoryProjection {
 
     String getCategoryName();
 
+    Long getParentId();
+
     Integer getDisplayOrder();
 }
