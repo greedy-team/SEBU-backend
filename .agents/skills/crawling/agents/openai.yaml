@@ -1,0 +1,4 @@
+interface:
+  display_name: "SEBU 학과 자료 크롤링"
+  short_description: "공식 학과 자료를 수집하고 오타·연구분야·배포 값을 검수합니다"
+  default_prompt: "$crawling을 사용해 요청한 학과 URL을 수집하고 오타와 연구분야 분류를 검수한 뒤 CSV와 배포 PR을 작성해 주세요."

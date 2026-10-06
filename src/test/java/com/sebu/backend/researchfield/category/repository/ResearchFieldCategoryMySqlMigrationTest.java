@@ -86,7 +86,7 @@ class ResearchFieldCategoryMySqlMigrationTest {
             assertMapping(connection, "건설작업로봇", "ROBOT_AUTONOMOUS");
         }
 
-        flyway(null).migrate();
+        flyway("47").migrate();
 
         try (Connection connection = connection()) {
             assertThat(findCategoryId(connection, "ROBOT_AUTONOMOUS")).isEqualTo(robotParentId);
