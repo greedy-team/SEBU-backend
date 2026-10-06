@@ -29,7 +29,7 @@ class ResearchFieldCategoryApiIntegrationTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.success").value(true))
             .andExpect(jsonPath("$.error").doesNotExist())
-            .andExpect(jsonPath("$.data.categories.length()").value(52))
+            .andExpect(jsonPath("$.data.categories.length()").value(54))
             .andExpect(jsonPath("$.data.categories[0].code").value("AI_ML"))
             .andExpect(jsonPath("$.data.categories[0].name")
                 .value("인공지능·기계학습"))
@@ -79,7 +79,15 @@ class ResearchFieldCategoryApiIntegrationTest {
                 .value("로봇공학·메카트로닉스"))
             .andExpect(jsonPath("$.data.categories[32].parentId").value(8))
             .andExpect(jsonPath("$.data.categories[51].displayOrder").value(52))
-            .andExpect(jsonPath("$.data.categories[51].parentId").value(8));
+            .andExpect(jsonPath("$.data.categories[51].parentId").value(8))
+            .andExpect(jsonPath("$.data.categories[52].code").value("MUSIC_PERFORMING_ARTS"))
+            .andExpect(jsonPath("$.data.categories[52].name").value("음악·공연예술"))
+            .andExpect(jsonPath("$.data.categories[52].displayOrder").value(53))
+            .andExpect(jsonPath("$.data.categories[52].parentId").isEmpty())
+            .andExpect(jsonPath("$.data.categories[53].code").value("SPORTS_PHYSICAL_EDUCATION"))
+            .andExpect(jsonPath("$.data.categories[53].name").value("체육·스포츠"))
+            .andExpect(jsonPath("$.data.categories[53].displayOrder").value(54))
+            .andExpect(jsonPath("$.data.categories[53].parentId").isEmpty());
     }
 
     @Test
