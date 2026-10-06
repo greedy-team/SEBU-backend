@@ -1,0 +1,7 @@
+college_name,department_name,url,parser_type
+예체능대학,회화과,https://dept.sejong.ac.kr/picdpt/intro/professor.do,SEJONG_STANDARD
+예체능대학,패션디자인학과,https://www.sejong.ac.kr/kor/college/fashion-design.do,SEJONG_STANDARD
+예체능대학,음악과,https://dept.sejong.ac.kr/musicdpt/intro/professor.do,SEJONG_STANDARD
+예체능대학,체육학과,https://www.sejong.ac.kr/kor/college/physical-education.do,SEJONG_STANDARD
+예체능대학,무용과,https://www.sejong.ac.kr/kor/college/dance.do,SEJONG_STANDARD
+예체능대학,영화예술학과,https://www.sejong.ac.kr/kor/college/film-art.do,SEJONG_STANDARD
