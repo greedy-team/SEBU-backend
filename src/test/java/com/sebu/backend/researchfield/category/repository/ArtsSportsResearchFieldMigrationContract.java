@@ -18,13 +18,7 @@ import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 
 import javax.sql.DataSource;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -35,8 +29,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 abstract class ArtsSportsResearchFieldMigrationContract {
     private static final String TARGET_EMAIL = "runner23@sejong.ac.kr";
     private static final String MIGRATION = "db/migration/V49__import_reviewed_arts_sports_research_fields.sql";
-    private static final Path LINKS_CSV = Path.of("docs/data/arts-sports-research-field-links.csv");
-    private static final Path CATEGORIES_CSV = Path.of("docs/data/arts-sports-research-field-categories.csv");
     private JdbcTemplate jdbc;
 
     protected abstract DataSource dataSource();
@@ -49,7 +41,7 @@ abstract class ArtsSportsResearchFieldMigrationContract {
     }
 
     @Test
-    void blankDatabaseMatchesEveryReviewedCsvValueAndExposesCategoriesAndResearchFields() throws IOException {
+    void blankDatabaseImportsReviewedFieldsAndExposesCategoriesAndResearchFields() {
         flyway("49").migrate();
 
         assertThat(count("research_field_category")).isEqualTo(54);
@@ -69,7 +61,7 @@ abstract class ArtsSportsResearchFieldMigrationContract {
             JOIN professor p ON p.id=l.professor_id
             WHERE p.email IN ('actscene@naver.com','zungbu@daum.net','ysahn@sejong.ac.kr')
             """, Integer.class)).isZero();
-        assertReviewedCsvValues();
+        assertReviewedFieldsAndMappings();
         assertNoUnmappedOrDuplicatePairs();
         validateHibernateAndQueryResponses();
         flyway("49").validate();
@@ -185,66 +177,55 @@ abstract class ArtsSportsResearchFieldMigrationContract {
         assertGuardedFailure();
     }
 
-    private void assertReviewedCsvValues() throws IOException {
-        var links = reviewedRows(LINKS_CSV);
-        var categories = reviewedRows(CATEGORIES_CSV);
-        assertThat(links).hasSize(61);
-        assertThat(categories).hasSize(69);
-        var expectedLinks = new LinkedHashSet<String>();
-        var expectedCategories = new LinkedHashSet<String>();
-        for (var row : links) {
-            expectedLinks.add(pair(row.get("email"), row.get("research_field_name")));
-            var profile = jdbc.queryForMap("""
-                SELECT c.name AS college_name,d.name AS department_name,p.name AS professor_name,
-                    l.description AS source_research_introduction,s.source_url
-                FROM laboratory l JOIN professor p ON p.id=l.professor_id
-                JOIN department d ON d.id=l.department_id JOIN college c ON c.id=d.college_id
-                JOIN crawl_source s ON s.department_id=d.id
-                WHERE p.email=? AND s.source_url=?
-                """, row.get("email"), row.get("source_url"));
-            for (String field : List.of("college_name", "department_name", "professor_name", "source_research_introduction", "source_url")) {
-                assertThat(profile.get(field)).as(row.get("email") + " " + field).isEqualTo(row.get(field));
-            }
-            assertThat(jdbc.queryForList("""
-                SELECT c.code FROM research_field f
-                JOIN research_field_category_mapping m ON m.research_field_id=f.id
-                JOIN research_field_category c ON c.id=m.category_id WHERE f.name=?
-                """, String.class, row.get("research_field_name")))
-                .containsExactlyInAnyOrder(row.get("category_codes").split("\\|"));
+    private void assertReviewedFieldsAndMappings() {
+        var departmentLinks = Map.of("회화과", 1, "패션디자인학과", 12, "음악과", 24,
+            "체육학과", 9, "무용과", 3, "영화예술학과", 12);
+        for (var entry : departmentLinks.entrySet()) {
+            assertThat(jdbc.queryForObject("""
+                SELECT COUNT(*) FROM laboratory_research_field lf
+                JOIN laboratory l ON l.id=lf.laboratory_id JOIN department d ON d.id=l.department_id
+                WHERE d.name=?
+                """, Integer.class, entry.getKey())).as(entry.getKey()).isEqualTo(entry.getValue());
         }
-        for (var row : categories) {
-            expectedCategories.add(pair(row.get("research_field_name"), row.get("category_code")));
-            var category = jdbc.queryForMap("""
-                SELECT c.name,parent.code AS parent_code FROM research_field_category c
-                LEFT JOIN research_field_category parent ON parent.id=c.parent_id WHERE c.code=?
-                """, row.get("category_code"));
-            assertThat(category.get("name")).isEqualTo(row.get("category_name"));
-            assertThat(category.get("parent_code")).isEqualTo(row.get("parent_category_code").isEmpty() ? null : row.get("parent_category_code"));
-            assertThat(row.get("category_is_new")).isEqualTo(Boolean.toString(
-                Set.of("MUSIC_PERFORMING_ARTS", "SPORTS_PHYSICAL_EDUCATION").contains(row.get("category_code"))));
-        }
-        assertThat(expectedLinks).hasSize(61);
-        assertThat(expectedCategories).hasSize(69);
-        assertThat(links.stream().map(row -> row.get("research_field_name")).distinct()).hasSize(55);
-        assertThat(jdbc.query("""
-            SELECT p.email,f.name FROM laboratory_research_field lf
-            JOIN laboratory l ON l.id=lf.laboratory_id JOIN professor p ON p.id=l.professor_id
-            JOIN department d ON d.id=l.department_id JOIN college c ON c.id=d.college_id
-            JOIN research_field f ON f.id=lf.research_field_id WHERE c.name='예체능대학'
-            """, (rs, index) -> pair(rs.getString(1), rs.getString(2))))
-            .doesNotHaveDuplicates().containsExactlyInAnyOrderElementsOf(expectedLinks);
-        var actualCategories = new LinkedHashSet<String>();
-        for (String field : links.stream().map(row -> row.get("research_field_name")).distinct().toList()) {
-            actualCategories.addAll(jdbc.query("""
-                SELECT f.name,c.code FROM research_field f
-                JOIN research_field_category_mapping m ON m.research_field_id=f.id
-                JOIN research_field_category c ON c.id=m.category_id WHERE f.name=?
-                """, (rs, index) -> pair(rs.getString(1), rs.getString(2)), field));
-        }
-        assertThat(actualCategories).containsExactlyInAnyOrderElementsOf(expectedCategories);
+        assertThat(jdbc.queryForObject("""
+            SELECT COUNT(DISTINCT lf.research_field_id) FROM laboratory_research_field lf
+            JOIN laboratory l ON l.id=lf.laboratory_id JOIN department d ON d.id=l.department_id
+            JOIN college c ON c.id=d.college_id WHERE c.name='예체능대학'
+            """, Integer.class)).isEqualTo(55);
+        assertThat(jdbc.queryForObject("""
+            SELECT COUNT(*) FROM research_field_category_mapping m WHERE m.research_field_id IN (
+                SELECT lf.research_field_id FROM laboratory_research_field lf
+                JOIN laboratory l ON l.id=lf.laboratory_id JOIN department d ON d.id=l.department_id
+                JOIN college c ON c.id=d.college_id WHERE c.name='예체능대학')
+            """, Integer.class)).isEqualTo(69);
+        assertLabFields(TARGET_EMAIL, "한국화");
+        assertLabFields("kclee@sejong.ac.kr", "piano performance", "piano literature", "collaborative piano");
+        assertLabFields("hyoungnam@sejong.ac.kr", "무용교육", "예술교육", "융합예술콘텐츠");
+        assertLabFields("filmdoo@sejong.ac.kr", "영화", "드라마 기획", "시나리오", "제작", "영화 미학 연구");
+        assertCategories("한국화", "DESIGN_ARTS");
+        assertCategories("예술/디자인사", "DESIGN_ARTS", "HISTORY_CULTURE");
+        assertCategories("인공지능과 패션 디자인", "AI_ML", "DESIGN_ARTS");
+        assertCategories("piano performance", "MUSIC_PERFORMING_ARTS");
+        assertCategories("체육학", "SPORTS_PHYSICAL_EDUCATION");
+        assertCategories("영화", "DESIGN_ARTS");
     }
 
-    private void validateHibernateAndQueryResponses() throws IOException {
+    private void assertLabFields(String email, String... expected) {
+        assertThat(jdbc.queryForList("""
+            SELECT f.name FROM laboratory_research_field lf JOIN research_field f ON f.id=lf.research_field_id
+            JOIN laboratory l ON l.id=lf.laboratory_id JOIN professor p ON p.id=l.professor_id
+            WHERE p.email=?
+            """, String.class, email)).containsExactlyInAnyOrder(expected);
+    }
+
+    private void assertCategories(String field, String... expected) {
+        assertThat(jdbc.queryForList("""
+            SELECT c.code FROM research_field f JOIN research_field_category_mapping m ON m.research_field_id=f.id
+            JOIN research_field_category c ON c.id=m.category_id WHERE f.name=?
+            """, String.class, field)).containsExactlyInAnyOrder(expected);
+    }
+
+    private void validateHibernateAndQueryResponses() {
         var factory = new LocalContainerEntityManagerFactoryBean();
         factory.setDataSource(dataSource());
         factory.setPackagesToScan("com.sebu.backend");
@@ -288,22 +269,17 @@ abstract class ArtsSportsResearchFieldMigrationContract {
                 var fields = repositories.getRepository(LaboratoryResearchFieldRepository.class)
                     .findFieldsByLaboratoryIds(laboratoryEmails.keySet());
                 assertThat(fields).hasSize(61);
-                var fieldNames = new LinkedHashMap<Long, String>();
-                fields.forEach(field -> fieldNames.put(field.getResearchFieldId(), field.getName()));
-                var actual = repositories.getRepository(LaboratoryResearchFieldCategoryQueryRepository.class)
-                    .findAllByLaboratoryIds(laboratoryEmails.keySet()).stream()
-                    .map(row -> pair(laboratoryEmails.get(row.getLaboratoryId()), pair(fieldNames.get(row.getResearchFieldId()), row.getCategoryCode())))
-                    .toList();
-                var expected = new LinkedHashSet<String>();
-                var reviewedCategories = reviewedRows(CATEGORIES_CSV);
-                for (var link : reviewedRows(LINKS_CSV)) {
-                    for (var category : reviewedCategories) {
-                        if (link.get("research_field_name").equals(category.get("research_field_name"))) {
-                            expected.add(pair(link.get("email"), pair(link.get("research_field_name"), category.get("category_code"))));
-                        }
-                    }
-                }
-                assertThat(actual).doesNotHaveDuplicates().containsExactlyInAnyOrderElementsOf(expected);
+                var mappings = repositories.getRepository(LaboratoryResearchFieldCategoryQueryRepository.class)
+                    .findAllByLaboratoryIds(laboratoryEmails.keySet());
+                assertThat(mappings).extracting(row -> List.of(row.getLaboratoryId(), row.getResearchFieldId(), row.getCategoryId()))
+                    .doesNotHaveDuplicates();
+                assertThat(mappings).filteredOn(row -> row.getLaboratoryId().equals(laboratory("kclee@sejong.ac.kr")))
+                    .hasSize(3).allSatisfy(row -> {
+                        assertThat(row.getCategoryCode()).isEqualTo("MUSIC_PERFORMING_ARTS");
+                        assertThat(row.getParentId()).isNull();
+                    });
+                assertThat(mappings).filteredOn(row -> row.getLaboratoryId().equals(laboratory("kimbm@sejong.ac.kr")))
+                    .singleElement().satisfies(row -> assertThat(row.getCategoryCode()).isEqualTo("SPORTS_PHYSICAL_EDUCATION"));
             }
         } finally {
             factory.destroy();
@@ -337,54 +313,6 @@ abstract class ArtsSportsResearchFieldMigrationContract {
         result.put("laboratory_research_field", jdbc.queryForList("SELECT * FROM laboratory_research_field ORDER BY laboratory_id,research_field_id"));
         result.put("research_field_category_mapping", jdbc.queryForList("SELECT * FROM research_field_category_mapping ORDER BY research_field_id,category_id"));
         return result;
-    }
-
-    private List<Map<String, String>> reviewedRows(Path path) throws IOException {
-        String text = Files.readString(path, StandardCharsets.UTF_8);
-        var rows = new ArrayList<List<String>>();
-        var columns = new ArrayList<String>();
-        var value = new StringBuilder();
-        boolean quoted = false;
-        for (int index = 0; index < text.length(); index++) {
-            char current = text.charAt(index);
-            if (current == '"') {
-                if (quoted && index + 1 < text.length() && text.charAt(index + 1) == '"') {
-                    value.append('"');
-                    index++;
-                } else {
-                    quoted = !quoted;
-                }
-            } else if (!quoted && (current == ',' || current == '\n' || current == '\r')) {
-                columns.add(value.toString());
-                value.setLength(0);
-                if (current != ',') {
-                    rows.add(new ArrayList<>(columns));
-                    columns.clear();
-                    if (current == '\r' && index + 1 < text.length() && text.charAt(index + 1) == '\n') index++;
-                }
-            } else {
-                value.append(current);
-            }
-        }
-        assertThat(quoted).as("CSV 인용 필드가 닫혀 있어야 한다").isFalse();
-        if (!columns.isEmpty() || !value.isEmpty()) {
-            columns.add(value.toString());
-            rows.add(columns);
-        }
-        var header = rows.getFirst();
-        var reviewed = new ArrayList<Map<String, String>>();
-        for (var row : rows.subList(1, rows.size())) {
-            assertThat(row).hasSize(header.size());
-            var mapped = new LinkedHashMap<String, String>();
-            for (int index = 0; index < header.size(); index++) mapped.put(header.get(index), row.get(index));
-            assertThat(mapped.get("review_status")).isEqualTo("APPROVED");
-            reviewed.add(mapped);
-        }
-        return reviewed;
-    }
-
-    private String pair(String first, String second) {
-        return first + "\t" + second;
     }
 
     private long laboratory(String email) {

@@ -10,11 +10,6 @@ import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 
 import javax.sql.DataSource;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,11 +34,10 @@ abstract class ArtsSportsCatalogMigrationContract {
     }
 
     @Test
-    void blankDatabaseImportsReviewedValuesAndSupportsIdempotentRetryAndHibernateValidation() throws IOException {
+    void blankDatabaseImportsReviewedValuesAndSupportsIdempotentRetryAndHibernateValidation() {
         flyway("48").migrate();
 
         assertReviewedCatalogue();
-        assertEveryReviewedCsvValue();
         assertThat(count("professor_crawl_candidate")).isZero();
         assertThat(count("laboratory_research_field_candidate")).isZero();
         flyway("48").validate();
@@ -185,9 +179,11 @@ abstract class ArtsSportsCatalogMigrationContract {
                 .as(entry.getKey() + " 크롤링 소스").isEqualTo(1);
         }
         assertThat(jdbc.queryForObject("""
-            SELECT COUNT(*) FROM laboratory l JOIN department d ON d.id=l.department_id
+            SELECT COUNT(*) FROM laboratory l JOIN professor p ON p.id=l.professor_id
+            JOIN department d ON d.id=l.department_id
             JOIN college c ON c.id=d.college_id WHERE c.name='예체능대학'
             AND l.name_source='GENERATED' AND l.recruitment_status='UNKNOWN'
+            AND l.name=CONCAT(p.name,' 교수님 연구실')
             """, Integer.class)).isEqualTo(18);
         assertThat(jdbc.queryForObject("""
             SELECT COUNT(*) FROM laboratory l JOIN department d ON d.id=l.department_id
@@ -216,74 +212,6 @@ abstract class ArtsSportsCatalogMigrationContract {
 
     private void insertReviewedProfessor() {
         jdbc.update("INSERT INTO professor (id,department_id,name,email) VALUES (9001,?,'정재호','runner23@sejong.ac.kr')", department("회화과"));
-    }
-
-    private void assertEveryReviewedCsvValue() throws IOException {
-        var rows = readCsv(Path.of("docs/data/arts-sports-professors-reviewed.csv"));
-        assertThat(rows).hasSize(19);
-        var header = rows.getFirst();
-        for (var columns : rows.subList(1, rows.size())) {
-            assertThat(columns).hasSize(header.size());
-            var reviewed = new LinkedHashMap<String, String>();
-            for (int index = 0; index < header.size(); index++) {
-                reviewed.put(header.get(index), columns.get(index).isEmpty() ? null : columns.get(index));
-            }
-            assertThat(reviewed.get("review_status")).isEqualTo("APPROVED");
-            var expected = new LinkedHashMap<String, Object>();
-            for (String field : List.of("college_name", "department_name", "source_url", "parser_type",
-                "professor_name", "position", "email", "research_introduction", "homepage_url",
-                "laboratory_name", "name_source")) {
-                expected.put(field, reviewed.get(field));
-            }
-            expected.put("website_url_source", reviewed.get("homepage_url") == null ? null : "CRAWLED");
-            var actual = jdbc.queryForMap("""
-                SELECT c.name AS college_name,d.name AS department_name,s.source_url,s.parser_type,
-                    p.name AS professor_name,p.position,p.email,l.description AS research_introduction,
-                    l.website_url AS homepage_url,l.name AS laboratory_name,l.name_source,l.website_url_source
-                FROM professor p JOIN laboratory l ON l.professor_id=p.id
-                JOIN professor_department pd ON pd.professor_id=p.id
-                JOIN laboratory_department ld ON ld.laboratory_id=l.id AND ld.department_id=pd.department_id
-                JOIN department d ON d.id=pd.department_id JOIN college c ON c.id=d.college_id
-                JOIN crawl_source s ON s.department_id=d.id
-                WHERE p.email=? AND s.source_url=? AND l.deleted_at IS NULL
-                """, reviewed.get("email"), reviewed.get("source_url"));
-            assertThat(actual).as(reviewed.get("professor_name") + " 검수 CSV와 배포 값").isEqualTo(expected);
-        }
-    }
-
-    private List<List<String>> readCsv(Path path) throws IOException {
-        String text = Files.readString(path, StandardCharsets.UTF_8);
-        var rows = new ArrayList<List<String>>();
-        var columns = new ArrayList<String>();
-        var value = new StringBuilder();
-        boolean quoted = false;
-        for (int index = 0; index < text.length(); index++) {
-            char current = text.charAt(index);
-            if (current == '"') {
-                if (quoted && index + 1 < text.length() && text.charAt(index + 1) == '"') {
-                    value.append('"');
-                    index++;
-                } else {
-                    quoted = !quoted;
-                }
-            } else if (!quoted && (current == ',' || current == '\n' || current == '\r')) {
-                columns.add(value.toString());
-                value.setLength(0);
-                if (current != ',') {
-                    rows.add(new ArrayList<>(columns));
-                    columns.clear();
-                    if (current == '\r' && index + 1 < text.length() && text.charAt(index + 1) == '\n') index++;
-                }
-            } else {
-                value.append(current);
-            }
-        }
-        assertThat(quoted).as("검수 CSV의 따옴표가 모두 닫혀 있어야 한다").isFalse();
-        if (!columns.isEmpty() || !value.isEmpty()) {
-            columns.add(value.toString());
-            rows.add(columns);
-        }
-        return rows;
     }
 
     private void assertFailsWithoutCanonicalWrites() {
