@@ -20,7 +20,7 @@ class AuthConfigurationValidationTest {
         .withPropertyValues(
             "app.auth.token.jwt-secret-base64=MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg5MDE=",
             "app.auth.token.access-token-expiration=30m",
-            "app.auth.token.refresh-token-expiration=14d",
+            "app.auth.token.refresh-token-expiration=12h",
             "app.auth.token.absolute-session-expiration=30d",
             "app.auth.csrf.allowed-origins[0]=https://sebu-frontend.vercel.app"
         );

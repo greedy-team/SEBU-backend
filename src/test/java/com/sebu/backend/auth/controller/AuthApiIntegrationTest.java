@@ -33,6 +33,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
 import org.slf4j.LoggerFactory;
 
+import java.time.Duration;
 import java.time.Instant;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -99,7 +100,7 @@ class AuthApiIntegrationTest {
             .andExpect(header().stringValues(HttpHeaders.SET_COOKIE, org.hamcrest.Matchers.hasItem(allOf(
                 containsString("refresh_token="),
                 containsString("Path=/api/v1/auth"),
-                containsString("Max-Age=1209600"),
+                containsString("Max-Age=43200"),
                 containsString("Secure"),
                 containsString("HttpOnly"),
                 containsString("SameSite=Lax")
@@ -108,6 +109,8 @@ class AuthApiIntegrationTest {
         assertThat(appUserRepository.findByProviderAndProviderUserId(AuthProvider.SEJONG, "21012345"))
             .isPresent();
         assertThat(refreshTokenRepository.count()).isOne();
+        var token = refreshTokenRepository.findAll().getFirst();
+        assertThat(Duration.between(token.getCreatedAt(), token.getExpiresAt())).isEqualTo(Duration.ofHours(12));
     }
 
     @Test
@@ -182,6 +185,9 @@ class AuthApiIntegrationTest {
         MvcResult refresh = mockMvc.perform(post("/api/v1/auth/refresh")
                 .cookie(new Cookie(AuthCookieFactory.REFRESH_COOKIE, previousToken)))
             .andExpect(status().isOk())
+            .andExpect(header().stringValues(HttpHeaders.SET_COOKIE, org.hamcrest.Matchers.hasItem(allOf(
+                containsString("refresh_token="), containsString("Max-Age=43200")
+            ))))
             .andExpect(jsonPath("$.data.accessToken").doesNotExist())
             .andExpect(jsonPath("$.data.tokenType").doesNotExist())
             .andExpect(jsonPath("$.data.expiresIn").value(1800))
@@ -189,6 +195,9 @@ class AuthApiIntegrationTest {
 
         String rotatedToken = refreshTokenFrom(refresh);
         assertThat(rotatedToken).isNotEqualTo(previousToken);
+        var persistedToken = refreshTokenRepository.findByTokenHash(refreshTokenGenerator.hash(rotatedToken)).orElseThrow();
+        assertThat(Duration.between(persistedToken.getCreatedAt(), persistedToken.getExpiresAt()))
+            .isEqualTo(Duration.ofHours(12));
         verifyNoInteractions(sejongAuthenticator);
 
         mockMvc.perform(post("/api/v1/auth/refresh")

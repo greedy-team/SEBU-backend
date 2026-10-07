@@ -19,7 +19,7 @@ app:
     token:
       jwt-secret-base64: MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg5MDE=
       access-token-expiration: 30m
-      refresh-token-expiration: 14d
+      refresh-token-expiration: 12h
       absolute-session-expiration: 30d
     csrf:
       allowed-origins:

@@ -39,6 +39,45 @@ class RefreshTokenTest {
         assertThat(start().getSessionId()).isNotEqualTo(first.getSessionId());
     }
 
+    @Test
+    void twelveHourTokenExpiresExactlyAtItsDeadline() {
+        RefreshToken token = RefreshToken.start(AppUser.sejong("test-user"), "a".repeat(64),
+            loginAt, Duration.ofHours(12), Duration.ofDays(30));
+
+        assertThat(token.getExpiresAt()).isEqualTo(loginAt.plusHours(12));
+        assertThat(token.isUsableAt(loginAt.plusHours(12).minusNanos(1))).isTrue();
+        assertThat(token.isUsableAt(loginAt.plusHours(12))).isFalse();
+        assertThatThrownBy(() -> token.rotate("b".repeat(64), loginAt.plusHours(12), Duration.ofHours(12)))
+            .isInstanceOf(IllegalStateException.class);
+    }
+
+    @Test
+    void existingFourteenDayTokenAdoptsTwelveHoursOnlyWhenRotated() {
+        RefreshToken existing = start();
+        LocalDateTime refreshAt = loginAt.plusDays(13);
+
+        assertThat(existing.getExpiresAt()).isEqualTo(loginAt.plusDays(14));
+        assertThat(existing.isUsableAt(refreshAt)).isTrue();
+        RefreshToken next = existing.rotate("b".repeat(64), refreshAt, Duration.ofHours(12));
+
+        assertThat(next.getExpiresAt()).isEqualTo(refreshAt.plusHours(12));
+        assertThat(next.getAbsoluteExpiresAt()).isEqualTo(loginAt.plusDays(30));
+        assertThat(next.getSessionId()).isEqualTo(existing.getSessionId());
+        assertThat(existing.isUsableAt(refreshAt)).isFalse();
+    }
+
+    @Test
+    void twelveHourRotationIsCappedByExistingAbsoluteDeadline() {
+        RefreshToken current = start()
+            .rotate("b".repeat(64), loginAt.plusDays(13), idle)
+            .rotate("c".repeat(64), loginAt.plusDays(26), idle);
+
+        RefreshToken next = current.rotate("d".repeat(64), loginAt.plusDays(29).plusHours(23), Duration.ofHours(12));
+
+        assertThat(next.getExpiresAt()).isEqualTo(loginAt.plusDays(30));
+        assertThat(next.getAbsoluteExpiresAt()).isEqualTo(loginAt.plusDays(30));
+    }
+
     private RefreshToken start() {
         return RefreshToken.start(AppUser.sejong("test-user"), "a".repeat(64), loginAt, idle, Duration.ofDays(30));
     }
