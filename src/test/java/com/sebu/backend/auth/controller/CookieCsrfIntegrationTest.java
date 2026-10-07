@@ -136,7 +136,7 @@ class CookieCsrfIntegrationTest {
         assertThat(access.getSecure()).isTrue();
         assertThat(refresh.getSecure()).isTrue();
         assertThat(access.getDomain()).isNull();
-        assertThat(refresh.getMaxAge()).isEqualTo(14 * 24 * 3600);
+        assertThat(refresh.getMaxAge()).isEqualTo(12 * 3600);
         assertThat(response.getCookie("recovery_token").getMaxAge()).isZero();
         assertThat(response.getCookie("XSRF-TOKEN").getValue()).isNotEqualTo(initial.getValue());
         assertThat(response.getCookie("XSRF-TOKEN").getAttribute("SameSite")).isEqualTo("Lax");
