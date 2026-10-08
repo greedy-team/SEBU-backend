@@ -2,8 +2,9 @@
 """Fail-closed, single-container pull deployment. No third-party Python packages.
 
 This is deliberately NOT blue/green. MySQL and Caddy are never replaced.
-Only trusted, CI-published develop images are eligible. Authentication is supplied
-by the root user's Docker credential store, never by a token in this file.
+Only trusted, CI-published images for the configured develop/main channel are eligible.
+Authentication is supplied by the root user's Docker credential store, never by a
+token in this file.
 """
 
 import argparse
@@ -20,6 +21,7 @@ import subprocess
 import sys
 import tempfile
 import time
+import urllib.parse
 import urllib.request
 import zipfile
 
@@ -113,12 +115,15 @@ def load_config(path):
     for key in ("container", "mysql_container", "mysql_volume", "network", "database"):
         if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]*", config[key]):
             raise DeployError(f"Invalid configuration field: {key}")
-    if config["tag"] != "develop":
-        raise DeployError("This deployment channel only accepts the develop tag")
+    if config["tag"] not in ("develop", "main"):
+        raise DeployError("Deployment channel must be develop or main")
     if not config["source"].startswith("https://github.com/"):
         raise DeployError("Expected a GitHub source repository")
     if not config["public_health_url"].startswith("https://"):
         raise DeployError("Public health check must use HTTPS")
+    health_hostname = (urllib.parse.urlsplit(config["public_health_url"]).hostname or "").rstrip(".")
+    if not health_hostname or health_hostname == "invalid" or health_hostname.endswith(".invalid"):
+        raise DeployError("Configure the real public API hostname before deployment; .invalid is a placeholder")
     for key in ("memory_mb", "port", "health_timeout", "min_free_mb"):
         if not isinstance(config[key], int) or config[key] <= 0:
             raise DeployError(f"Expected a positive integer: {key}")
@@ -238,6 +243,20 @@ class Deployer:
             self.docker.run("cp", f"{self.config['container']}:/app/app.jar", str(target))
             return jar_fingerprint(target)
 
+    def validate_image(self, image):
+        labels = image.get("Config", {}).get("Labels") or {}
+        revision = labels.get("org.opencontainers.image.revision", "")
+        migrations = labels.get("io.sebu.migrations-sha256", "")
+        if labels.get("org.opencontainers.image.source") != self.config["source"] or not SHA.fullmatch(revision):
+            raise DeployError("Image does not identify the configured repository and commit")
+        if labels.get("io.sebu.deployment-channel") != self.config["tag"]:
+            raise DeployError("Image deployment channel does not match the configured tag")
+        if not re.fullmatch(r"[0-9a-f]{64}", migrations):
+            raise DeployError("Image was not published with the required deployment metadata")
+        if image.get("Os") != "linux" or image.get("Architecture") != "amd64":
+            raise DeployError("Only linux/amd64 images are supported on this EC2 instance")
+        return revision, migrations
+
     def health(self):
         c = self.config
         deadline = time.monotonic() + c["health_timeout"]
@@ -279,21 +298,15 @@ class Deployer:
             if (live["Image"] != current.get("image_id") or not live["State"]["Running"]
                     or live["State"].get("Health", {}).get("Status") != "healthy"):
                 raise DeployError("Recorded version does not match the running container; inspect manually")
+            # A cached digest must not hide a channel/repository configuration change.
+            self.validate_image(self.docker.inspect(live["Image"], image=True))
             log("No new deployment image")
             return
         previous = self.preflight()
         ref = f"{c['image']}@{target}"
         self.docker.run("pull", ref, timeout=600)
         image = self.docker.inspect(ref, image=True)
-        labels = image.get("Config", {}).get("Labels") or {}
-        revision = labels.get("org.opencontainers.image.revision", "")
-        migrations = labels.get("io.sebu.migrations-sha256", "")
-        if labels.get("org.opencontainers.image.source") != c["source"] or not SHA.fullmatch(revision):
-            raise DeployError("Image does not identify the configured repository and commit")
-        if labels.get("io.sebu.deployment-channel") != "develop" or not re.fullmatch(r"[0-9a-f]{64}", migrations):
-            raise DeployError("Image was not published with the required deployment metadata")
-        if image.get("Os") != "linux" or image.get("Architecture") != "amd64":
-            raise DeployError("Only linux/amd64 images are supported on this EC2 instance")
+        revision, migrations = self.validate_image(image)
         old_migrations = self.previous_migrations()
         # A new version might have been published during the download. Never deploy an obsolete pointer.
         if self.docker.manifest(c["image"], c["tag"]) != target:
@@ -304,7 +317,7 @@ class Deployer:
         backup_dir = self.state / "backups"
         backup_dir.mkdir(mode=0o700, exist_ok=True)
         backup = backup_dir / f"{stamp}-{revision[:12]}.sql.gz"
-        record = {"digest": target, "revision": revision, "previous_image_id": previous["Image"],
+        record = {"digest": target, "revision": revision, "channel": c["tag"], "previous_image_id": previous["Image"],
                   "rollback_container": rollback, "backup": str(backup), "stage": "backup",
                   "same_migrations": old_migrations == migrations}
         atomic_json(progress, record)
@@ -336,7 +349,7 @@ class Deployer:
                 raise DeployError("New backend failed health checks")
             self.docker.run("update", "--restart", "unless-stopped", c["container"])
             atomic_json(self.state / "current.json", {
-                "digest": target, "revision": revision, "image_id": image["Id"],
+                "digest": target, "revision": revision, "channel": c["tag"], "image_id": image["Id"],
                 "migrations": migrations, "deployed_at": stamp, "rollback_container": rollback,
                 "backup": str(backup)
             })
