@@ -47,3 +47,4 @@ ops/deploy/tests/__pycache__/
 ops/deploy/backend.env
 ops/deploy/config.json
 *.sql.gz
+*.catalog.json.gz

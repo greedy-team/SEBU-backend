@@ -38,6 +38,7 @@ if systemctl is-active --quiet sebu-pull-deploy.service || [[ -e /etc/sebu-deplo
   exit 1
 fi
 install -o root -g root -m 0700 "$script_dir/deploy.py" /opt/sebu-deploy/deploy.py
+install -o root -g root -m 0700 "$script_dir/catalog_transfer.py" /opt/sebu-deploy/catalog_transfer.py
 install -o root -g root -m 0700 "$script_dir/login-ghcr.sh" /opt/sebu-deploy/login-ghcr.sh
 if [[ ! -e /etc/sebu-deploy/config.json ]]; then
   install -o root -g root -m 0600 "$script_dir/$config_example" /etc/sebu-deploy/config.json

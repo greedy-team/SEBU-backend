@@ -119,7 +119,8 @@ if failures:
     raise SystemExit("FAIL: fresh production database validation\n" + "\n".join(failures))
 print("PASS: all source migrations applied; catalogues present; user activity and candidate tables empty")
 PY
-    echo 'PASS: MySQL 8.0 + full migrations + production seeds + Hibernate validation + monitoring + readiness + representative API'
+    bash "$script_dir/smoke-catalog-transfer.sh" "$mysql_id" sebu "$app_id"
+    echo 'PASS: MySQL 8.0 + full migrations + production seeds + catalogue transfer + Hibernate validation + monitoring + readiness + representative API'
     exit 0
   fi
   sleep 2
