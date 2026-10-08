@@ -51,8 +51,10 @@ class ResearchFieldCategoryMySqlMigrationTest {
         "폐수 중금속 이온 흡착 및 약물 전달을 위한 젤라틴 기반 하이드로겔 입자 제조"
     );
     private static final Path BASE_CLASSIFICATION_CSV = Path.of(
-        "docs",
-        "data",
+        "src",
+        "test",
+        "resources",
+        "fixtures",
         "research-field-category-classification.csv"
     );
     private static final Path NATURAL_SCIENCE_MAPPING_MIGRATION = Path.of(
