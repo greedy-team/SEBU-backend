@@ -1,0 +1,17 @@
+{
+  "image": "ghcr.io/greedy-team/sebu-backend",
+  "tag": "main",
+  "source": "https://github.com/greedy-team/SEBU-backend",
+  "container": "sebu-prod-backend",
+  "mysql_container": "sebu-prod-mysql",
+  "mysql_volume": "sebu-prod-mysql-data",
+  "database": "sebu_prod",
+  "network": "sebu-prod-network",
+  "env_file": "/etc/sebu-deploy/backend.env",
+  "state_dir": "/var/lib/sebu-deploy",
+  "memory_mb": 768,
+  "port": 8080,
+  "health_timeout": 300,
+  "min_free_mb": 2048,
+  "public_health_url": "https://production-api.example.invalid/api/v1/laboratories"
+}

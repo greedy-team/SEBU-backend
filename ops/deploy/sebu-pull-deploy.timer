@@ -1,5 +1,5 @@
 [Unit]
-Description=Check SEBU develop image approximately every two minutes
+Description=Check the configured SEBU deployment channel approximately every two minutes
 
 [Timer]
 OnBootSec=90s

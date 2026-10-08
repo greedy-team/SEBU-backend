@@ -37,8 +37,10 @@ class FakeDocker:
             'Config': {'Labels': {
                 'org.opencontainers.image.source': config['source'],
                 'org.opencontainers.image.revision': REVISION,
-                'io.sebu.deployment-channel': 'develop',
+                'io.sebu.deployment-channel': config['tag'],
                 'io.sebu.migrations-sha256': MIGRATIONS}}}
+        self.previous_image = copy.deepcopy(self.candidate)
+        self.previous_image['Id'] = 'sha256:old-image'
         self.containers = {
             'sebu-backend': {
                 'Image': 'sha256:old-image', 'State': {'Running': True, 'Health': {'Status': 'healthy'}},
@@ -52,7 +54,7 @@ class FakeDocker:
 
     def inspect(self, name, image=False):
         if image:
-            return copy.deepcopy(self.candidate)
+            return copy.deepcopy(self.previous_image if name == self.previous_image['Id'] else self.candidate)
         if name not in self.containers:
             raise d.DeployError('Container not found')
         return copy.deepcopy(self.containers[name])
@@ -117,6 +119,7 @@ class DeploymentTests(unittest.TestCase):
         current = d.read_json(self.state / 'current.json')
         self.assertEqual(current['digest'], DIGEST)
         self.assertEqual(current['revision'], REVISION)
+        self.assertEqual(current['channel'], 'develop')
         self.assertEqual(self.docker.containers['sebu-mysql'], mysql)
         self.assertIn(current['rollback_container'], self.docker.containers)
         self.assertTrue(Path(current['backup']).exists())
@@ -129,9 +132,61 @@ class DeploymentTests(unittest.TestCase):
 
     def test_unchanged_image_is_not_restarted(self):
         d.atomic_json(self.state / 'current.json', {'digest': DIGEST, 'image_id': 'sha256:old-image'})
-        self.deployer.deploy()
+        for channel in ('develop', 'main'):
+            with self.subTest(channel=channel):
+                self.config['tag'] = channel
+                self.docker.previous_image['Config']['Labels']['io.sebu.deployment-channel'] = channel
+                self.deployer.deploy()
+                self.assert_not_stopped()
+                self.assertFalse(any(c[0] in ('pull', 'backup') for c in self.docker.calls))
+
+    def test_main_deploy_uses_main_manifest_and_records_production_channel(self):
+        self.config['tag'] = 'main'
+        self.docker.candidate['Config']['Labels']['io.sebu.deployment-channel'] = 'main'
+        mysql = copy.deepcopy(self.docker.containers['sebu-mysql'])
+        self.deployer.deploy(DIGEST)
+
+        current = d.read_json(self.state / 'current.json')
+        self.assertEqual(current['channel'], 'main')
+        self.assertEqual(current['digest'], DIGEST)
+        self.assertTrue(Path(current['backup']).exists())
+        self.assertEqual(self.docker.containers['sebu-mysql'], mysql)
+        self.assertIn(current['rollback_container'], self.docker.containers)
+        manifests = [call for call in self.docker.calls if call[0] == 'manifest']
+        self.assertTrue(manifests)
+        self.assertTrue(all(call[2] == 'main' for call in manifests))
+
+    def test_cross_channel_candidate_is_rejected_before_backup_or_stop(self):
+        for channel, wrong_channel in (('develop', 'main'), ('main', 'develop')):
+            with self.subTest(channel=channel):
+                self.config['tag'] = channel
+                self.docker.candidate['Config']['Labels']['io.sebu.deployment-channel'] = wrong_channel
+                with self.assertRaisesRegex(d.DeployError, 'channel'):
+                    self.deployer.deploy()
+                self.assert_not_stopped()
+                self.assertFalse(any(call[0] == 'backup' for call in self.docker.calls))
+                self.assertFalse((self.state / 'current.json').exists())
+
+    def test_unchanged_digest_does_not_bypass_channel_validation(self):
+        d.atomic_json(self.state / 'current.json', {'digest': DIGEST, 'image_id': 'sha256:old-image'})
+        self.config['tag'] = 'main'
+        # The registry candidate is valid for main, but the cached live image belongs to develop.
+        self.docker.candidate['Config']['Labels']['io.sebu.deployment-channel'] = 'main'
+        with self.assertRaisesRegex(d.DeployError, 'channel'):
+            self.deployer.deploy()
         self.assert_not_stopped()
-        self.assertFalse(any(c[0] in ('pull', 'backup') for c in self.docker.calls))
+        self.assertFalse(any(call[0] in ('pull', 'backup') for call in self.docker.calls))
+
+    def test_unchanged_digest_still_requires_trusted_image_metadata(self):
+        d.atomic_json(self.state / 'current.json', {'digest': DIGEST, 'image_id': 'sha256:old-image'})
+        labels = self.docker.previous_image['Config']['Labels']
+        for key in tuple(labels):
+            with self.subTest(label=key):
+                saved = labels.pop(key)
+                with self.assertRaises(d.DeployError):
+                    self.deployer.deploy()
+                self.assert_not_stopped()
+                labels[key] = saved
 
     def test_unchanged_but_unhealthy_image_is_reported(self):
         d.atomic_json(self.state / 'current.json', {'digest': DIGEST, 'image_id': 'sha256:old-image'})
@@ -177,6 +232,23 @@ class DeploymentTests(unittest.TestCase):
         self.assertFalse(self.docker.containers['sebu-backend']['State']['Running'])
         self.assertFalse(any(c[0] in ('rm', 'start') for c in self.docker.calls))
         self.assertEqual(d.read_json(self.state / 'blocked.json')['rollback'], 'manual-db-review-required')
+
+    def test_failed_main_deploy_with_new_migrations_keeps_database_for_manual_review(self):
+        self.config['tag'] = 'main'
+        self.docker.candidate['Config']['Labels']['io.sebu.deployment-channel'] = 'main'
+        self.deployer.previous_migrations.return_value = 'e' * 64
+        self.deployer.health.return_value = False
+        mysql = copy.deepcopy(self.docker.containers['sebu-mysql'])
+        with self.assertRaises(d.DeployError):
+            self.deployer.deploy()
+
+        blocked = d.read_json(self.state / 'blocked.json')
+        self.assertEqual(blocked['channel'], 'main')
+        self.assertEqual(blocked['rollback'], 'manual-db-review-required')
+        self.assertTrue(Path(blocked['backup']).exists())
+        self.assertEqual(self.docker.containers['sebu-mysql'], mysql)
+        self.assertFalse(self.docker.containers['sebu-backend']['State']['Running'])
+        self.assertFalse(any(call[0] in ('rm', 'start') for call in self.docker.calls))
 
     def test_run_timeout_with_new_migrations_stops_candidate_and_blocks(self):
         self.deployer.previous_migrations.return_value = 'e' * 64
@@ -283,6 +355,34 @@ class DeploymentTests(unittest.TestCase):
 
 
 class UtilityTests(unittest.TestCase):
+    def test_config_requires_real_public_health_hostname(self):
+        config = json.loads((MODULE.parent / 'config.main.example.json').read_text())
+        config.update(state_dir=str(MODULE.parent), env_file=str(MODULE.parent / 'backend.env'))
+        with patch.object(d, 'private_file'), patch.object(d, 'read_json', return_value=config):
+            for url in ('https://production-api.example.invalid/api/v1/laboratories',
+                        'https://INVALID/api/v1/laboratories', 'https://api.invalid./health',
+                        'https:///api/v1/laboratories'):
+                with self.subTest(url=url):
+                    config['public_health_url'] = url
+                    with self.assertRaisesRegex(d.DeployError, 'real public API hostname'):
+                        d.load_config('unused')
+            config['public_health_url'] = 'https://api.example.com/api/v1/laboratories'
+            self.assertEqual(d.load_config('unused')['public_health_url'], config['public_health_url'])
+
+    def test_config_accepts_only_develop_and_main_channels(self):
+        config = json.loads((MODULE.parent / 'config.example.json').read_text())
+        config.update(state_dir=str(MODULE.parent), env_file=str(MODULE.parent / 'backend.env'))
+        with patch.object(d, 'private_file'), patch.object(d, 'read_json', return_value=config):
+            for channel in ('develop', 'main'):
+                with self.subTest(channel=channel):
+                    config['tag'] = channel
+                    self.assertEqual(d.load_config('unused')['tag'], channel)
+            for channel in ('latest', 'prod', 'feature/test', 'Main', '', None):
+                with self.subTest(channel=channel):
+                    config['tag'] = channel
+                    with self.assertRaisesRegex(d.DeployError, 'channel'):
+                        d.load_config('unused')
+
     def test_backup_runs_dump_before_gzip_and_verifies_contents(self):
         payload = b'-- disposable test SQL\n' * 20
         def dump_process(command, **kwargs):

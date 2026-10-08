@@ -57,11 +57,13 @@ jobs:
         run: bash ops/deploy/smoke-prod.sh sebu-backend:ci
 
   publish:
-    name: Publish private develop image
+    name: Publish private ${{ github.ref_name }} image
     needs: test
-    if: github.ref == 'refs/heads/develop' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    if: (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main') && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     timeout-minutes: 25
+    env:
+      DEPLOYMENT_CHANNEL: ${{ github.ref_name }}
     permissions:
       contents: read
       packages: write
@@ -78,18 +80,19 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          case "$DEPLOYMENT_CHANNEL" in develop|main) ;; *) exit 1 ;; esac
           migrations=$(python3 ops/deploy/deploy.py fingerprint)
           docker build --platform linux/amd64 \
             --label "org.opencontainers.image.source=https://github.com/greedy-team/SEBU-backend" \
             --label "org.opencontainers.image.revision=$GITHUB_SHA" \
-            --label "io.sebu.deployment-channel=develop" \
+            --label "io.sebu.deployment-channel=$DEPLOYMENT_CHANNEL" \
             --label "io.sebu.migrations-sha256=$migrations" \
-            --tag "ghcr.io/greedy-team/sebu-backend:sha-$GITHUB_SHA" .
+            --tag "ghcr.io/greedy-team/sebu-backend:$DEPLOYMENT_CHANNEL-sha-$GITHUB_SHA" .
 
       - name: Validate exact publish image with MySQL 8.0
-        run: bash ops/deploy/smoke-prod.sh "ghcr.io/greedy-team/sebu-backend:sha-$GITHUB_SHA"
+        run: bash ops/deploy/smoke-prod.sh "ghcr.io/greedy-team/sebu-backend:$DEPLOYMENT_CHANNEL-sha-$GITHUB_SHA"
 
-      - name: Publish private image, then advance develop pointer
+      - name: Publish private image, then advance the matching branch pointer
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -99,13 +102,14 @@ jobs:
           python3 ops/deploy/check-package-private.py --allow-missing
           printf '%s' "$GH_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
           trap 'docker logout ghcr.io >/dev/null 2>&1 || true' EXIT
-          docker push "$image:sha-$GITHUB_SHA"
+          # Branch-qualified SHA tags cannot overwrite each other's channel metadata.
+          docker push "$image:$DEPLOYMENT_CHANNEL-sha-$GITHUB_SHA"
           python3 ops/deploy/check-package-private.py
-          current_develop=$(git ls-remote origin refs/heads/develop | cut -f1)
-          if [[ "$current_develop" != "$GITHUB_SHA" ]]; then
-            echo 'A newer develop commit exists. SHA image retained; deployment pointer not changed.'
+          current_branch=$(git ls-remote origin "refs/heads/$DEPLOYMENT_CHANNEL" | cut -f1)
+          if [[ "$current_branch" != "$GITHUB_SHA" ]]; then
+            echo 'Branch HEAD changed. SHA image retained; deployment pointer not changed.'
             exit 0
           fi
-          docker tag "$image:sha-$GITHUB_SHA" "$image:develop"
-          docker push "$image:develop"
-          echo "Private image published for commit $GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
+          docker tag "$image:$DEPLOYMENT_CHANNEL-sha-$GITHUB_SHA" "$image:$DEPLOYMENT_CHANNEL"
+          docker push "$image:$DEPLOYMENT_CHANNEL"
+          echo "Private $DEPLOYMENT_CHANNEL image published for commit $GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
