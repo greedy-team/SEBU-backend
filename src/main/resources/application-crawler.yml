@@ -1,0 +1,12 @@
+spring:
+  main:
+    web-application-type: none
+
+app:
+  professor-crawler:
+    enabled: false
+    timeout: 15s
+    request-delay: 1s
+    max-body-size-bytes: 2097152
+    user-agent: "SEBU-ProfessorCrawler/1.0 (+https://github.com/greedy-team/SEBU-backend)"
+    curl-executable: curl

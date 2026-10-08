@@ -1,0 +1,4 @@
+interface:
+  display_name: "Flyway 마이그레이션 관리"
+  short_description: "SEBU Flyway 마이그레이션을 안전하게 설계하고 검증합니다"
+  default_prompt: "$manage-flyway-migration을 사용해 이 데이터베이스 변경을 안전한 Flyway 마이그레이션으로 설계하고 검증해 주세요."

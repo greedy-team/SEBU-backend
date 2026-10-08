@@ -1,0 +1,4 @@
+interface:
+  display_name: "OOP·SRP 기반 구현"
+  short_description: "SEBU 백엔드 변경에 명확한 객체 책임을 적용합니다"
+  default_prompt: "$apply-oop-srp를 사용해 객체 책임과 SRP를 명확히 적용하여 이 SEBU 백엔드 변경을 구현해 주세요."

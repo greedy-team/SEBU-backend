@@ -1,0 +1,11 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: sebu-backend:local
+    environment:
+      SPRING_PROFILES_ACTIVE: local
+      JWT_SECRET_BASE64: "${JWT_SECRET_BASE64:?JWT_SECRET_BASE64 must be set}"
+    ports:
+      - "${BACKEND_PORT:-8080}:8080"

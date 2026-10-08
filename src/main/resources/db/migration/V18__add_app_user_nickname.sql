@@ -1,0 +1,2 @@
+ALTER TABLE app_user
+    ADD COLUMN nickname VARCHAR(30) NULL;

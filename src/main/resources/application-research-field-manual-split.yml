@@ -1,0 +1,7 @@
+spring:
+  main:
+    web-application-type: none
+
+app:
+  research-field-manual-split:
+    enabled: false

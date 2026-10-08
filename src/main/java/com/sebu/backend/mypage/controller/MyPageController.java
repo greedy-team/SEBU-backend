@@ -1,0 +1,101 @@
+package com.sebu.backend.mypage.controller;
+
+import com.sebu.backend.auth.controller.AuthCookieFactory;
+import com.sebu.backend.auth.exception.AccessTokenInvalidException;
+import com.sebu.backend.global.auth.CurrentUserProvider;
+import com.sebu.backend.global.auth.CsrfCookieSupport;
+import com.sebu.backend.global.response.ApiResponse;
+import com.sebu.backend.mypage.dto.MyPageResponse;
+import com.sebu.backend.mypage.dto.ProfileResponse;
+import com.sebu.backend.mypage.dto.ProfileUpdateRequest;
+import com.sebu.backend.mypage.service.MyPageService;
+import com.sebu.backend.mypage.service.ProfileService;
+import com.sebu.backend.account.service.AccountLifecycleService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.CacheControl;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequiredArgsConstructor
+@RequestMapping("/api/v1/users/me")
+@Tag(name = "마이페이지", description = "로그인한 사용자의 마이페이지, 프로필 및 회원 탈퇴 API")
+public class MyPageController {
+
+    private final MyPageService myPageService;
+    private final CurrentUserProvider currentUserProvider;
+    private final ProfileService profileService;
+    private final AccountLifecycleService accountLifecycleService;
+    private final AuthCookieFactory cookieFactory;
+    private final CsrfCookieSupport csrfCookieSupport;
+
+
+    @Operation(summary = "마이페이지 조회", description = "로그인한 사용자의 마이페이지 정보를 조회합니다.")
+    @SecurityRequirement(name = "cookieAuth")
+    @GetMapping("/mypage")
+    public ResponseEntity<ApiResponse<MyPageResponse>> getMyPage(){
+        Long userId = currentUserProvider.currentUserId()
+                .orElseThrow(AccessTokenInvalidException::new);
+
+        MyPageResponse response = myPageService.getMyPage(userId);
+
+        return ResponseEntity.ok()
+                .header("Cache-Control","private, no-store")
+                .body(ApiResponse.success(response));
+    }
+
+    @Operation(summary = "프로필 수정", description = "로그인한 사용자의 프로필 정보를 수정합니다.")
+    @SecurityRequirement(name = "cookieAuth")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "409",
+            ref = "#/components/responses/Conflict"
+    )
+    @PutMapping("/profile")
+    public ResponseEntity<ApiResponse<ProfileResponse>> updateProfile(
+            @Valid @RequestBody ProfileUpdateRequest request
+    ) {
+        Long userId = currentUserProvider.currentUserId()
+                .orElseThrow(AccessTokenInvalidException::new);
+
+        ProfileResponse response =
+                profileService.updateProfile(userId, request);
+
+        return ResponseEntity.ok()
+                .header("Cache-Control", "private, no-store")
+                .body(ApiResponse.success(response));
+    }
+
+    @Operation(summary = "회원 탈퇴", description = "로그인한 사용자의 계정을 탈퇴 처리합니다.")
+    @SecurityRequirement(name = "cookieAuth")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "204",
+            description = "회원 탈퇴 성공"
+    )
+    @DeleteMapping
+    public ResponseEntity<Void> withdraw(HttpServletRequest request, HttpServletResponse response) {
+        Long userId = currentUserProvider.currentUserId()
+                .orElseThrow(AccessTokenInvalidException::new);
+
+        accountLifecycleService.withdraw(userId);
+        csrfCookieSupport.renew(request, response);
+
+        return ResponseEntity.noContent().cacheControl(CacheControl.noStore())
+            .header(HttpHeaders.SET_COOKIE,
+                cookieFactory.deleteAccess().toString(),
+                cookieFactory.deleteRefresh().toString(),
+                cookieFactory.deleteRecovery().toString())
+            .build();
+    }
+}

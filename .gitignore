@@ -35,3 +35,16 @@ out/
 
 ### VS Code ###
 .vscode/
+
+### Local environment ###
+.env
+.env.*
+!.env.example
+
+### Deployment runtime files (never commit secrets or DB backups) ###
+ops/deploy/__pycache__/
+ops/deploy/tests/__pycache__/
+ops/deploy/backend.env
+ops/deploy/config.json
+*.sql.gz
+*.catalog.json.gz

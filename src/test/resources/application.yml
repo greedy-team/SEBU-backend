@@ -1,0 +1,53 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:sebu-test;MODE=MySQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        generate_statistics: true
+  flyway:
+    enabled: true
+
+app:
+  auth:
+    token:
+      jwt-secret-base64: MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg5MDE=
+      access-token-expiration: 30m
+      refresh-token-expiration: 12h
+      absolute-session-expiration: 30d
+    csrf:
+      allowed-origins:
+        - https://sebu-frontend.vercel.app
+        - https://sebu.kr
+        - https://www.sebu.kr
+    retention:
+      purge-cron: "-"
+    account:
+      anonymization-cron: "-"
+    cookie:
+      secure: true
+    sejong:
+      portal-login-url: https://portal.sejong.ac.kr/jsp/login/login_action.jsp
+      portal-login-page-url: "https://portal.sejong.ac.kr/jsp/login/loginSSL.jsp?rtUrl=portal.sejong.ac.kr/comm/member/user/ssoLoginProc.do"
+      portal-return-url: portal.sejong.ac.kr/comm/member/user/ssoLoginProc.do
+      portal-sso-login-url: https://portal.sejong.ac.kr/comm/member/user/ssoLoginProc.do
+      sso-login-url: https://sjpt.sejong.ac.kr/main/view/Login/doSsoLogin.do
+      user-info-url: https://sjpt.sejong.ac.kr/main/sys/UserInfo/initUserInfo.do
+      connect-timeout: 5s
+      request-timeout: 10s
+  rate-limit:
+    max-requests: 120
+    search-max-requests: 60
+    bookmark-max-requests: 30
+    content-write-max-requests: 10
+    anonymous-ip-multiplier: 5
+    window: 1m
+    login:
+      max-requests: 5
+      window: 1m

@@ -1,0 +1,536 @@
+research_field_name,laboratory_count,laboratory_ids,department_names,laboratory_names,category_code,category_name,classification_basis,confidence,review_status
+3D,1,185,콘텐츠소프트웨어학과,백경준 교수님 연구실,HCI_XR,HCI·XR·인터랙티브미디어,생성형 3D 콘텐츠·그래픽 연구,MEDIUM,APPROVED
+3D 오디오,1,12,컴퓨터공학과,박우찬 교수님 연구실,SIGNAL_MEDIA,신호·영상·미디어처리,공간 오디오 처리 분야,HIGH,APPROVED
+3D Imaging System,1,48,AI융합전자공학과,김태근 교수님 연구실,PHOTONICS_OPTICS,광학·포토닉스,홀로그래피 기반 3D 광학 영상,HIGH,APPROVED
+5G/6G 모바일 통신 및 센싱,1,19,컴퓨터공학과,김문석 교수님 연구실,COMM_NETWORK,통신·네트워크·IoT,차세대 이동통신·센싱 연구,HIGH,APPROVED
+5G/6G 시스템,1,72,정보보호학과,송재승 교수님 연구실,COMM_NETWORK,통신·네트워크·IoT,차세대 이동통신 시스템,HIGH,APPROVED
+6G 통신,1,170,지능정보융합학과,신철규 교수님 연구실,COMM_NETWORK,통신·네트워크·IoT,6G 무선통신 연구,HIGH,APPROVED
+360 VR System,1,51,AI융합전자공학과,한종기 교수님 연구실,HCI_XR,HCI·XR·인터랙티브미디어,360도 가상현실 시스템,HIGH,APPROVED
+가상/증강/혼합현실,1,179,콘텐츠소프트웨어학과,송오영 교수님 연구실,HCI_XR,HCI·XR·인터랙티브미디어,VR·AR·MR 확장현실 연구,HIGH,APPROVED
+가상센서,1,148,인공지능데이터사이언스학과,신승협 교수님 연구실,CONTROL_SYSTEMS,제어·추정·시스템공학,기계 시스템 상태 추정용 가상센서,MEDIUM,APPROVED
+가상현실,2,9|178,컴퓨터공학과|콘텐츠소프트웨어학과,이종원 교수님 연구실|최수미 교수님 연구실,HCI_XR,HCI·XR·인터랙티브미디어,가상현실·인간컴퓨터상호작용,HIGH,APPROVED
+가상화,1,10,컴퓨터공학과,노재춘 교수님 연구실,SOFTWARE_COMPUTING,소프트웨어·컴퓨팅시스템,클라우드 컴퓨팅 가상화 기술,HIGH,APPROVED
+가시광 통신,1,67,AI융합전자공학과,SEJAN MOHAMMAD ABRAR SHAKIL 교수님 연구실,COMM_NETWORK,통신·네트워크·IoT,가시광 기반 무선통신,HIGH,APPROVED
+감정인식,1,176,콘텐츠소프트웨어학과,권순일 교수님 연구실,SIGNAL_MEDIA,신호·영상·미디어처리,음성 기반 감정 신호 인식,HIGH,APPROVED
+강인 제어,1,172,지능정보융합학과,이석영 교수님 연구실,CONTROL_SYSTEMS,제어·추정·시스템공학,외란에 강인한 제어 이론,HIGH,APPROVED
+강인 제어 및 외란 관측기,1,93,AI로봇학과,이찬화 교수님 연구실,CONTROL_SYSTEMS,제어·추정·시스템공학,강인 제어와 외란 상태 관측,HIGH,APPROVED
+강화학습,1,148,인공지능데이터사이언스학과,신승협 교수님 연구실,AI_ML,인공지능·기계학습,범용 강화학습 방법론,HIGH,APPROVED
+강화학습기반 자율협력주행시스템,1,150,인공지능데이터사이언스학과,이동훈 교수님 연구실,ROBOT_AUTONOMOUS,로봇·자율시스템,강화학습 기반 자율협력주행,HIGH,APPROVED
+거대 인공지능 모델,1,142,인공지능데이터사이언스학과,구영현 교수님 연구실,AI_ML,인공지능·기계학습,응용 문맥과 무관하게 거대 AI 모델 자체를 연구,HIGH,APPROVED
+검파및추정,1,39,AI융합전자공학과,배진수 교수님 연구실,CONTROL_SYSTEMS,제어·추정·시스템공학,확률적 검파·상태 추정 방법론,MEDIUM,APPROVED
+결정질 실리콘 태양전지,1,53,AI융합전자공학과,김정 교수님 연구실,ENERGY_ENVIRONMENT,에너지·환경·기후,태양광 에너지 변환 소자,HIGH,APPROVED
+결함 내성 시스템,1,2,컴퓨터공학과,박태순 교수님 연구실,SOFTWARE_COMPUTING,소프트웨어·컴퓨팅시스템,분산 컴퓨팅 시스템 신뢰성,HIGH,APPROVED
+경로 계획 및 장애물 회피,1,105,AI로봇학과,MAI The Vu 교수님 연구실,ROBOT_AUTONOMOUS,로봇·자율시스템,로봇 자율경로 계획과 회피,HIGH,APPROVED
+"고속 데이터센터 연결망 (high-speed data center interconnect, DCI)",1,189,양자지능정보학과,배성현 교수님 연구실,COMM_NETWORK,통신·네트워크·IoT,데이터센터 고속 연결 네트워크,HIGH,APPROVED
+고속 디지털 시스템,1,118,반도체시스템공학과,김영우 교수님 연구실,SEMICONDUCTOR_HW,반도체·집적회로·컴퓨팅하드웨어,반도체 패키지 기반 고속 하드웨어,HIGH,APPROVED
+고속 알고리즘,1,36,컴퓨터공학과,김도년 교수님 연구실,SIGNAL_MEDIA,신호·영상·미디어처리,비디오 코딩·영상처리 고속화,MEDIUM,APPROVED
+고장 감지 및 배제 알고리즘,2,112|159,인공지능데이터사이언스학과|AI로봇학과,김용훈 교수님 연구실|Hussain Dildar 교수님 연구실,CONTROL_SYSTEMS,제어·추정·시스템공학,항법 시스템 고장 상태 추정,MEDIUM,APPROVED
+고장진단 및 수명예측,1,148,인공지능데이터사이언스학과,신승협 교수님 연구실,CONTROL_SYSTEMS,제어·추정·시스템공학,기계 시스템 진단·예지 제어,HIGH,APPROVED
+공간 데이터 분석,1,22,컴퓨터공학과,Abolghasem Sadeghi-Niaraki 교수님 연구실,DATA_INFORMATION,데이터과학·정보관리,GIS·지리공간 데이터 분석,HIGH,APPROVED
+공력·CFD 기반 성능최적화,1,103,AI로봇학과,손찬규 교수님 연구실,INDUSTRIAL_MOBILITY,산업·모빌리티·스마트인프라,UAV·UAM 공력 설계 최적화,HIGH,APPROVED
+공정 시스템 공학 (Process Systems Engineering),1,31,컴퓨터공학과,Abdulrahman Hussein Abdullah Ba Alawi 교수님 연구실,CONTROL_SYSTEMS,제어·추정·시스템공학,공정 모델링·최적화 시스템 공학,HIGH,APPROVED
+공중 관성항법 시스템,2,112|159,인공지능데이터사이언스학과|AI로봇학과,김용훈 교수님 연구실|Hussain Dildar 교수님 연구실,ROBOT_AUTONOMOUS,로봇·자율시스템,드론·무인이동체 관성항법,HIGH,APPROVED
+공진기 및 필터,1,34,컴퓨터공학과,Rajendra Dhakal 교수님 연구실,ELECTRONIC_DEVICES,전자소자·센서·나노소재,RF 회로용 공진기·필터 소자,HIGH,APPROVED
+광대역통신,1,52,AI융합전자공학과,김아정 교수님 연구실,COMM_NETWORK,통신·네트워크·IoT,광대역 통신 기술,HIGH,APPROVED
+광도파로,1,56,AI융합전자공학과,김경염 교수님 연구실,PHOTONICS_OPTICS,광학·포토닉스,광 신호 전송 도파로,HIGH,APPROVED
+광반도체 소자 반도체물리연구 미소링 공진기,1,50,AI융합전자공학과,현경숙 교수님 연구실,PHOTONICS_OPTICS,광학·포토닉스,광반도체·미소링 광소자,HIGH,APPROVED
+광반도체 소자 LED 및 응용 반도체 레이저 및 광 증폭기 소자 광통신 소자 및 시스템,1,61,AI융합전자공학과,김종열 교수님 연구실,PHOTONICS_OPTICS,광학·포토닉스,LED·레이저·광증폭기 광소자,HIGH,APPROVED
+광섬유 광학 (fiber optics),1,188,양자지능정보학과,김한솔 교수님 연구실,PHOTONICS_OPTICS,광학·포토닉스,광섬유 기반 광학 연구,HIGH,APPROVED
+광의료영상 시스템 및 적외선 무선충전,1,60,AI융합전자공학과,하진용 교수님 연구실,BIOMED_HEALTH,바이오·의료·헬스케어,광학 기반 의료영상 시스템,MEDIUM,APPROVED
+구조 최적화 설계,1,148,인공지능데이터사이언스학과,신승협 교수님 연구실,CONTROL_SYSTEMS,제어·추정·시스템공학,기계 구조 모델링·최적화,HIGH,APPROVED
+국방 정보 기술 사이버전 기슬 머신 러닝 유비쿼터스 멀티미디어 시스템,1,3,컴퓨터공학과,신동규 교수님 연구실,DEFENSE_MILITARY,국방·군사·안보,국방 정보기술·사이버전 응용,HIGH,APPROVED
+국방정책 및 전략,1,134,사이버국방학과,김덕영 교수님 연구실,DEFENSE_MILITARY,국방·군사·안보,국방 정책·군사 전략 연구,HIGH,APPROVED
+국제표준 비디오 코딩,1,7,컴퓨터공학과,이영렬 교수님 연구실,SIGNAL_MEDIA,신호·영상·미디어처리,표준 기반 비디오 압축·코딩,HIGH,APPROVED
+군 지휘구조/부대구조/병력구조 등,1,138,국방AI로봇융합공학과,김태성 교수님 연구실,DEFENSE_MILITARY,국방·군사·안보,군 조직·전력 구조 연구,HIGH,APPROVED
+궤도 추적,1,105,AI로봇학과,MAI The Vu 교수님 연구실,ROBOT_AUTONOMOUS,로봇·자율시스템,수중차량·로봇 궤도 추종,HIGH,APPROVED
+그래프 신경망,1,67,AI융합전자공학과,SEJAN MOHAMMAD ABRAR SHAKIL 교수님 연구실,AI_ML,인공지능·기계학습,범용 그래프 기반 기계학습 방법론,HIGH,APPROVED
+그래픽 하드웨어,1,12,컴퓨터공학과,박우찬 교수님 연구실,SEMICONDUCTOR_HW,반도체·집적회로·컴퓨팅하드웨어,GPU·ASIC 기반 그래픽 하드웨어,HIGH,APPROVED
+금융 AI,1,151,인공지능데이터사이언스학과,이윤영 교수님 연구실,POLICY_MANAGEMENT,경영·정책·법·교육,금융·핀테크 의사결정 AI,MEDIUM,APPROVED
+기계 학습,1,110,AI로봇학과,Amad Zafar 교수님 연구실,AI_ML,인공지능·기계학습,범용 기계학습 방법론,HIGH,APPROVED
+기계/시스템 AI,1,148,인공지능데이터사이언스학과,신승협 교수님 연구실,CONTROL_SYSTEMS,제어·추정·시스템공학,기계 상태 추정·진단·제어 AI,HIGH,APPROVED
+기계학습,4,4|17|21|29,컴퓨터공학과,신동일 교수님 연구실|윤은일 교수님 연구실|전은지 교수님 연구실|Usman Ali 교수님 연구실,AI_ML,인공지능·기계학습,다수 연구실의 범용 기계학습,HIGH,APPROVED
+"기계학습 기반 지능형 시스템 (스마트팩토리, 스마트시티, 디지털 트윈, 자율 · 엣지 AI)",1,171,지능정보융합학과,이경호 교수님 연구실,AI_ML,인공지능·기계학습,지능형 시스템용 범용 기계학습,MEDIUM,APPROVED
+기능점수(Function Point),1,35,컴퓨터공학과,권기학 교수님 연구실,SOFTWARE_COMPUTING,소프트웨어·컴퓨팅시스템,소프트웨어 규모·공수 측정,HIGH,APPROVED
+기상 예측,1,33,컴퓨터공학과,전민종 교수님 연구실,ENERGY_ENVIRONMENT,에너지·환경·기후,기후·기상 환경 예측,HIGH,APPROVED
+기후 빅데이터,1,141,인공지능데이터사이언스학과,최우석 교수님 연구실,ENERGY_ENVIRONMENT,에너지·환경·기후,기후·환경 대규모 데이터 분석,HIGH,APPROVED
+기후 정보학,1,33,컴퓨터공학과,전민종 교수님 연구실,ENERGY_ENVIRONMENT,에너지·환경·기후,기후 데이터·예측 정보학,HIGH,APPROVED
+기후예측,1,141,인공지능데이터사이언스학과,최우석 교수님 연구실,ENERGY_ENVIRONMENT,에너지·환경·기후,환경·기후 변화 예측,HIGH,APPROVED
+나노광학소자,1,56,AI융합전자공학과,김경염 교수님 연구실,PHOTONICS_OPTICS,광학·포토닉스,나노 구조 기반 광학 소자,HIGH,APPROVED
+나노구조 설계·합성,1,129,반도체시스템공학과,CAI ZHICHENG 교수님 연구실,ELECTRONIC_DEVICES,전자소자·센서·나노소재,센서용 나노소재 구조 제작,MEDIUM,APPROVED
+"나노소재: 2차원(2D) 소재(MXene, MoS2, 그래핀) 반도체 센서: 가스 센서",1,130,반도체시스템공학과,HILAL MUHAMMAD 교수님 연구실,ELECTRONIC_DEVICES,전자소자·센서·나노소재,2차원 소재 기반 반도체 센서,HIGH,APPROVED
+네트워크 보안,3,27|72|74,정보보호학과|컴퓨터공학과,송재승 교수님 연구실|윤주범 교수님 연구실|Tanveer Jawad 교수님 연구실,SECURITY_CRYPTO,정보보안·암호,통신망 공격 방어·보호,HIGH,APPROVED
+네트워크 제어 시스템,1,172,지능정보융합학과,이석영 교수님 연구실,CONTROL_SYSTEMS,제어·추정·시스템공학,네트워크 기반 분산 제어,HIGH,APPROVED
+다물체 동적 모델링,1,105,AI로봇학과,MAI The Vu 교수님 연구실,CONTROL_SYSTEMS,제어·추정·시스템공학,다물체 시스템 동역학 모델링,HIGH,APPROVED
+다물체동역학의 대리모델링,1,104,AI로봇학과,최희선 교수님 연구실,CONTROL_SYSTEMS,제어·추정·시스템공학,동역학 시스템 대리 모델링,HIGH,APPROVED
+다중안테나 기술,1,66,AI융합전자공학과,황덕동 교수님 연구실,COMM_NETWORK,통신·네트워크·IoT,MIMO 무선통신 안테나 기술,HIGH,APPROVED
+대규모 언어모델(LLM),1,161,인공지능데이터사이언스학과,FARANAKSADAT SOLAT 교수님 연구실,AI_ML,인공지능·기계학습,범용 대규모 언어모델 연구,HIGH,APPROVED
+대응,1,78,정보보호학과,최창희 교수님 연구실,SECURITY_CRYPTO,정보보안·암호,APT 공격 분석·사이버 대응 문맥,MEDIUM,APPROVED
+데이터 과학,1,23,컴퓨터공학과,Mohammad Jalil Piran 교수님 연구실,DATA_INFORMATION,데이터과학·정보관리,데이터 분석·지식 추출 방법론,HIGH,APPROVED
+데이터 기반 의사결정,1,157,인공지능데이터사이언스학과,Norma Latif Fitriyani 교수님 연구실,DATA_INFORMATION,데이터과학·정보관리,데이터 분석을 통한 의사결정 방법론,HIGH,APPROVED
+데이터 마이닝 및 분석,1,157,인공지능데이터사이언스학과,Norma Latif Fitriyani 교수님 연구실,DATA_INFORMATION,데이터과학·정보관리,데이터 마이닝·분석 방법론,HIGH,APPROVED
+데이터 및 보안 상호운용성,1,73,정보보호학과,김영갑 교수님 연구실,SECURITY_CRYPTO,정보보안·암호,보안 데이터 연계·상호운용,HIGH,APPROVED
+데이터 분석,1,156,인공지능데이터사이언스학과,MUHAMMAD SYAFRUDIN 교수님 연구실,DATA_INFORMATION,데이터과학·정보관리,정보시스템 데이터 분석,HIGH,APPROVED
+데이터 사이언스,1,177,콘텐츠소프트웨어학과,백성욱 교수님 연구실,DATA_INFORMATION,데이터과학·정보관리,범용 데이터 과학 연구,HIGH,APPROVED
+데이터 시각화,1,16,컴퓨터공학과,장윤 교수님 연구실,DATA_INFORMATION,데이터과학·정보관리,데이터의 시각적 분석·표현,HIGH,APPROVED
+데이터 인텔리전스,1,156,인공지능데이터사이언스학과,MUHAMMAD SYAFRUDIN 교수님 연구실,DATA_INFORMATION,데이터과학·정보관리,데이터 기반 지능·정보 추출,HIGH,APPROVED
+데이터마이닝,1,17,컴퓨터공학과,윤은일 교수님 연구실,DATA_INFORMATION,데이터과학·정보관리,대규모 데이터 패턴 탐색,HIGH,APPROVED
+데이터베이스,3,4|17|25,컴퓨터공학과,김천식 교수님 연구실|신동일 교수님 연구실|윤은일 교수님 연구실,DATA_INFORMATION,데이터과학·정보관리,데이터 저장·검색·관리,HIGH,APPROVED
+데이터분석,2,17|148,인공지능데이터사이언스학과|컴퓨터공학과,신승협 교수님 연구실|윤은일 교수님 연구실,DATA_INFORMATION,데이터과학·정보관리,범용 데이터 분석 방법론,HIGH,APPROVED
+데이터사이언스,1,16,컴퓨터공학과,장윤 교수님 연구실,DATA_INFORMATION,데이터과학·정보관리,데이터 처리·분석 과학,HIGH,APPROVED
+도시환경,1,141,인공지능데이터사이언스학과,최우석 교수님 연구실,ENERGY_ENVIRONMENT,에너지·환경·기후,기후·스마트시티 도시환경 연구,HIGH,APPROVED
+동영상 압축,1,6,컴퓨터공학과,김해광 교수님 연구실,SIGNAL_MEDIA,신호·영상·미디어처리,동영상 신호 압축·부호화,HIGH,APPROVED
+드론 펌웨어 개발 및 알고리즘 구현,2,112|159,인공지능데이터사이언스학과|AI로봇학과,김용훈 교수님 연구실|Hussain Dildar 교수님 연구실,ROBOT_AUTONOMOUS,로봇·자율시스템,드론 자율항법 임베디드 구현,HIGH,APPROVED
+드론 환경 인식,1,85,AI로봇학과,서재규 교수님 연구실,ROBOT_AUTONOMOUS,로봇·자율시스템,드론 자율비행용 환경 인지,HIGH,APPROVED
+디스플레이 화질 개선,1,11,컴퓨터공학과,한동일 교수님 연구실,SIGNAL_MEDIA,신호·영상·미디어처리,영상·디스플레이 화질 처리,HIGH,APPROVED
+디지털 영상 처리,2,36|106,컴퓨터공학과|AI로봇학과,김도년 교수님 연구실|Rizwan Ali NAQVI 교수님 연구실,SIGNAL_MEDIA,신호·영상·미디어처리,디지털 이미지 신호 처리,HIGH,APPROVED
+디지털 영상 포렌직,1,78,정보보호학과,최창희 교수님 연구실,SECURITY_CRYPTO,정보보안·암호,사이버 수사용 영상 포렌식,HIGH,APPROVED
+디지털 통신 시스템,1,47,AI융합전자공학과,송형규 교수님 연구실,COMM_NETWORK,통신·네트워크·IoT,디지털 방식 통신 시스템,HIGH,APPROVED
+디지털 트윈,2,165|168,지능정보융합학과,김재호 교수님 연구실|정민채 교수님 연구실,INDUSTRIAL_MOBILITY,산업·모빌리티·스마트인프라,산업·도시 시스템의 디지털 복제 및 운영,HIGH,APPROVED
+디지털 TV,1,45,AI융합전자공학과,문주희 교수님 연구실,SIGNAL_MEDIA,신호·영상·미디어처리,디지털 영상 방송·전송,HIGH,APPROVED
+디지털신호처리,1,44,AI융합전자공학과,김우식 교수님 연구실,SIGNAL_MEDIA,신호·영상·미디어처리,범용 디지털 신호 처리,HIGH,APPROVED
+디지털콘텐츠 보안,1,25,컴퓨터공학과,김천식 교수님 연구실,SECURITY_CRYPTO,정보보안·암호,디지털 콘텐츠 보호 기술,HIGH,APPROVED
+디지털포렌식,1,70,정보보호학과,박기웅 교수님 연구실,SECURITY_CRYPTO,정보보안·암호,디지털 증거 수집·분석,HIGH,APPROVED
+딥 러닝,1,67,AI융합전자공학과,SEJAN MOHAMMAD ABRAR SHAKIL 교수님 연구실,AI_ML,인공지능·기계학습,범용 딥러닝 방법론,HIGH,APPROVED
+딥러닝,7,11|21|28|33|37|106|158,인공지능데이터사이언스학과|컴퓨터공학과|AI로봇학과,알마스니모하메드압둘라힘모하메드 교수님 연구실|이수빈 교수님 연구실|전민종 교수님 연구실|전은지 교수님 연구실|한동일 교수님 연구실|DILSHAD NAQQASH 교수님 연구실|Rizwan Ali NAQVI 교수님 연구실,AI_ML,인공지능·기계학습,다분야 범용 딥러닝 방법론,HIGH,APPROVED
+딥러닝기반 지능형교통시스템,1,150,인공지능데이터사이언스학과,이동훈 교수님 연구실,INDUSTRIAL_MOBILITY,산업·모빌리티·스마트인프라,AI 기반 교통·모빌리티 시스템,HIGH,APPROVED
+레이다 및 라이다 신호처리,1,55,AI융합전자공학과,이성주 교수님 연구실,SIGNAL_MEDIA,신호·영상·미디어처리,레이다·라이다 센서 신호 처리,HIGH,APPROVED
+레이더 신호처리 배열 신호처리 통계 신호처리 해석적 성능분석 레이더 및 전자전 M&S 레이더 탐지 및 인식 알고리즘,1,54,AI융합전자공학과,이준호 교수님 연구실,DEFENSE_MILITARY,국방·군사·안보,레이더·전자전 탐지 국방 기술,HIGH,APPROVED
+레이저,1,49,AI융합전자공학과,문희종 교수님 연구실,PHOTONICS_OPTICS,광학·포토닉스,레이저 광원·광학 연구,HIGH,APPROVED
+레이저광학 (laser optics),1,188,양자지능정보학과,김한솔 교수님 연구실,PHOTONICS_OPTICS,광학·포토닉스,레이저 기반 광학 연구,HIGH,APPROVED
+로보틱스,6,5|88|96|98|164|172,지능정보융합학과|컴퓨터공학과|AI로봇학과,문승빈 교수님 연구실|박규민 교수님 연구실|이석영 교수님 연구실|이학성 교수님 연구실|최유경 교수님 연구실|최호선 교수님 연구실,ROBOT_AUTONOMOUS,로봇·자율시스템,로봇 설계·지능·제어 전반,HIGH,APPROVED
+로봇,1,86,AI로봇학과,송진우 교수님 연구실,ROBOT_AUTONOMOUS,로봇·자율시스템,무인이동체·로봇 시스템,HIGH,APPROVED
+로봇 & 메커니즘 디자인,1,92,AI로봇학과,강병현 교수님 연구실,ROBOT_AUTONOMOUS,로봇·자율시스템,로봇 기구·메커니즘 설계,HIGH,APPROVED
+로봇 제어/로봇 매니퓰레이터,1,93,AI로봇학과,이찬화 교수님 연구실,ROBOT_AUTONOMOUS,로봇·자율시스템,매니퓰레이터 로봇 제어,HIGH,APPROVED
+로봇 조작 및 작업 학습,1,142,인공지능데이터사이언스학과,구영현 교수님 연구실,ROBOT_AUTONOMOUS,로봇·자율시스템,지능형 로봇 조작 학습,HIGH,APPROVED
+로봇공학,1,30,컴퓨터공학과,Algabri Redhwan Nasser Ali 교수님 연구실,ROBOT_AUTONOMOUS,로봇·자율시스템,로봇 자세 추정·비전·제어,HIGH,APPROVED
+로봇을 위한 인공지능 알고리즘,1,92,AI로봇학과,강병현 교수님 연구실,ROBOT_AUTONOMOUS,로봇·자율시스템,로봇 지능화를 위한 AI,HIGH,APPROVED
+리더십,1,134,사이버국방학과,김덕영 교수님 연구실,DEFENSE_MILITARY,국방·군사·안보,국방 전략·군 조직 리더십,MEDIUM,APPROVED
+마이크로 그리드,1,14,컴퓨터공학과,양효식 교수님 연구실,ENERGY_ENVIRONMENT,에너지·환경·기후,분산형 전력·에너지망,HIGH,APPROVED
+마찰전기를 이용한 발전 소자,1,113,반도체시스템공학과,박성훈 교수님 연구실,ENERGY_ENVIRONMENT,에너지·환경·기후,마찰전기 에너지 수확 소자,HIGH,APPROVED
+머신 러닝,1,67,AI융합전자공학과,SEJAN MOHAMMAD ABRAR SHAKIL 교수님 연구실,AI_ML,인공지능·기계학습,범용 머신러닝 방법론,HIGH,APPROVED
+머신러닝,7,23|28|33|34|108|157|169,인공지능데이터사이언스학과|지능정보융합학과|컴퓨터공학과|AI로봇학과,윤진희 교수님 연구실|전민종 교수님 연구실|DILSHAD NAQQASH 교수님 연구실|Mohammad Jalil Piran 교수님 연구실|Muhammad Umair ALI 교수님 연구실|Norma Latif Fitriyani 교수님 연구실|Rajendra Dhakal 교수님 연구실,AI_ML,인공지능·기계학습,다분야 범용 머신러닝 방법론,HIGH,APPROVED
+머신러닝&딥러닝,1,148,인공지능데이터사이언스학과,신승협 교수님 연구실,AI_ML,인공지능·기계학습,범용 머신러닝·딥러닝 기법,HIGH,APPROVED
+멀티모달,1,141,인공지능데이터사이언스학과,최우석 교수님 연구실,AI_ML,인공지능·기계학습,복수 데이터 양식을 결합하는 범용 AI 방법론,HIGH,APPROVED
+멀티모달 인공지능,2,97|147,인공지능데이터사이언스학과|AI로봇학과,김장겸 교수님 연구실|류승형 교수님 연구실,AI_ML,인공지능·기계학습,복수 데이터 양식 통합 AI,HIGH,APPROVED
+멀티모달 학습,1,158,인공지능데이터사이언스학과,알마스니모하메드압둘라힘모하메드 교수님 연구실,AI_ML,인공지능·기계학습,범용 멀티모달 학습 방법론,HIGH,APPROVED
+멀티모달 AI,1,132,지능IoT학과,김정현 교수님 연구실,AI_ML,인공지능·기계학습,복합 데이터 기반 지능 시스템,HIGH,APPROVED
+멀티모달LLM,1,152,인공지능데이터사이언스학과,최교윤 교수님 연구실,AI_ML,인공지능·기계학습,멀티모달 대규모 언어모델 방법론,HIGH,APPROVED
+멀티미디어,1,36,컴퓨터공학과,김도년 교수님 연구실,SIGNAL_MEDIA,신호·영상·미디어처리,영상·음향 멀티미디어 처리,HIGH,APPROVED
+멀티미디어 정보 처리,1,6,컴퓨터공학과,김해광 교수님 연구실,SIGNAL_MEDIA,신호·영상·미디어처리,동영상 중심 멀티미디어 처리,HIGH,APPROVED
+메타강화학습기반 차량경로안내시스템,1,150,인공지능데이터사이언스학과,이동훈 교수님 연구실,INDUSTRIAL_MOBILITY,산업·모빌리티·스마트인프라,차량 경로 안내·교통 최적화,HIGH,APPROVED
+메타물질 등을 이용한 무선채널 환경 제어,1,66,AI융합전자공학과,황덕동 교수님 연구실,COMM_NETWORK,통신·네트워크·IoT,메타물질 기반 무선채널 제어,HIGH,APPROVED
+메타버스,2,22|165,지능정보융합학과|컴퓨터공학과,김재호 교수님 연구실|Abolghasem Sadeghi-Niaraki 교수님 연구실,HCI_XR,HCI·XR·인터랙티브미디어,가상세계·확장현실 플랫폼,HIGH,APPROVED
+메타버스 보안,1,73,정보보호학과,김영갑 교수님 연구실,SECURITY_CRYPTO,정보보안·암호,메타버스 환경 보안,HIGH,APPROVED
+메타버스 시스템,1,47,AI융합전자공학과,송형규 교수님 연구실,HCI_XR,HCI·XR·인터랙티브미디어,메타버스 가상환경 시스템,HIGH,APPROVED
+모델링,1,108,AI로봇학과,Muhammad Umair ALI 교수님 연구실,CONTROL_SYSTEMS,제어·추정·시스템공학,상태 추정·최적화를 위한 모델링,HIGH,APPROVED
+모바일 및 무선 시스템,1,2,컴퓨터공학과,박태순 교수님 연구실,COMM_NETWORK,통신·네트워크·IoT,모바일·무선 네트워크 시스템,HIGH,APPROVED
+모빌리티 시스템 동역학 해석 및 제어,1,102,AI로봇학과,조아라 교수님 연구실,INDUSTRIAL_MOBILITY,산업·모빌리티·스마트인프라,차량 동역학·모빌리티 제어,HIGH,APPROVED
+모션 아티팩트 보정,1,158,인공지능데이터사이언스학과,알마스니모하메드압둘라힘모하메드 교수님 연구실,BIOMED_HEALTH,바이오·의료·헬스케어,의료영상 움직임 왜곡 보정,HIGH,APPROVED
+모터 제어,1,89,AI로봇학과,김성한 교수님 연구실,CONTROL_SYSTEMS,제어·추정·시스템공학,모터 구동 제어 기술,HIGH,APPROVED
+무선 네트워크,1,91,AI로봇학과,이현석 교수님 연구실,COMM_NETWORK,통신·네트워크·IoT,무선 통신망 연구,HIGH,APPROVED
+무선 네트워크 및 엣지 컴퓨팅,1,27,컴퓨터공학과,Tanveer Jawad 교수님 연구실,COMM_NETWORK,통신·네트워크·IoT,무선망·엣지 통신 인프라,HIGH,APPROVED
+무선 이동통신,1,68,AI융합전자공학과,이경근 교수님 연구실,COMM_NETWORK,통신·네트워크·IoT,이동 단말 무선통신 기술,HIGH,APPROVED
+무선 통신,2,65|67,AI융합전자공학과,Mohammed H. Alsharif 교수님 연구실|SEJAN MOHAMMAD ABRAR SHAKIL 교수님 연구실,COMM_NETWORK,통신·네트워크·IoT,무선 신호 전송·통신 이론,HIGH,APPROVED
+무선망 과 시스템 최적화,1,66,AI융합전자공학과,황덕동 교수님 연구실,COMM_NETWORK,통신·네트워크·IoT,무선통신망 성능 최적화,HIGH,APPROVED
+무선통신,4,66|84|87|175,지능정보융합학과|AI로봇학과|AI융합전자공학과,안성준 교수님 연구실|이병무 교수님 연구실|정철 교수님 연구실|황덕동 교수님 연구실,COMM_NETWORK,통신·네트워크·IoT,범용 무선통신 연구,HIGH,APPROVED
+무선통신 시스템,1,8,컴퓨터공학과,유영환 교수님 연구실,COMM_NETWORK,통신·네트워크·IoT,지능형 무선통신 시스템,HIGH,APPROVED
+무인 항공기(UAV),1,27,컴퓨터공학과,Tanveer Jawad 교수님 연구실,ROBOT_AUTONOMOUS,로봇·자율시스템,자율 무인항공 이동체,HIGH,APPROVED
+무인이동체 항법유도제어 센서 융합 및 자율주행항법 드론,1,86,AI로봇학과,송진우 교수님 연구실,ROBOT_AUTONOMOUS,로봇·자율시스템,무인이동체 자율항법·센서융합,HIGH,APPROVED
+무인잠수정,1,100,AI로봇학과,양해상 교수님 연구실,ROBOT_AUTONOMOUS,로봇·자율시스템,자율 수중 무인이동체,HIGH,APPROVED
+무인체계 및 지능로봇 분야 피지컬 AI 유무인복합체계 외,1,95,AI로봇학과,유재관 교수님 연구실,ROBOT_AUTONOMOUS,로봇·자율시스템,무인체계·지능로봇 피지컬 AI,HIGH,APPROVED
+문화기술(Culture Technology),1,22,컴퓨터공학과,Abolghasem Sadeghi-Niaraki 교수님 연구실,HCI_XR,HCI·XR·인터랙티브미디어,XR·메타버스 문화콘텐츠 기술,MEDIUM,APPROVED
+물류 체인 디지털 전환,1,90,AI로봇학과,김세원 교수님 연구실,INDUSTRIAL_MOBILITY,산업·모빌리티·스마트인프라,항만·물류 운송 디지털화,HIGH,APPROVED
+물리계층 신호처리,1,66,AI융합전자공학과,황덕동 교수님 연구실,COMM_NETWORK,통신·네트워크·IoT,무선통신 물리계층 신호 처리,HIGH,APPROVED
+물리기반 인공지능,1,104,AI로봇학과,최희선 교수님 연구실,AI_ML,인공지능·기계학습,물리 지식을 결합한 AI 방법론,HIGH,APPROVED
+물리적 AI(Embodied AI),1,22,컴퓨터공학과,Abolghasem Sadeghi-Niaraki 교수님 연구실,ROBOT_AUTONOMOUS,로봇·자율시스템,물리 환경과 상호작용하는 AI,HIGH,APPROVED
+물리정보 신경망,1,99,AI로봇학과,강창호 교수님 연구실,AI_ML,인공지능·기계학습,물리 제약을 학습하는 신경망 방법론,HIGH,APPROVED
+물성/표면결함 제어,1,129,반도체시스템공학과,CAI ZHICHENG 교수님 연구실,ELECTRONIC_DEVICES,전자소자·센서·나노소재,센서 나노소재 물성·결함 제어,HIGH,APPROVED
+미디어 전송,1,175,지능정보융합학과,안성준 교수님 연구실,COMM_NETWORK,통신·네트워크·IoT,무선망 기반 미디어 통신,HIGH,APPROVED
+미소공진기,1,49,AI융합전자공학과,문희종 교수님 연구실,PHOTONICS_OPTICS,광학·포토닉스,레이저용 미세 광공진기,HIGH,APPROVED
+미식최적화,1,146,인공지능데이터사이언스학과,박동현 교수님 연구실,BIOMED_HEALTH,바이오·의료·헬스케어,정밀영양·건강 기반 식단 최적화,MEDIUM,APPROVED
+및 지도 작성 설명 가능한 강화학습,1,99,AI로봇학과,강창호 교수님 연구실,ROBOT_AUTONOMOUS,로봇·자율시스템,영상·라이다 위치추정과 지도작성,MEDIUM,APPROVED
+및 퍼지 시스템,1,106,AI로봇학과,Rizwan Ali NAQVI 교수님 연구실,AI_ML,인공지능·기계학습,원문이 잘렸지만 퍼지 지능시스템을 명시,MEDIUM,APPROVED
+바이오/의료 인공지능,1,21,컴퓨터공학과,전은지 교수님 연구실,BIOMED_HEALTH,바이오·의료·헬스케어,바이오·의료 특화 AI,HIGH,APPROVED
+바이오로보틱스 생체 신호 인간-로봇 상호작용 웨어러블 로보틱스 원격 로봇 제어 시스템,1,63,AI융합전자공학과,경슬기 교수님 연구실,ROBOT_AUTONOMOUS,로봇·자율시스템,웨어러블·원격 바이오로봇 시스템,HIGH,APPROVED
+바이오메카닉스,1,96,AI로봇학과,최호선 교수님 연구실,BIOMED_HEALTH,바이오·의료·헬스케어,생체 역학·운동 분석,HIGH,APPROVED
+바이오메카트로닉스,1,96,AI로봇학과,최호선 교수님 연구실,BIOMED_HEALTH,바이오·의료·헬스케어,생체·기전 융합 시스템,HIGH,APPROVED
+바이오센서,1,130,반도체시스템공학과,HILAL MUHAMMAD 교수님 연구실,BIOMED_HEALTH,바이오·의료·헬스케어,생체 물질 검출 센서,HIGH,APPROVED
+바이오신호처리,1,24,컴퓨터공학과,이수정 교수님 연구실,BIOMED_HEALTH,바이오·의료·헬스케어,생체의학 신호 분석·처리,HIGH,APPROVED
+바이오인공지능,1,140,인공지능데이터사이언스학과,전창재 교수님 연구실,BIOMED_HEALTH,바이오·의료·헬스케어,생명·의료 분야 특화 AI,HIGH,APPROVED
+반도체 공정,2,119|124,반도체시스템공학과,남태욱 교수님 연구실|엄태용 교수님 연구실,SEMICONDUCTOR_HW,반도체·집적회로·컴퓨팅하드웨어,반도체 제조·원자층 공정,HIGH,APPROVED
+반도체 소자 및 공정,1,114,반도체시스템공학과,김덕기 교수님 연구실,SEMICONDUCTOR_HW,반도체·집적회로·컴퓨팅하드웨어,반도체 소자 제조 공정,HIGH,APPROVED
+반도체 소자 및 소재 연구,1,124,반도체시스템공학과,남태욱 교수님 연구실,SEMICONDUCTOR_HW,반도체·집적회로·컴퓨팅하드웨어,반도체 소자·재료 기술,HIGH,APPROVED
+반도체 소재,1,119,반도체시스템공학과,엄태용 교수님 연구실,SEMICONDUCTOR_HW,반도체·집적회로·컴퓨팅하드웨어,반도체 제조용 소재 연구,HIGH,APPROVED
+반도체 패키징,1,118,반도체시스템공학과,김영우 교수님 연구실,SEMICONDUCTOR_HW,반도체·집적회로·컴퓨팅하드웨어,반도체 칩 패키지 설계,HIGH,APPROVED
+병렬 처리 등,1,68,AI융합전자공학과,이경근 교수님 연구실,SOFTWARE_COMPUTING,소프트웨어·컴퓨팅시스템,컴퓨팅 작업의 병렬 실행,MEDIUM,APPROVED
+보건 정보학,1,157,인공지능데이터사이언스학과,Norma Latif Fitriyani 교수님 연구실,BIOMED_HEALTH,바이오·의료·헬스케어,의료·보건 데이터 정보학,HIGH,APPROVED
+보안공학,1,73,정보보호학과,김영갑 교수님 연구실,SECURITY_CRYPTO,정보보안·암호,안전한 시스템 설계·검증,HIGH,APPROVED
+보행자 및 차량 객체 인식,1,85,AI로봇학과,서재규 교수님 연구실,ROBOT_AUTONOMOUS,로봇·자율시스템,자율주행 환경의 객체 인지,HIGH,APPROVED
+북한학,1,134,사이버국방학과,김덕영 교수님 연구실,DEFENSE_MILITARY,국방·군사·안보,국방 전략 맥락의 북한 연구,HIGH,APPROVED
+분산 알고리즘 및 미들웨어,1,2,컴퓨터공학과,박태순 교수님 연구실,SOFTWARE_COMPUTING,소프트웨어·컴퓨팅시스템,분산 컴퓨팅 알고리즘·미들웨어,HIGH,APPROVED
+분산/병렬 파일시스템 및 저장장치시스템,1,10,컴퓨터공학과,노재춘 교수님 연구실,SOFTWARE_COMPUTING,소프트웨어·컴퓨팅시스템,분산 스토리지·파일시스템,HIGH,APPROVED
+분산학습,1,161,인공지능데이터사이언스학과,FARANAKSADAT SOLAT 교수님 연구실,AI_ML,인공지능·기계학습,분산 환경의 기계학습,HIGH,APPROVED
+분석,2,43|78,정보보호학과|AI융합전자공학과,권오진 교수님 연구실|최창희 교수님 연구실,DATA_INFORMATION,데이터과학·정보관리,복수 연구실에 걸친 일반 분석 항목이므로 데이터 분석으로 정규화,MEDIUM,APPROVED
+불확실성 정량화,1,104,AI로봇학과,최희선 교수님 연구실,CONTROL_SYSTEMS,제어·추정·시스템공학,동역학 모델 불확실성 평가,HIGH,APPROVED
+불확실성 추정,1,24,컴퓨터공학과,이수정 교수님 연구실,CONTROL_SYSTEMS,제어·추정·시스템공학,범용 추정·불확실성 정량화 방법론,HIGH,APPROVED
+블록체인,3,72|76|151,인공지능데이터사이언스학과|정보보호학과,송재승 교수님 연구실|이윤영 교수님 연구실|이종혁 교수님 연구실,SECURITY_CRYPTO,정보보안·암호,암호 기반 분산원장 보안,HIGH,APPROVED
+블록체인 기반 에너지 시스템,1,32,컴퓨터공학과,Lilia Tightiz 교수님 연구실,ENERGY_ENVIRONMENT,에너지·환경·기후,분산원장 기반 전력·에너지망,HIGH,APPROVED
+블록체인 프라이버시,1,75,정보보호학과,이광수 교수님 연구실,SECURITY_CRYPTO,정보보안·암호,블록체인 개인정보·암호 보호,HIGH,APPROVED
+비디오 코딩,1,36,컴퓨터공학과,김도년 교수님 연구실,SIGNAL_MEDIA,신호·영상·미디어처리,비디오 신호 압축·부호화,HIGH,APPROVED
+비디오압축,1,82,AI로봇학과,이진영 교수님 연구실,SIGNAL_MEDIA,신호·영상·미디어처리,비디오 데이터 압축 처리,HIGH,APPROVED
+비선형광학 (nonlinear optics),1,188,양자지능정보학과,김한솔 교수님 연구실,PHOTONICS_OPTICS,광학·포토닉스,비선형 광학 현상 연구,HIGH,APPROVED
+비정형 데이터 어노테이션,1,147,인공지능데이터사이언스학과,김장겸 교수님 연구실,DATA_INFORMATION,데이터과학·정보관리,비정형 데이터 구축·관리,HIGH,APPROVED
+빅데이터,3,16|18|23,컴퓨터공학과,장윤 교수님 연구실|LEE KANGWON 교수님 연구실|Mohammad Jalil Piran 교수님 연구실,DATA_INFORMATION,데이터과학·정보관리,대규모 데이터 분석 분야,HIGH,APPROVED
+빅데이터 보안,1,73,정보보호학과,김영갑 교수님 연구실,SECURITY_CRYPTO,정보보안·암호,빅데이터 보호가 핵심,HIGH,APPROVED
+사물인터넷,5,15|28|72|83|165,정보보호학과|지능정보융합학과|컴퓨터공학과|AI로봇학과,김재호 교수님 연구실|김형석 교수님 연구실|박기호 교수님 연구실|송재승 교수님 연구실|DILSHAD NAQQASH 교수님 연구실,COMM_NETWORK,통신·네트워크·IoT,IoT 연결·네트워크 기술,HIGH,APPROVED
+사물인터넷 보안,1,73,정보보호학과,김영갑 교수님 연구실,SECURITY_CRYPTO,정보보안·암호,IoT 보안이 명시됨,HIGH,APPROVED
+사물인터넷(IoT),1,23,컴퓨터공학과,Mohammad Jalil Piran 교수님 연구실,COMM_NETWORK,통신·네트워크·IoT,IoT 통신·연결 분야,HIGH,APPROVED
+사용자 경험,1,149,인공지능데이터사이언스학과,하태현 교수님 연구실,HCI_XR,HCI·XR·인터랙티브미디어,사용자 경험 설계 연구,HIGH,APPROVED
+사용자 경험(UX) 인공지능 머신러닝 딥러닝 자연어처리,1,153,인공지능데이터사이언스학과,Jamil HUSSAIN 교수님 연구실,HCI_XR,HCI·XR·인터랙티브미디어,UX가 대표 응용 맥락,MEDIUM,APPROVED
+사이버 물리 시스템의 안전성 및 보안,1,93,AI로봇학과,이찬화 교수님 연구실,SECURITY_CRYPTO,정보보안·암호,사이버물리시스템 보안 연구,HIGH,APPROVED
+사이버 보안,1,23,컴퓨터공학과,Mohammad Jalil Piran 교수님 연구실,SECURITY_CRYPTO,정보보안·암호,사이버보안 분야 명시,HIGH,APPROVED
+사이버 지휘통제,1,78,정보보호학과,최창희 교수님 연구실,DEFENSE_MILITARY,국방·군사·안보,군사 사이버 지휘통제,HIGH,APPROVED
+사이버보안,1,133,사이버국방학과,노동영 교수님 연구실,SECURITY_CRYPTO,정보보안·암호,사이버보안 분야 명시,HIGH,APPROVED
+사이버안보,1,80,정보보호학과,박종일 교수님 연구실,SECURITY_CRYPTO,정보보안·암호,사이버 위협 대응·안보,HIGH,APPROVED
+사이버전 개론 사이버전자기 스팩트럼전 사이버전과 물리전의 결합,1,135,사이버국방학과,최낙중 교수님 연구실,DEFENSE_MILITARY,국방·군사·안보,사이버·전자기 전쟁 연구,HIGH,APPROVED
+사이버전자 기술,1,78,정보보호학과,최창희 교수님 연구실,SECURITY_CRYPTO,정보보안·암호,사이버 공방·보안 기술 맥락,MEDIUM,APPROVED
+산업 인공지능,1,147,인공지능데이터사이언스학과,김장겸 교수님 연구실,INDUSTRIAL_MOBILITY,산업·모빌리티·스마트인프라,산업 현장 AI 응용,HIGH,APPROVED
+산업 인공지능(AI),1,156,인공지능데이터사이언스학과,MUHAMMAD SYAFRUDIN 교수님 연구실,INDUSTRIAL_MOBILITY,산업·모빌리티·스마트인프라,산업 분야 AI 응용,HIGH,APPROVED
+산업 AI,1,151,인공지능데이터사이언스학과,이윤영 교수님 연구실,INDUSTRIAL_MOBILITY,산업·모빌리티·스마트인프라,산업·금융 AI 응용,MEDIUM,APPROVED
+산업인공지능,1,140,인공지능데이터사이언스학과,전창재 교수님 연구실,INDUSTRIAL_MOBILITY,산업·모빌리티·스마트인프라,산업 응용 인공지능,HIGH,APPROVED
+산화물 나노물질 및 박막 합성,1,113,반도체시스템공학과,박성훈 교수님 연구실,ELECTRONIC_DEVICES,전자소자·센서·나노소재,센서용 나노소재·박막,HIGH,APPROVED
+상륙작전,1,138,국방AI로봇융합공학과,김태성 교수님 연구실,DEFENSE_MILITARY,국방·군사·안보,군사 상륙작전 연구,HIGH,APPROVED
+상태 추정,1,108,AI로봇학과,Muhammad Umair ALI 교수님 연구실,CONTROL_SYSTEMS,제어·추정·시스템공학,시스템 상태 추정 방법론,HIGH,APPROVED
+색역 사상,1,11,컴퓨터공학과,한동일 교수님 연구실,SIGNAL_MEDIA,신호·영상·미디어처리,영상 색 재현 처리 기술,HIGH,APPROVED
+생성모델,1,185,콘텐츠소프트웨어학과,백경준 교수님 연구실,AI_ML,인공지능·기계학습,생성형 기계학습 모델,HIGH,APPROVED
+생성형AI,1,152,인공지능데이터사이언스학과,최교윤 교수님 연구실,AI_ML,인공지능·기계학습,생성형 인공지능 기술,HIGH,APPROVED
+생의학 영상,1,110,AI로봇학과,Amad Zafar 교수님 연구실,BIOMED_HEALTH,바이오·의료·헬스케어,생의학 영상 응용,HIGH,APPROVED
+생체삽입형 전자소자,1,120,반도체시스템공학과,구자훈 교수님 연구실,BIOMED_HEALTH,바이오·의료·헬스케어,인체 삽입 의료전자소자,HIGH,APPROVED
+생체의학 신호 및 영상 처리,1,108,AI로봇학과,Muhammad Umair ALI 교수님 연구실,BIOMED_HEALTH,바이오·의료·헬스케어,의생명 신호·영상 처리,HIGH,APPROVED
+선박 제어 알고리즘,1,90,AI로봇학과,김세원 교수님 연구실,ROBOT_AUTONOMOUS,로봇·자율시스템,자율운항선박 제어 맥락,HIGH,APPROVED
+선박 충돌회피,1,90,AI로봇학과,김세원 교수님 연구실,ROBOT_AUTONOMOUS,로봇·자율시스템,자율운항 충돌회피 기술,HIGH,APPROVED
+선형 및 비선형 제어,1,105,AI로봇학과,MAI The Vu 교수님 연구실,CONTROL_SYSTEMS,제어·추정·시스템공학,일반 제어이론 분야,HIGH,APPROVED
+설명 가능한 AI(XAI),1,155,인공지능데이터사이언스학과,알안타리무가헤드알리샤우퀴 교수님 연구실,AI_ML,인공지능·기계학습,설명가능 인공지능 방법론,HIGH,APPROVED
+성능분석,1,76,정보보호학과,이종혁 교수님 연구실,COMM_NETWORK,통신·네트워크·IoT,프로토콜 성능분석 맥락,MEDIUM,APPROVED
+성층권 HALE/HAPS,1,103,AI로봇학과,손찬규 교수님 연구실,ROBOT_AUTONOMOUS,로봇·자율시스템,고고도 무인항공 플랫폼,HIGH,APPROVED
+센서 정보이론/ 보안,1,52,AI융합전자공학과,김아정 교수님 연구실,SECURITY_CRYPTO,정보보안·암호,센서 정보 보호가 명시됨,HIGH,APPROVED
+수중,1,112,AI로봇학과,김용훈 교수님 연구실,ROBOT_AUTONOMOUS,로봇·자율시스템,동일 연구실의 지상·공중 관성항법과 연결된 수중 자율이동체 문맥,MEDIUM,APPROVED
+수중 차량 및 로봇,1,105,AI로봇학과,MAI The Vu 교수님 연구실,ROBOT_AUTONOMOUS,로봇·자율시스템,수중 로봇·차량 연구,HIGH,APPROVED
+수중무인체 등 무인이동체 임베디드시스템 탐지인식 및 AI 의사결정시스템,1,86,AI로봇학과,송진우 교수님 연구실,ROBOT_AUTONOMOUS,로봇·자율시스템,무인이동체 자율판단 시스템,HIGH,APPROVED
+수중음향,2,42|100,AI로봇학과|AI융합전자공학과,양해상 교수님 연구실|임준석 교수님 연구실,SIGNAL_MEDIA,신호·영상·미디어처리,수중 음향신호 처리,HIGH,APPROVED
+스마트 그리드,1,14,컴퓨터공학과,양효식 교수님 연구실,ENERGY_ENVIRONMENT,에너지·환경·기후,지능형 전력망 연구,HIGH,APPROVED
+스마트 그리드 최적화,1,32,컴퓨터공학과,Lilia Tightiz 교수님 연구실,ENERGY_ENVIRONMENT,에너지·환경·기후,전력망 최적화 응용,HIGH,APPROVED
+스마트 네트워크관리,1,68,AI융합전자공학과,이경근 교수님 연구실,COMM_NETWORK,통신·네트워크·IoT,통신망 관리 기술,HIGH,APPROVED
+스마트 모빌리티,1,170,지능정보융합학과,신철규 교수님 연구실,INDUSTRIAL_MOBILITY,산업·모빌리티·스마트인프라,지능형 모빌리티 응용,HIGH,APPROVED
+스마트 시티,1,14,컴퓨터공학과,양효식 교수님 연구실,INDUSTRIAL_MOBILITY,산업·모빌리티·스마트인프라,스마트 도시 인프라,HIGH,APPROVED
+스마트 팩토리,1,18,컴퓨터공학과,LEE KANGWON 교수님 연구실,INDUSTRIAL_MOBILITY,산업·모빌리티·스마트인프라,지능형 제조 시스템,HIGH,APPROVED
+스마트시티,2,141|165,인공지능데이터사이언스학과|지능정보융합학과,김재호 교수님 연구실|최우석 교수님 연구실,INDUSTRIAL_MOBILITY,산업·모빌리티·스마트인프라,도시 디지털 인프라,HIGH,APPROVED
+시각언어모델,1,152,인공지능데이터사이언스학과,최교윤 교수님 연구실,AI_ML,인공지능·기계학습,시각·언어 멀티모달 AI 모델,HIGH,APPROVED
+시각적 데이터 분석,1,16,컴퓨터공학과,장윤 교수님 연구실,DATA_INFORMATION,데이터과학·정보관리,데이터 시각 분석 분야,HIGH,APPROVED
+시간 지연 시스템,1,172,지능정보융합학과,이석영 교수님 연구실,CONTROL_SYSTEMS,제어·추정·시스템공학,시간지연 제어시스템 이론,HIGH,APPROVED
+시계열 로봇 센서 데이터 처리를 위한 AI,2,112|159,인공지능데이터사이언스학과|AI로봇학과,김용훈 교수님 연구실|Hussain Dildar 교수님 연구실,ROBOT_AUTONOMOUS,로봇·자율시스템,로봇 센서 AI 응용,HIGH,APPROVED
+시계열 예측,1,97,AI로봇학과,류승형 교수님 연구실,AI_ML,인공지능·기계학습,학습 기반 시계열 예측,HIGH,APPROVED
+시뮬레이션 대리모델링,1,104,AI로봇학과,최희선 교수님 연구실,CONTROL_SYSTEMS,제어·추정·시스템공학,시스템 대리모델링 방법론,HIGH,APPROVED
+시스템 보안,1,74,정보보호학과,윤주범 교수님 연구실,SECURITY_CRYPTO,정보보안·암호,컴퓨팅 시스템 보호,HIGH,APPROVED
+시스템 신뢰성 및 가용성,1,2,컴퓨터공학과,박태순 교수님 연구실,CONTROL_SYSTEMS,제어·추정·시스템공학,시스템 신뢰성 분석,HIGH,APPROVED
+시스템 제어,1,148,인공지능데이터사이언스학과,신승협 교수님 연구실,CONTROL_SYSTEMS,제어·추정·시스템공학,시스템 제어 방법론,HIGH,APPROVED
+시스템보안,1,70,정보보호학과,박기웅 교수님 연구실,SECURITY_CRYPTO,정보보안·암호,컴퓨팅 시스템 보안,HIGH,APPROVED
+신뢰성·안전·인증,1,103,AI로봇학과,손찬규 교수님 연구실,INDUSTRIAL_MOBILITY,산업·모빌리티·스마트인프라,항공시스템 안전·인증 맥락,MEDIUM,APPROVED
+신뢰할 수 있는 인공지능(Trustworthy AI),1,169,지능정보융합학과,윤진희 교수님 연구실,AI_ML,인공지능·기계학습,신뢰가능 AI 방법론,HIGH,APPROVED
+신재생 에너지,1,14,컴퓨터공학과,양효식 교수님 연구실,ENERGY_ENVIRONMENT,에너지·환경·기후,재생에너지 기술,HIGH,APPROVED
+신호/전력 무결성,1,118,반도체시스템공학과,김영우 교수님 연구실,SEMICONDUCTOR_HW,반도체·집적회로·컴퓨팅하드웨어,반도체 패키지 무결성,HIGH,APPROVED
+신호처리,2,42|84,AI로봇학과|AI융합전자공학과,이병무 교수님 연구실|임준석 교수님 연구실,SIGNAL_MEDIA,신호·영상·미디어처리,신호 분석·처리 분야,HIGH,APPROVED
+신호처리 기반 딥러닝,1,155,인공지능데이터사이언스학과,알안타리무가헤드알리샤우퀴 교수님 연구실,SIGNAL_MEDIA,신호·영상·미디어처리,신호처리 중심 딥러닝,HIGH,APPROVED
+실시간 렌더링,1,12,컴퓨터공학과,박우찬 교수님 연구실,HCI_XR,HCI·XR·인터랙티브미디어,실시간 컴퓨터그래픽스 기술,HIGH,APPROVED
+심층 강화 학습,1,155,인공지능데이터사이언스학과,알안타리무가헤드알리샤우퀴 교수님 연구실,AI_ML,인공지능·기계학습,강화학습 방법론,HIGH,APPROVED
+심층 영상/라이다 위치추정 강화학습(XRL),1,99,AI로봇학과,강창호 교수님 연구실,ROBOT_AUTONOMOUS,로봇·자율시스템,로봇 위치추정·지도작성,HIGH,APPROVED
+아날로그 및 혼성신호 집적회로 설계,1,121,반도체시스템공학과,정용운 교수님 연구실,SEMICONDUCTOR_HW,반도체·집적회로·컴퓨팅하드웨어,혼성신호 IC 설계,HIGH,APPROVED
+아날로그 VLSI 설계 혼성신호 IC 설계 FPD 구동,1,40,AI융합전자공학과,김준엽 교수님 연구실,SEMICONDUCTOR_HW,반도체·집적회로·컴퓨팅하드웨어,VLSI·혼성신호 회로 설계,HIGH,APPROVED
+아날로그&디지털 혼성회로 설계,1,122,반도체시스템공학과,구자현 교수님 연구실,SEMICONDUCTOR_HW,반도체·집적회로·컴퓨팅하드웨어,혼성 집적회로 설계,HIGH,APPROVED
+아연 이온 배터리(Zn-ion Battery),1,130,반도체시스템공학과,HILAL MUHAMMAD 교수님 연구실,ENERGY_ENVIRONMENT,에너지·환경·기후,전기화학 에너지 저장소자,HIGH,APPROVED
+안티탬퍼링,1,78,정보보호학과,최창희 교수님 연구실,SECURITY_CRYPTO,정보보안·암호,하드웨어 변조 방어 기술,HIGH,APPROVED
+암호,2,133|183,사이버국방학과|콘텐츠소프트웨어학과,노동영 교수님 연구실|이은상 교수님 연구실,SECURITY_CRYPTO,정보보안·암호,암호·정보보호 분야,HIGH,APPROVED
+암호 프로토콜,1,75,정보보호학과,이광수 교수님 연구실,SECURITY_CRYPTO,정보보안·암호,암호통신 프로토콜 연구,HIGH,APPROVED
+암호학,2,71|75,정보보호학과,신지선 교수님 연구실|이광수 교수님 연구실,SECURITY_CRYPTO,정보보안·암호,암호학 분야 명시,HIGH,APPROVED
+양자 강화학습(QRL),1,142,인공지능데이터사이언스학과,구영현 교수님 연구실,QUANTUM_TECH,양자정보·양자기술,양자 기반 강화학습 기술,HIGH,APPROVED
+양자 광학 (quantum optics),1,191,양자지능정보학과,Teo Yong Siah 교수님 연구실,QUANTUM_TECH,양자정보·양자기술,양자광학 연구,HIGH,APPROVED
+양자 내성 암호,1,75,정보보호학과,이광수 교수님 연구실,SECURITY_CRYPTO,정보보안·암호,양자공격 대응 암호,HIGH,APPROVED
+양자 정보 이론 (quantum information theory),2,190|191,양자지능정보학과,신성욱 교수님 연구실|Teo Yong Siah 교수님 연구실,QUANTUM_TECH,양자정보·양자기술,양자정보 이론 연구,HIGH,APPROVED
+양자 컴퓨팅 알고리즘 (quantum algorithm),1,190,양자지능정보학과,신성욱 교수님 연구실,QUANTUM_TECH,양자정보·양자기술,양자컴퓨팅 알고리즘,HIGH,APPROVED
+양자 토모그래피 (quantum tomography),1,191,양자지능정보학과,Teo Yong Siah 교수님 연구실,QUANTUM_TECH,양자정보·양자기술,양자상태 재구성 기술,HIGH,APPROVED
+양자 AI (quantum AI),1,190,양자지능정보학과,신성욱 교수님 연구실,QUANTUM_TECH,양자정보·양자기술,양자 인공지능 기술,HIGH,APPROVED
+양자광학 (quantum optics),1,188,양자지능정보학과,김한솔 교수님 연구실,QUANTUM_TECH,양자정보·양자기술,양자광학 연구,HIGH,APPROVED
+양자오류 완화 및 억제 기법 (quantum error mitigation and suppression),1,191,양자지능정보학과,Teo Yong Siah 교수님 연구실,QUANTUM_TECH,양자정보·양자기술,양자컴퓨팅 오류 완화,HIGH,APPROVED
+양자전송,1,56,AI융합전자공학과,김경염 교수님 연구실,QUANTUM_TECH,양자정보·양자기술,양자정보 전송 기술,HIGH,APPROVED
+"양자키분배 (quantum key Distribution, QKD)",1,189,양자지능정보학과,배성현 교수님 연구실,QUANTUM_TECH,양자정보·양자기술,양자키분배 기술,HIGH,APPROVED
+에너지 시스템을 위한 QC 및 QML,1,32,컴퓨터공학과,Lilia Tightiz 교수님 연구실,ENERGY_ENVIRONMENT,에너지·환경·기후,에너지시스템 양자기술 응용,HIGH,APPROVED
+에너지 인포메틱스,1,177,콘텐츠소프트웨어학과,백성욱 교수님 연구실,ENERGY_ENVIRONMENT,에너지·환경·기후,에너지 데이터·정보 응용,HIGH,APPROVED
+에너지 ICT,1,147,인공지능데이터사이언스학과,김장겸 교수님 연구실,ENERGY_ENVIRONMENT,에너지·환경·기후,에너지 분야 ICT 응용,HIGH,APPROVED
+에이전트 기반 분산 컴퓨팅,1,2,컴퓨터공학과,박태순 교수님 연구실,SOFTWARE_COMPUTING,소프트웨어·컴퓨팅시스템,분산 컴퓨팅 시스템,HIGH,APPROVED
+에이전트 상황 추론,1,142,인공지능데이터사이언스학과,구영현 교수님 연구실,AI_ML,인공지능·기계학습,지능형 에이전트 추론,HIGH,APPROVED
+에이전틱 AI,1,149,인공지능데이터사이언스학과,하태현 교수님 연구실,AI_ML,인공지능·기계학습,자율 에이전트 인공지능,HIGH,APPROVED
+연합작전,1,138,국방AI로봇융합공학과,김태성 교수님 연구실,DEFENSE_MILITARY,국방·군사·안보,군사 연합작전 연구,HIGH,APPROVED
+연합학습,1,161,인공지능데이터사이언스학과,FARANAKSADAT SOLAT 교수님 연구실,AI_ML,인공지능·기계학습,분산 기계학습 방법론,HIGH,APPROVED
+영상 검색,1,6,컴퓨터공학과,김해광 교수님 연구실,SIGNAL_MEDIA,신호·영상·미디어처리,영상 기반 검색 기술,HIGH,APPROVED
+영상 압축 및 전송,1,45,AI융합전자공학과,문주희 교수님 연구실,SIGNAL_MEDIA,신호·영상·미디어처리,영상 코딩·전송 기술,HIGH,APPROVED
+영상 처리,1,45,AI융합전자공학과,문주희 교수님 연구실,SIGNAL_MEDIA,신호·영상·미디어처리,디지털 영상처리 분야,HIGH,APPROVED
+영상처리,3,7|82|101,컴퓨터공학과|AI로봇학과,이영렬 교수님 연구실|이진영 교수님 연구실|조재진 교수님 연구실,SIGNAL_MEDIA,신호·영상·미디어처리,영상 분석·처리 분야,HIGH,APPROVED
+영상처리 프로세서 설계,1,55,AI융합전자공학과,이성주 교수님 연구실,SEMICONDUCTOR_HW,반도체·집적회로·컴퓨팅하드웨어,영상처리 전용 하드웨어 설계,HIGH,APPROVED
+오디오 신호 처리,1,58,AI융합전자공학과,방희석 교수님 연구실,SIGNAL_MEDIA,신호·영상·미디어처리,오디오 신호처리 분야,HIGH,APPROVED
+워터마킹,1,43,AI융합전자공학과,권오진 교수님 연구실,SIGNAL_MEDIA,신호·영상·미디어처리,영상 워터마킹 맥락,HIGH,APPROVED
+"원자층 공정 (원자층 증착, 원자층 식각)",1,124,반도체시스템공학과,남태욱 교수님 연구실,SEMICONDUCTOR_HW,반도체·집적회로·컴퓨팅하드웨어,반도체 원자층 공정,HIGH,APPROVED
+웨어러블 센서 에너지 저장 및 변환 소자: 슈퍼커패시터,1,130,반도체시스템공학과,HILAL MUHAMMAD 교수님 연구실,ENERGY_ENVIRONMENT,에너지·환경·기후,슈퍼커패시터 에너지 저장,HIGH,APPROVED
+웨어러블 전자소자,1,120,반도체시스템공학과,구자훈 교수님 연구실,ELECTRONIC_DEVICES,전자소자·센서·나노소재,착용형 전자소자,HIGH,APPROVED
+위성통신,1,168,지능정보융합학과,정민채 교수님 연구실,COMM_NETWORK,통신·네트워크·IoT,위성 기반 통신기술,HIGH,APPROVED
+유기 태양전지(Organic Solar Cell),1,130,반도체시스템공학과,HILAL MUHAMMAD 교수님 연구실,ENERGY_ENVIRONMENT,에너지·환경·기후,태양광 에너지 변환소자,HIGH,APPROVED
+유무선 통신,1,44,AI융합전자공학과,김우식 교수님 연구실,COMM_NETWORK,통신·네트워크·IoT,유선·무선 통신기술,HIGH,APPROVED
+유연 바이오전자소자,1,120,반도체시스템공학과,구자훈 교수님 연구실,BIOMED_HEALTH,바이오·의료·헬스케어,바이오 응용 유연전자소자,HIGH,APPROVED
+유연 웨어러블 센서,1,34,컴퓨터공학과,Rajendra Dhakal 교수님 연구실,ELECTRONIC_DEVICES,전자소자·센서·나노소재,유연 착용형 센서소자,HIGH,APPROVED
+유연/박막 센서 플랫폼,1,129,반도체시스템공학과,CAI ZHICHENG 교수님 연구실,ELECTRONIC_DEVICES,전자소자·센서·나노소재,박막 기반 센서소자,HIGH,APPROVED
+융합 및 처리,1,43,AI융합전자공학과,권오진 교수님 연구실,SIGNAL_MEDIA,신호·영상·미디어처리,영상 코딩·처리 맥락,MEDIUM,APPROVED
+음성인식,1,176,콘텐츠소프트웨어학과,권순일 교수님 연구실,SIGNAL_MEDIA,신호·영상·미디어처리,음성 신호 인식 기술,HIGH,APPROVED
+음향신호처리,1,100,AI로봇학과,양해상 교수님 연구실,SIGNAL_MEDIA,신호·영상·미디어처리,음향 신호처리 분야,HIGH,APPROVED
+음향학,1,58,AI융합전자공학과,방희석 교수님 연구실,SIGNAL_MEDIA,신호·영상·미디어처리,음향·오디오 신호 연구,HIGH,APPROVED
+응용 인공지능,2,97|106,AI로봇학과,류승형 교수님 연구실|Rizwan Ali NAQVI 교수님 연구실,AI_ML,인공지능·기계학습,범용 응용 AI 분야,MEDIUM,APPROVED
+의공학,1,44,AI융합전자공학과,김우식 교수님 연구실,BIOMED_HEALTH,바이오·의료·헬스케어,공학 기반 의료기술,HIGH,APPROVED
+의료 2D/3D 영상 분석,1,106,AI로봇학과,Rizwan Ali NAQVI 교수님 연구실,BIOMED_HEALTH,바이오·의료·헬스케어,의료영상 분석 응용,HIGH,APPROVED
+의료 영상 기반 딥러닝,1,155,인공지능데이터사이언스학과,알안타리무가헤드알리샤우퀴 교수님 연구실,BIOMED_HEALTH,바이오·의료·헬스케어,의료영상 AI 응용,HIGH,APPROVED
+의료 인공지능,1,157,인공지능데이터사이언스학과,Norma Latif Fitriyani 교수님 연구실,BIOMED_HEALTH,바이오·의료·헬스케어,의료 분야 인공지능,HIGH,APPROVED
+의료영상 분석,1,158,인공지능데이터사이언스학과,알마스니모하메드압둘라힘모하메드 교수님 연구실,BIOMED_HEALTH,바이오·의료·헬스케어,진단용 의료영상 분석,HIGH,APPROVED
+의료영상 분할,1,158,인공지능데이터사이언스학과,알마스니모하메드압둘라힘모하메드 교수님 연구실,BIOMED_HEALTH,바이오·의료·헬스케어,의료영상 분할 기술,HIGH,APPROVED
+의료영상 합성,1,158,인공지능데이터사이언스학과,알마스니모하메드압둘라힘모하메드 교수님 연구실,BIOMED_HEALTH,바이오·의료·헬스케어,의료영상 생성 기술,HIGH,APPROVED
+의료영상처리,1,101,AI로봇학과,조재진 교수님 연구실,BIOMED_HEALTH,바이오·의료·헬스케어,의료 목적 영상처리,HIGH,APPROVED
+의료용 로봇,1,94,AI로봇학과,우현수 교수님 연구실,BIOMED_HEALTH,바이오·의료·헬스케어,의료 목적 로봇기술,HIGH,APPROVED
+의료AI,1,152,인공지능데이터사이언스학과,최교윤 교수님 연구실,BIOMED_HEALTH,바이오·의료·헬스케어,의료 인공지능 응용,HIGH,APPROVED
+이동성 및 위치 측정 기술,1,173,지능정보융합학과,한종훈 교수님 연구실,COMM_NETWORK,통신·네트워크·IoT,통신 이동성·측위 기술,HIGH,APPROVED
+이동통신,1,18,컴퓨터공학과,LEE KANGWON 교수님 연구실,COMM_NETWORK,통신·네트워크·IoT,모바일 통신기술,HIGH,APPROVED
+이미지 센서 반도체 소자,1,46,AI융합전자공학과,박상식 교수님 연구실,SEMICONDUCTOR_HW,반도체·집적회로·컴퓨팅하드웨어,반도체 이미지센서 소자,HIGH,APPROVED
+이미지 처리,1,157,인공지능데이터사이언스학과,Norma Latif Fitriyani 교수님 연구실,SIGNAL_MEDIA,신호·영상·미디어처리,이미지 분석·처리 분야,HIGH,APPROVED
+이미지/비디오 코딩,1,43,AI융합전자공학과,권오진 교수님 연구실,SIGNAL_MEDIA,신호·영상·미디어처리,영상 압축·코딩 기술,HIGH,APPROVED
+이미징 AI,1,145,인공지능데이터사이언스학과,민병석 교수님 연구실,SIGNAL_MEDIA,신호·영상·미디어처리,컴퓨터비전·영상 AI,HIGH,APPROVED
+이상탐지,1,97,AI로봇학과,류승형 교수님 연구실,AI_ML,인공지능·기계학습,학습 기반 이상탐지,HIGH,APPROVED
+인간-로봇 상호작용,1,98,AI로봇학과,박규민 교수님 연구실,ROBOT_AUTONOMOUS,로봇·자율시스템,로봇 상호작용 기술,HIGH,APPROVED
+인간-컴퓨터 상호작용(HCI),2,22|149,인공지능데이터사이언스학과|컴퓨터공학과,하태현 교수님 연구실|Abolghasem Sadeghi-Niaraki 교수님 연구실,HCI_XR,HCI·XR·인터랙티브미디어,HCI 분야 명시,HIGH,APPROVED
+인간과 컴퓨터 상호작용,1,9,컴퓨터공학과,최수미 교수님 연구실,HCI_XR,HCI·XR·인터랙티브미디어,인간-컴퓨터 상호작용,HIGH,APPROVED
+인간컴퓨터상호작용,1,16,컴퓨터공학과,장윤 교수님 연구실,HCI_XR,HCI·XR·인터랙티브미디어,HCI 분야 명시,HIGH,APPROVED
+인공신경망기반 첨단운전자보조시스템,1,150,인공지능데이터사이언스학과,이동훈 교수님 연구실,ROBOT_AUTONOMOUS,로봇·자율시스템,자율주행 보조시스템 AI,HIGH,APPROVED
+인공지능,17,4|11|16|23|29|30|83|87|98|101|158|170|171|176|177|179|185,인공지능데이터사이언스학과|지능정보융합학과|컴퓨터공학과|콘텐츠소프트웨어학과|AI로봇학과,권순일 교수님 연구실|김형석 교수님 연구실|박규민 교수님 연구실|백경준 교수님 연구실|백성욱 교수님 연구실|송오영 교수님 연구실|신동일 교수님 연구실|신철규 교수님 연구실|알마스니모하메드압둘라힘모하메드 교수님 연구실|이경호 교수님 연구실|장윤 교수님 연구실|정철 교수님 연구실|조재진 교수님 연구실|한동일 교수님 연구실|Algabri Redhwan Nasser Ali 교수님 연구실|Mohammad Jalil Piran 교수님 연구실|Usman Ali 교수님 연구실,AI_ML,인공지능·기계학습,범용 인공지능 분야,HIGH,APPROVED
+인공지능 기반 설계 기술,1,123,반도체시스템공학과,현대준 교수님 연구실,SEMICONDUCTOR_HW,반도체·집적회로·컴퓨팅하드웨어,집적회로 물리설계 AI,HIGH,APPROVED
+인공지능 기반 영상보안,1,73,정보보호학과,김영갑 교수님 연구실,SECURITY_CRYPTO,정보보안·암호,AI 기반 보안영상 분석,HIGH,APPROVED
+인공지능 보안,3,71|72|74,정보보호학과,송재승 교수님 연구실|신지선 교수님 연구실|윤주범 교수님 연구실,SECURITY_CRYPTO,정보보안·암호,AI 시스템 보안 연구,HIGH,APPROVED
+인공지능 시스템,1,18,컴퓨터공학과,LEE KANGWON 교수님 연구실,AI_ML,인공지능·기계학습,인공지능 시스템 전반,HIGH,APPROVED
+인공지능 신경망프로세서 설계,1,55,AI융합전자공학과,이성주 교수님 연구실,SEMICONDUCTOR_HW,반도체·집적회로·컴퓨팅하드웨어,AI 전용 프로세서 설계,HIGH,APPROVED
+인공지능 응용,2,91|157,인공지능데이터사이언스학과|AI로봇학과,이현석 교수님 연구실|Norma Latif Fitriyani 교수님 연구실,AI_ML,인공지능·기계학습,범용 AI 응용 연구,MEDIUM,APPROVED
+인공지능 프로젝트 수행,1,35,컴퓨터공학과,권기학 교수님 연구실,POLICY_MANAGEMENT,경영·정책·법·교육,AI 프로젝트 관리 맥락,MEDIUM,APPROVED
+인공지능 하드웨어,1,12,컴퓨터공학과,박우찬 교수님 연구실,SEMICONDUCTOR_HW,반도체·집적회로·컴퓨팅하드웨어,AI 연산 하드웨어,HIGH,APPROVED
+인공지능기반 모빌리티 시스템,1,150,인공지능데이터사이언스학과,이동훈 교수님 연구실,INDUSTRIAL_MOBILITY,산업·모빌리티·스마트인프라,AI 기반 모빌리티 응용,HIGH,APPROVED
+인류를 위한 로봇 기술 개발,1,92,AI로봇학과,강병현 교수님 연구실,ROBOT_AUTONOMOUS,로봇·자율시스템,지능형 로봇 기술,HIGH,APPROVED
+인터랙티브 미디어아트,1,187,콘텐츠소프트웨어학과,김화슬 교수님 연구실,HCI_XR,HCI·XR·인터랙티브미디어,상호작용형 디지털 미디어,HIGH,APPROVED
+임베디드 시스템,2,15|172,지능정보융합학과|컴퓨터공학과,박기호 교수님 연구실|이석영 교수님 연구실,SOFTWARE_COMPUTING,소프트웨어·컴퓨팅시스템,임베디드 컴퓨팅 시스템,HIGH,APPROVED
+자기지도학습,1,185,콘텐츠소프트웨어학과,백경준 교수님 연구실,AI_ML,인공지능·기계학습,자기지도 기계학습 방법론,HIGH,APPROVED
+자동제어,1,164,지능정보융합학과,이학성 교수님 연구실,CONTROL_SYSTEMS,제어·추정·시스템공학,자동 제어공학 분야,HIGH,APPROVED
+자동차 제어/군집주행,1,93,AI로봇학과,이찬화 교수님 연구실,ROBOT_AUTONOMOUS,로봇·자율시스템,차량 자율·군집주행 제어,HIGH,APPROVED
+자세 추정,1,30,컴퓨터공학과,Algabri Redhwan Nasser Ali 교수님 연구실,ROBOT_AUTONOMOUS,로봇·자율시스템,로봇 자세추정 맥락,MEDIUM,APPROVED
+자율운항선박,1,90,AI로봇학과,김세원 교수님 연구실,ROBOT_AUTONOMOUS,로봇·자율시스템,선박 자율운항 기술,HIGH,APPROVED
+자율주행 모빌리티 제어,1,89,AI로봇학과,김성한 교수님 연구실,ROBOT_AUTONOMOUS,로봇·자율시스템,자율주행 차량 제어,HIGH,APPROVED
+자율주행 차량 거동계획,1,102,AI로봇학과,조아라 교수님 연구실,ROBOT_AUTONOMOUS,로봇·자율시스템,자율차 행동·경로 계획,HIGH,APPROVED
+자율주행을 위한 라이다와 카메라 기반 환경 인지,1,89,AI로봇학과,김성한 교수님 연구실,ROBOT_AUTONOMOUS,로봇·자율시스템,자율주행 환경 인지,HIGH,APPROVED
+자율주행자동차 환경 인식,1,85,AI로봇학과,서재규 교수님 연구실,ROBOT_AUTONOMOUS,로봇·자율시스템,자율차 센서융합 인식,HIGH,APPROVED
+작업 상황 이해 및 추론,1,142,인공지능데이터사이언스학과,구영현 교수님 연구실,ROBOT_AUTONOMOUS,로봇·자율시스템,로봇조작 작업 추론 맥락,HIGH,APPROVED
+잠수함 및 수중운동체 자율화,1,90,AI로봇학과,김세원 교수님 연구실,ROBOT_AUTONOMOUS,로봇·자율시스템,수중운동체 자율화 기술,HIGH,APPROVED
+저전력 시스템 구조 설계,1,15,컴퓨터공학과,박기호 교수님 연구실,SEMICONDUCTOR_HW,반도체·집적회로·컴퓨팅하드웨어,저전력 컴퓨터 하드웨어 구조,HIGH,APPROVED
+저전력 회로설계,1,122,반도체시스템공학과,구자현 교수님 연구실,SEMICONDUCTOR_HW,반도체·집적회로·컴퓨팅하드웨어,저전력 집적회로 설계,HIGH,APPROVED
+저차원 금속산화물 나노소재(0D/1D/2D),1,129,반도체시스템공학과,CAI ZHICHENG 교수님 연구실,ELECTRONIC_DEVICES,전자소자·센서·나노소재,센서용 저차원 나노소재,HIGH,APPROVED
+전략도서방위작전,1,138,국방AI로봇융합공학과,김태성 교수님 연구실,DEFENSE_MILITARY,국방·군사·안보,군사 도서 방위작전,HIGH,APPROVED
+전자기적합성,1,118,반도체시스템공학과,김영우 교수님 연구실,SEMICONDUCTOR_HW,반도체·집적회로·컴퓨팅하드웨어,전자 하드웨어 전자기 적합성,HIGH,APPROVED
+전자전,1,80,정보보호학과,박종일 교수님 연구실,DEFENSE_MILITARY,국방·군사·안보,군사 전자전 분야,HIGH,APPROVED
+전쟁사,1,134,사이버국방학과,김덕영 교수님 연구실,DEFENSE_MILITARY,국방·군사·안보,군사사·전쟁사 연구,HIGH,APPROVED
+정밀영양,1,146,인공지능데이터사이언스학과,박동현 교수님 연구실,BIOMED_HEALTH,바이오·의료·헬스케어,개인맞춤 건강·영양 연구,HIGH,APPROVED
+정보검색,1,17,컴퓨터공학과,윤은일 교수님 연구실,DATA_INFORMATION,데이터과학·정보관리,정보 탐색·검색 기술,HIGH,APPROVED
+정보보안,2,20|133,사이버국방학과|컴퓨터공학과,김민철 교수님 연구실|노동영 교수님 연구실,SECURITY_CRYPTO,정보보안·암호,정보 보호·보안 분야,HIGH,APPROVED
+정보보호 및 사이버보안,1,77,정보보호학과,김종현 교수님 연구실,SECURITY_CRYPTO,정보보안·암호,정보보호·사이버보안 명시,HIGH,APPROVED
+정보시스템,3,33|156|175,인공지능데이터사이언스학과|지능정보융합학과|컴퓨터공학과,안성준 교수님 연구실|전민종 교수님 연구실|MUHAMMAD SYAFRUDIN 교수님 연구실,DATA_INFORMATION,데이터과학·정보관리,정보시스템·정보관리 분야,HIGH,APPROVED
+정보이론,1,20,컴퓨터공학과,김민철 교수님 연구실,COMM_NETWORK,통신·네트워크·IoT,통신 기반 정보이론,MEDIUM,APPROVED
+정보학,1,156,인공지능데이터사이언스학과,MUHAMMAD SYAFRUDIN 교수님 연구실,DATA_INFORMATION,데이터과학·정보관리,정보·데이터 학문 분야,HIGH,APPROVED
+"정보화시대의 군사력강화 방안(석사학위 논문, 2001)",1,138,국방AI로봇융합공학과,김태성 교수님 연구실,DEFENSE_MILITARY,국방·군사·안보,군사력 강화 정책 연구,HIGH,APPROVED
+제어,1,102,AI로봇학과,조아라 교수님 연구실,CONTROL_SYSTEMS,제어·추정·시스템공학,일반 제어 방법론,HIGH,APPROVED
+제어 이론 및 응용,1,93,AI로봇학과,이찬화 교수님 연구실,CONTROL_SYSTEMS,제어·추정·시스템공학,제어이론과 시스템 응용,HIGH,APPROVED
+제어공학,1,167,지능정보융합학과,박봉석 교수님 연구실,CONTROL_SYSTEMS,제어·추정·시스템공학,제어공학 분야 명시,HIGH,APPROVED
+증강현실,1,178,콘텐츠소프트웨어학과,이종원 교수님 연구실,HCI_XR,HCI·XR·인터랙티브미디어,AR 인터랙티브 기술,HIGH,APPROVED
+지능 사물,1,165,지능정보융합학과,김재호 교수님 연구실,COMM_NETWORK,통신·네트워크·IoT,사물인터넷 기반 지능형 연결 기술,HIGH,APPROVED
+지능시스템,1,169,지능정보융합학과,윤진희 교수님 연구실,AI_ML,인공지능·기계학습,머신러닝·신뢰가능 AI 중심,HIGH,APPROVED
+지능형 로봇,1,92,AI로봇학과,강병현 교수님 연구실,ROBOT_AUTONOMOUS,로봇·자율시스템,로봇 설계와 지능 알고리즘 연구,HIGH,APPROVED
+지능형 모빌리티 시스템 및 제어,1,102,AI로봇학과,조아라 교수님 연구실,ROBOT_AUTONOMOUS,로봇·자율시스템,자율주행 모빌리티 계획·제어,HIGH,APPROVED
+지능형 모빌리티 제어,1,89,AI로봇학과,김성한 교수님 연구실,ROBOT_AUTONOMOUS,로봇·자율시스템,자율주행 인지와 모빌리티 제어,HIGH,APPROVED
+지능형 바이오시스템 및 뉴럴 엔지니어링,1,144,인공지능데이터사이언스학과,정세훈 교수님 연구실,BIOMED_HEALTH,바이오·의료·헬스케어,바이오시스템·신경공학 분야,HIGH,APPROVED
+지능형 반도체 소자/공정,1,115,반도체시스템공학과,김희동 교수님 연구실,SEMICONDUCTOR_HW,반도체·집적회로·컴퓨팅하드웨어,반도체 소자와 제조 공정,HIGH,APPROVED
+지능형 보안 시스템 연구,1,19,컴퓨터공학과,김문석 교수님 연구실,SECURITY_CRYPTO,정보보안·암호,지능형 정보보안 시스템 연구,HIGH,APPROVED
+지능형 사물인터넷 시스템,1,19,컴퓨터공학과,김문석 교수님 연구실,COMM_NETWORK,통신·네트워크·IoT,사물인터넷 연결 시스템 연구,HIGH,APPROVED
+지능형 시스템,1,132,지능IoT학과,김정현 교수님 연구실,AI_ML,인공지능·기계학습,멀티모달 AI 기반 지능 시스템,HIGH,APPROVED
+지능형 시스템을 위한 추정 및 예측,1,110,AI로봇학과,Amad Zafar 교수님 연구실,CONTROL_SYSTEMS,제어·추정·시스템공학,시스템 상태 추정·예측 방법,HIGH,APPROVED
+지능형 신호처리,1,8,컴퓨터공학과,유영환 교수님 연구실,SIGNAL_MEDIA,신호·영상·미디어처리,지능형 신호 분석·처리 기술,HIGH,APPROVED
+지능형 에이전트,1,142,인공지능데이터사이언스학과,구영현 교수님 연구실,AI_ML,인공지능·기계학습,강화학습 기반 에이전트 지능,HIGH,APPROVED
+지능형 의사결정,1,91,AI로봇학과,이현석 교수님 연구실,AI_ML,인공지능·기계학습,AI 기반 의사결정 방법,HIGH,APPROVED
+지능형 이동체 인공지능,1,85,AI로봇학과,서재규 교수님 연구실,ROBOT_AUTONOMOUS,로봇·자율시스템,자율주행·드론 환경 인지 AI,HIGH,APPROVED
+지능형 제어 및 자동화를 위한 뇌-컴퓨터 인터페이스,1,110,AI로봇학과,Amad Zafar 교수님 연구실,BIOMED_HEALTH,바이오·의료·헬스케어,뇌신호 기반 생체 인터페이스,HIGH,APPROVED
+지능형 탐색,1,105,AI로봇학과,MAI The Vu 교수님 연구실,ROBOT_AUTONOMOUS,로봇·자율시스템,수중로봇 경로계획·장애물 회피,HIGH,APPROVED
+지능형 통신 네트워크,1,64,AI융합전자공학과,김홍찬 교수님 연구실,COMM_NETWORK,통신·네트워크·IoT,AI 결합 통신 네트워크,HIGH,APPROVED
+지리공간 인공지능(Geo-AI),1,22,컴퓨터공학과,Abolghasem Sadeghi-Niaraki 교수님 연구실,DATA_INFORMATION,데이터과학·정보관리,GIS·공간 데이터 분석 AI,HIGH,APPROVED
+지상,1,112,AI로봇학과,김용훈 교수님 연구실,ROBOT_AUTONOMOUS,로봇·자율시스템,문맥상 지상 이동체 관성항법,MEDIUM,APPROVED
+진화알고리즘,1,169,지능정보융합학과,윤진희 교수님 연구실,AI_ML,인공지능·기계학습,진화 기반 인공지능 알고리즘,HIGH,APPROVED
+집적 광학 (photonic integrated circuit),1,188,양자지능정보학과,김한솔 교수님 연구실,PHOTONICS_OPTICS,광학·포토닉스,광자 집적회로·집적광학,HIGH,APPROVED
+집적회로 물리적 설계,1,123,반도체시스템공학과,현대준 교수님 연구실,SEMICONDUCTOR_HW,반도체·집적회로·컴퓨팅하드웨어,집적회로 물리 설계 기술,HIGH,APPROVED
+차세대 딥러닝,1,24,컴퓨터공학과,이수정 교수님 연구실,AI_ML,인공지능·기계학습,차세대 심층학습 방법론,HIGH,APPROVED
+차세대 메모리 소자,1,119,반도체시스템공학과,엄태용 교수님 연구실,SEMICONDUCTOR_HW,반도체·집적회로·컴퓨팅하드웨어,반도체 메모리 소자 연구,HIGH,APPROVED
+차세대 안테나 전자파 잔향실 메타 물질 지능형 산란체 전자장 이론,1,59,AI융합전자공학과,김동호 교수님 연구실,COMM_NETWORK,통신·네트워크·IoT,안테나·전자파 통신 기반 기술,HIGH,APPROVED
+차세대 이동통신(5G/6G) 보안 및 국내외 표준화,1,77,정보보호학과,김종현 교수님 연구실,SECURITY_CRYPTO,정보보안·암호,이동통신 보안·보안 표준화,HIGH,APPROVED
+차세대 통신,1,168,지능정보융합학과,정민채 교수님 연구실,COMM_NETWORK,통신·네트워크·IoT,차세대 이동·위성 통신,HIGH,APPROVED
+창업,1,35,컴퓨터공학과,권기학 교수님 연구실,POLICY_MANAGEMENT,경영·정책·법·교육,기술 창업과 경영 분야,HIGH,APPROVED
+창의적공학설계,1,35,컴퓨터공학과,권기학 교수님 연구실,POLICY_MANAGEMENT,경영·정책·법·교육,프로젝트 기반 공학 설계·기획,MEDIUM,APPROVED
+초고속 고출력 광검출기,1,50,AI융합전자공학과,현경숙 교수님 연구실,PHOTONICS_OPTICS,광학·포토닉스,고속 광검출 광반도체 소자,HIGH,APPROVED
+초고속 보안 시스템,1,70,정보보호학과,박기웅 교수님 연구실,SECURITY_CRYPTO,정보보안·암호,고성능 시스템 보안 기술,HIGH,APPROVED
+최적화,3,108|161|172,인공지능데이터사이언스학과|지능정보융합학과|AI로봇학과,이석영 교수님 연구실|FARANAKSADAT SOLAT 교수님 연구실|Muhammad Umair ALI 교수님 연구실,CONTROL_SYSTEMS,제어·추정·시스템공학,범용 시스템 최적화 방법,HIGH,APPROVED
+추정,1,102,AI로봇학과,조아라 교수님 연구실,CONTROL_SYSTEMS,제어·추정·시스템공학,시스템 상태 추정 방법,HIGH,APPROVED
+추천시스템,1,146,인공지능데이터사이언스학과,박동현 교수님 연구실,AI_ML,인공지능·기계학습,AI 기반 개인화 추천,HIGH,APPROVED
+카메라·레이더·라이다 센서 융합,1,85,AI로봇학과,서재규 교수님 연구실,ROBOT_AUTONOMOUS,로봇·자율시스템,자율주행 다중센서 환경 인지,HIGH,APPROVED
+커뮤니케이션 이론,1,65,AI융합전자공학과,Mohammed H. Alsharif 교수님 연구실,COMM_NETWORK,통신·네트워크·IoT,무선통신 이론 연구,HIGH,APPROVED
+컴퓨터 구조,1,15,컴퓨터공학과,박기호 교수님 연구실,SEMICONDUCTOR_HW,반도체·집적회로·컴퓨팅하드웨어,프로세서·시스템 하드웨어 구조,HIGH,APPROVED
+컴퓨터 그래픽스,3,9|179|182,컴퓨터공학과|콘텐츠소프트웨어학과,박상일 교수님 연구실|송오영 교수님 연구실|최수미 교수님 연구실,HCI_XR,HCI·XR·인터랙티브미디어,그래픽스·VR/XR 시각 상호작용,HIGH,APPROVED
+컴퓨터 네트워크,1,18,컴퓨터공학과,LEE KANGWON 교수님 연구실,COMM_NETWORK,통신·네트워크·IoT,컴퓨터·이동 통신망 연구,HIGH,APPROVED
+컴퓨터 보조 진단,2,106|158,인공지능데이터사이언스학과|AI로봇학과,알마스니모하메드압둘라힘모하메드 교수님 연구실|Rizwan Ali NAQVI 교수님 연구실,BIOMED_HEALTH,바이오·의료·헬스케어,의료영상 기반 진단 지원,HIGH,APPROVED
+컴퓨터 비전,5,28|29|37|106|184,컴퓨터공학과|콘텐츠소프트웨어학과|AI로봇학과,이수빈 교수님 연구실|정승화 교수님 연구실|DILSHAD NAQQASH 교수님 연구실|Rizwan Ali NAQVI 교수님 연구실|Usman Ali 교수님 연구실,SIGNAL_MEDIA,신호·영상·미디어처리,영상 이해·컴퓨터 비전,HIGH,APPROVED
+컴퓨터 비전 및 제어 시스템,1,30,컴퓨터공학과,Algabri Redhwan Nasser Ali 교수님 연구실,ROBOT_AUTONOMOUS,로봇·자율시스템,로봇 비전·자세 추정·제어,MEDIUM,APPROVED
+컴퓨터 비젼,2,11|145,인공지능데이터사이언스학과|컴퓨터공학과,민병석 교수님 연구실|한동일 교수님 연구실,SIGNAL_MEDIA,신호·영상·미디어처리,영상 분석·인식 기술,HIGH,APPROVED
+컴퓨터 알고리즘,1,1,컴퓨터공학과,나중채 교수님 연구실,SOFTWARE_COMPUTING,소프트웨어·컴퓨팅시스템,컴퓨팅 알고리즘 설계·분석,HIGH,APPROVED
+컴퓨터 이론,1,1,컴퓨터공학과,나중채 교수님 연구실,SOFTWARE_COMPUTING,소프트웨어·컴퓨팅시스템,이론 컴퓨터과학 분야,HIGH,APPROVED
+컴퓨터구조,1,12,컴퓨터공학과,박우찬 교수님 연구실,SEMICONDUCTOR_HW,반도체·집적회로·컴퓨팅하드웨어,GPU·ASIC 중심 하드웨어 구조,HIGH,APPROVED
+컴퓨터그래픽스,1,16,컴퓨터공학과,장윤 교수님 연구실,HCI_XR,HCI·XR·인터랙티브미디어,그래픽스·시각화·상호작용,HIGH,APPROVED
+컴퓨터비전,2,88|140,인공지능데이터사이언스학과|AI로봇학과,전창재 교수님 연구실|최유경 교수님 연구실,SIGNAL_MEDIA,신호·영상·미디어처리,영상 기반 컴퓨터 비전,HIGH,APPROVED
+컴퓨터비젼,1,177,콘텐츠소프트웨어학과,백성욱 교수님 연구실,SIGNAL_MEDIA,신호·영상·미디어처리,이미징 AI·영상 분석,HIGH,APPROVED
+클라우드,1,18,컴퓨터공학과,LEE KANGWON 교수님 연구실,SOFTWARE_COMPUTING,소프트웨어·컴퓨팅시스템,클라우드 소프트웨어 인프라,HIGH,APPROVED
+클라우드 서비스 보안,1,77,정보보호학과,김종현 교수님 연구실,SECURITY_CRYPTO,정보보안·암호,클라우드 서비스 보호 기술,HIGH,APPROVED
+클라우드 컴퓨팅,2,10|70,정보보호학과|컴퓨터공학과,노재춘 교수님 연구실|박기웅 교수님 연구실,SOFTWARE_COMPUTING,소프트웨어·컴퓨팅시스템,가상화·분산 클라우드 시스템,HIGH,APPROVED
+통계학적신호처리,1,39,AI융합전자공학과,배진수 교수님 연구실,SIGNAL_MEDIA,신호·영상·미디어처리,통계 기반 신호 검파·추정,HIGH,APPROVED
+통신 네트워크,1,14,컴퓨터공학과,양효식 교수님 연구실,COMM_NETWORK,통신·네트워크·IoT,통신망 구성·운영 기술,HIGH,APPROVED
+통신 및 센싱 융합,1,173,지능정보융합학과,한종훈 교수님 연구실,COMM_NETWORK,통신·네트워크·IoT,통신·센싱 통합 시스템,HIGH,APPROVED
+통신 및 영상처리 알고리듬,1,55,AI융합전자공학과,이성주 교수님 연구실,SIGNAL_MEDIA,신호·영상·미디어처리,통신·영상 신호처리 알고리즘,HIGH,APPROVED
+통신 시스템,1,173,지능정보융합학과,한종훈 교수님 연구실,COMM_NETWORK,통신·네트워크·IoT,통신 시스템 설계·운용,HIGH,APPROVED
+통신 표준,1,173,지능정보융합학과,한종훈 교수님 연구실,COMM_NETWORK,통신·네트워크·IoT,이동통신 표준 기술,HIGH,APPROVED
+통신 프로토콜,1,68,AI융합전자공학과,이경근 교수님 연구실,COMM_NETWORK,통신·네트워크·IoT,통신망 프로토콜 설계,HIGH,APPROVED
+통신-센싱 융합기술,1,168,지능정보융합학과,정민채 교수님 연구실,COMM_NETWORK,통신·네트워크·IoT,차세대 통신·센싱 융합,HIGH,APPROVED
+통신신호처리,1,42,AI융합전자공학과,임준석 교수님 연구실,SIGNAL_MEDIA,신호·영상·미디어처리,통신 파형·신호 처리,HIGH,APPROVED
+통신용 모뎀 SoC 설계,1,55,AI융합전자공학과,이성주 교수님 연구실,SEMICONDUCTOR_HW,반도체·집적회로·컴퓨팅하드웨어,통신 모뎀 시스템온칩 설계,HIGH,APPROVED
+통신이론,1,39,AI융합전자공학과,배진수 교수님 연구실,COMM_NETWORK,통신·네트워크·IoT,통신 검파·추정 이론,HIGH,APPROVED
+트래픽 엔지니어링,1,68,AI융합전자공학과,이경근 교수님 연구실,COMM_NETWORK,통신·네트워크·IoT,무선망 트래픽 관리,HIGH,APPROVED
+패키지 설계 자동화,1,118,반도체시스템공학과,김영우 교수님 연구실,SEMICONDUCTOR_HW,반도체·집적회로·컴퓨팅하드웨어,반도체 패키지 자동 설계,HIGH,APPROVED
+패턴 분석,1,17,컴퓨터공학과,윤은일 교수님 연구실,DATA_INFORMATION,데이터과학·정보관리,데이터 패턴 마이닝·분석,HIGH,APPROVED
+표면·계면 기능화(촉매·금속나노입자·이종접합),1,129,반도체시스템공학과,CAI ZHICHENG 교수님 연구실,ELECTRONIC_DEVICES,전자소자·센서·나노소재,센서 소자 표면·계면 기능화,HIGH,APPROVED
+프라이버시-보존 머신러닝,1,183,콘텐츠소프트웨어학과,이은상 교수님 연구실,SECURITY_CRYPTO,정보보안·암호,암호 기반 학습 프라이버시,HIGH,APPROVED
+프로젝트 관리,1,35,컴퓨터공학과,권기학 교수님 연구실,POLICY_MANAGEMENT,경영·정책·법·교육,소프트웨어 프로젝트 경영·관리,HIGH,APPROVED
+프로토콜 엔지니어링,1,76,정보보호학과,이종혁 교수님 연구실,COMM_NETWORK,통신·네트워크·IoT,통신·블록체인 프로토콜 설계,MEDIUM,APPROVED
+핀테크,1,151,인공지능데이터사이언스학과,이윤영 교수님 연구실,POLICY_MANAGEMENT,경영·정책·법·교육,금융 기술·산업 응용,MEDIUM,APPROVED
+하드웨어보안,1,118,반도체시스템공학과,김영우 교수님 연구실,SECURITY_CRYPTO,정보보안·암호,반도체·패키지 하드웨어 보안,HIGH,APPROVED
+함수 암호,1,75,정보보호학과,이광수 교수님 연구실,SECURITY_CRYPTO,정보보안·암호,함수형 암호 기법,HIGH,APPROVED
+항공 MRO,1,103,AI로봇학과,손찬규 교수님 연구실,INDUSTRIAL_MOBILITY,산업·모빌리티·스마트인프라,항공기 정비·수리·운영,HIGH,APPROVED
+항만 터미널 디지털화,1,90,AI로봇학과,김세원 교수님 연구실,INDUSTRIAL_MOBILITY,산업·모빌리티·스마트인프라,항만 물류·터미널 디지털 전환,HIGH,APPROVED
+항습·장기신뢰성·저전력 구동,1,129,반도체시스템공학과,CAI ZHICHENG 교수님 연구실,ELECTRONIC_DEVICES,전자소자·센서·나노소재,센서 소자 신뢰성·저전력 구동,HIGH,APPROVED
+해상풍력 자율화 및 무인화,1,90,AI로봇학과,김세원 교수님 연구실,ENERGY_ENVIRONMENT,에너지·환경·기후,해상풍력 에너지 설비 무인화,HIGH,APPROVED
+협력통신 및 전이중 통신,1,66,AI융합전자공학과,황덕동 교수님 연구실,COMM_NETWORK,통신·네트워크·IoT,무선 협력·전이중 통신,HIGH,APPROVED
+화학 가스 센서,1,113,반도체시스템공학과,박성훈 교수님 연구실,ELECTRONIC_DEVICES,전자소자·센서·나노소재,가스 검출 전자센서 소자,HIGH,APPROVED
+화학저항형 가스센서,1,129,반도체시스템공학과,CAI ZHICHENG 교수님 연구실,ELECTRONIC_DEVICES,전자소자·센서·나노소재,화학저항식 가스센서 소자,HIGH,APPROVED
+확률 기반 추정론,2,112|159,인공지능데이터사이언스학과|AI로봇학과,김용훈 교수님 연구실|Hussain Dildar 교수님 연구실,CONTROL_SYSTEMS,제어·추정·시스템공학,제어·항법용 확률 추정,HIGH,APPROVED
+확장현실,2,9|178,컴퓨터공학과|콘텐츠소프트웨어학과,이종원 교수님 연구실|최수미 교수님 연구실,HCI_XR,HCI·XR·인터랙티브미디어,VR·AR·MR 확장현실,HIGH,APPROVED
+확장현실(XR: VR/AR/MR),1,22,컴퓨터공학과,Abolghasem Sadeghi-Niaraki 교수님 연구실,HCI_XR,HCI·XR·인터랙티브미디어,VR·AR·MR 상호작용 기술,HIGH,APPROVED
+휴머노이드 로봇,1,94,AI로봇학과,우현수 교수님 연구실,ROBOT_AUTONOMOUS,로봇·자율시스템,인간형 지능 로봇,HIGH,APPROVED
+힘·압력(Force/Pressure) 센서,1,129,반도체시스템공학과,CAI ZHICHENG 교수님 연구실,ELECTRONIC_DEVICES,전자소자·센서·나노소재,힘·압력 측정 센서 소자,HIGH,APPROVED
+Affective Computing,1,154,인공지능데이터사이언스학과,이수진 교수님 연구실,HCI_XR,HCI·XR·인터랙티브미디어,감정 인식 인간중심 컴퓨팅,HIGH,APPROVED
+Agentic AI,1,143,인공지능데이터사이언스학과,문연국 교수님 연구실,AI_ML,인공지능·기계학습,자율 에이전트 인공지능,HIGH,APPROVED
+Agentic AI 기반 사이버 공방,1,78,정보보호학과,최창희 교수님 연구실,SECURITY_CRYPTO,정보보안·암호,AI 기반 사이버 공격·방어,HIGH,APPROVED
+AI,2,80|154,인공지능데이터사이언스학과|정보보호학과,박종일 교수님 연구실|이수진 교수님 연구실,AI_ML,인공지능·기계학습,범용 인공지능 연구 항목,MEDIUM,APPROVED
+AI & Visual Computing,1,154,인공지능데이터사이언스학과,이수진 교수님 연구실,SIGNAL_MEDIA,신호·영상·미디어처리,AI 기반 시각 컴퓨팅,HIGH,APPROVED
+AI 기반 무인비행체,1,47,AI융합전자공학과,송형규 교수님 연구실,ROBOT_AUTONOMOUS,로봇·자율시스템,AI 기반 자율 무인항공기,HIGH,APPROVED
+AI 기반 의료 서비스 및 애플리케이션,1,155,인공지능데이터사이언스학과,알안타리무가헤드알리샤우퀴 교수님 연구실,BIOMED_HEALTH,바이오·의료·헬스케어,의료 서비스용 인공지능,HIGH,APPROVED
+AI 기반 자연어 처리(NLP),1,155,인공지능데이터사이언스학과,알안타리무가헤드알리샤우퀴 교수님 연구실,AI_ML,인공지능·기계학습,인공지능 자연어 처리,HIGH,APPROVED
+AI 기반 차세대 통신 DNA 저장 장치 시멘틱 통신 양자 정보,1,166,지능정보융합학과,김성환 교수님 연구실,COMM_NETWORK,통신·네트워크·IoT,차세대·시맨틱 통신이 주된 문맥,MEDIUM,APPROVED
+AI 기반 청정에너지,1,155,인공지능데이터사이언스학과,알안타리무가헤드알리샤우퀴 교수님 연구실,ENERGY_ENVIRONMENT,에너지·환경·기후,청정에너지 분야 인공지능,HIGH,APPROVED
+AI 기반 APT 공격 탐지,1,78,정보보호학과,최창희 교수님 연구실,SECURITY_CRYPTO,정보보안·암호,AI 기반 지능형 공격 탐지,HIGH,APPROVED
+AI 기본 모델링 및 추정,1,99,AI로봇학과,강창호 교수님 연구실,CONTROL_SYSTEMS,제어·추정·시스템공학,시스템 모델링·상태 추정,HIGH,APPROVED
+AI 사이버 보안,1,78,정보보호학과,최창희 교수님 연구실,SECURITY_CRYPTO,정보보안·암호,인공지능 기반 사이버보안,HIGH,APPROVED
+AI Accelerator,1,116,반도체시스템공학과,김동순 교수님 연구실,SEMICONDUCTOR_HW,반도체·집적회로·컴퓨팅하드웨어,인공지능 연산 가속 하드웨어,HIGH,APPROVED
+AI-RAN,1,174,지능정보융합학과,강홍구 교수님 연구실,COMM_NETWORK,통신·네트워크·IoT,AI 결합 무선접속망,HIGH,APPROVED
+AI/응용특화 가속기 설계,1,15,컴퓨터공학과,박기호 교수님 연구실,SEMICONDUCTOR_HW,반도체·집적회로·컴퓨팅하드웨어,AI 전용 반도체 가속기 설계,HIGH,APPROVED
+AI/ML/FL,1,27,컴퓨터공학과,Tanveer Jawad 교수님 연구실,AI_ML,인공지능·기계학습,AI·머신러닝·연합학습 방법,HIGH,APPROVED
+AI/ML기반의 악성코드 분석 및 탐지,1,77,정보보호학과,김종현 교수님 연구실,SECURITY_CRYPTO,정보보안·암호,AI 기반 악성코드 보안 분석,HIGH,APPROVED
+AI로봇,2,83|94,AI로봇학과,김형석 교수님 연구실|우현수 교수님 연구실,ROBOT_AUTONOMOUS,로봇·자율시스템,인공지능 융합 로봇,HIGH,APPROVED
+AI헬스케어,1,146,인공지능데이터사이언스학과,박동현 교수님 연구실,BIOMED_HEALTH,바이오·의료·헬스케어,헬스케어 특화 인공지능,HIGH,APPROVED
+AI활용 융합교육,1,187,콘텐츠소프트웨어학과,김화슬 교수님 연구실,POLICY_MANAGEMENT,경영·정책·법·교육,AI 활용 교육·융합 기획,MEDIUM,APPROVED
+and AIoT,1,26,컴퓨터공학과,다오누곡 교수님 연구실,COMM_NETWORK,통신·네트워크·IoT,AI 결합 사물인터넷 시스템,HIGH,APPROVED
+"Artificial Intelligence (AI,) 최적화 (Optimization)",1,31,컴퓨터공학과,Abdulrahman Hussein Abdullah Ba Alawi 교수님 연구실,CONTROL_SYSTEMS,제어·추정·시스템공학,공정 시스템 AI 최적화,HIGH,APPROVED
+ASIC 칩 설계,1,12,컴퓨터공학과,박우찬 교수님 연구실,SEMICONDUCTOR_HW,반도체·집적회로·컴퓨팅하드웨어,주문형 반도체 칩 설계,HIGH,APPROVED
+Biosensor platform for neurotransmitter detection,1,117,반도체시스템공학과,임유승 교수님 연구실,BIOMED_HEALTH,바이오·의료·헬스케어,신경전달물질 검출 바이오센서,HIGH,APPROVED
+CNN기반 비디오코딩,1,7,컴퓨터공학과,이영렬 교수님 연구실,SIGNAL_MEDIA,신호·영상·미디어처리,딥러닝 기반 영상 부호화,HIGH,APPROVED
+Computer Vision,1,13,컴퓨터공학과,문현준 교수님 연구실,SIGNAL_MEDIA,신호·영상·미디어처리,영상 인식·컴퓨터 비전,HIGH,APPROVED
+Data mining,1,180,콘텐츠소프트웨어학과,최준연 교수님 연구실,DATA_INFORMATION,데이터과학·정보관리,데이터 패턴 발굴·분석,HIGH,APPROVED
+Deep Learning,1,51,AI융합전자공학과,한종기 교수님 연구실,AI_ML,인공지능·기계학습,범용 심층학습 방법론,HIGH,APPROVED
+Deep Learning Biometrics (Face Detection & Recognition),1,13,컴퓨터공학과,문현준 교수님 연구실,SIGNAL_MEDIA,신호·영상·미디어처리,얼굴 영상 검출·인식,HIGH,APPROVED
+Digital Hologram,1,48,AI융합전자공학과,김태근 교수님 연구실,PHOTONICS_OPTICS,광학·포토닉스,디지털 홀로그램 광학,HIGH,APPROVED
+Digital Holography,1,48,AI융합전자공학과,김태근 교수님 연구실,PHOTONICS_OPTICS,광학·포토닉스,디지털 홀로그래피 광학 기술,HIGH,APPROVED
+Domuent AI,1,145,인공지능데이터사이언스학과,민병석 교수님 연구실,AI_ML,인공지능·기계학습,Document AI로 해석되는 AI 응용 모델,MEDIUM,APPROVED
+Edge AI,1,174,지능정보융합학과,강홍구 교수님 연구실,AI_ML,인공지능·기계학습,엣지 환경 인공지능 실행,HIGH,APPROVED
+Emotional AI,1,143,인공지능데이터사이언스학과,문연국 교수님 연구실,HCI_XR,HCI·XR·인터랙티브미디어,감정 이해 인간중심 AI,HIGH,APPROVED
+Federated Learning,1,174,지능정보융합학과,강홍구 교수님 연구실,AI_ML,인공지능·기계학습,분산·연합 머신러닝,HIGH,APPROVED
+fractional calculus 응용,1,164,지능정보융합학과,이학성 교수님 연구실,CONTROL_SYSTEMS,제어·추정·시스템공학,자동제어용 분수 미적분 응용,HIGH,APPROVED
+GIS,1,22,컴퓨터공학과,Abolghasem Sadeghi-Niaraki 교수님 연구실,DATA_INFORMATION,데이터과학·정보관리,지리공간 정보시스템·공간데이터,HIGH,APPROVED
+GPU 구조,1,12,컴퓨터공학과,박우찬 교수님 연구실,SEMICONDUCTOR_HW,반도체·집적회로·컴퓨팅하드웨어,그래픽 처리장치 하드웨어 구조,HIGH,APPROVED
+HCI,1,178,콘텐츠소프트웨어학과,이종원 교수님 연구실,HCI_XR,HCI·XR·인터랙티브미디어,인간-컴퓨터 상호작용,HIGH,APPROVED
+Hologram Contents,1,48,AI융합전자공학과,김태근 교수님 연구실,PHOTONICS_OPTICS,광학·포토닉스,홀로그램 광학 콘텐츠 기술,MEDIUM,APPROVED
+Holographic Camera,1,48,AI융합전자공학과,김태근 교수님 연구실,PHOTONICS_OPTICS,광학·포토닉스,홀로그래픽 광학 카메라,HIGH,APPROVED
+Holographic Coherence Tomography,1,48,AI융합전자공학과,김태근 교수님 연구실,PHOTONICS_OPTICS,광학·포토닉스,홀로그래픽 단층 광학 영상,HIGH,APPROVED
+Holographic Image Recognition,1,48,AI융합전자공학과,김태근 교수님 연구실,SIGNAL_MEDIA,신호·영상·미디어처리,홀로그램 영상 인식,HIGH,APPROVED
+Human-Centered AI for Media and Creativity,1,154,인공지능데이터사이언스학과,이수진 교수님 연구실,HCI_XR,HCI·XR·인터랙티브미디어,미디어 창작용 인간중심 AI,HIGH,APPROVED
+Image Processing,1,13,컴퓨터공학과,문현준 교수님 연구실,SIGNAL_MEDIA,신호·영상·미디어처리,디지털 영상 신호 처리,HIGH,APPROVED
+Industrial AI Application,1,145,인공지능데이터사이언스학과,민병석 교수님 연구실,INDUSTRIAL_MOBILITY,산업·모빌리티·스마트인프라,산업 현장 인공지능 응용,HIGH,APPROVED
+intelligent systems,2,26|180,컴퓨터공학과|콘텐츠소프트웨어학과,다오누곡 교수님 연구실|최준연 교수님 연구실,AI_ML,인공지능·기계학습,예측분석 기반 지능 시스템,HIGH,APPROVED
+IoT 보안,1,70,정보보호학과,박기웅 교수님 연구실,SECURITY_CRYPTO,정보보안·암호,사물인터넷 시스템 보안,HIGH,APPROVED
+IT 서비스,1,35,컴퓨터공학과,권기학 교수님 연구실,POLICY_MANAGEMENT,경영·정책·법·교육,IT 서비스 기획·경영,HIGH,APPROVED
+IT 정책 경영,1,35,컴퓨터공학과,권기학 교수님 연구실,POLICY_MANAGEMENT,경영·정책·법·교육,IT 정책·사업 경영,HIGH,APPROVED
+IT융합,1,68,AI융합전자공학과,이경근 교수님 연구실,COMM_NETWORK,통신·네트워크·IoT,통신망 중심 IT 융합,MEDIUM,APPROVED
+IT융합 디지털신호처리용 프로세서 설계,1,55,AI융합전자공학과,이성주 교수님 연구실,SEMICONDUCTOR_HW,반도체·집적회로·컴퓨팅하드웨어,디지털신호처리 프로세서 하드웨어,HIGH,APPROVED
+LLM,1,146,인공지능데이터사이언스학과,박동현 교수님 연구실,AI_ML,인공지능·기계학습,대규모 언어모델 인공지능,HIGH,APPROVED
+Machine Learning,1,13,컴퓨터공학과,문현준 교수님 연구실,AI_ML,인공지능·기계학습,범용 머신러닝 방법론,HIGH,APPROVED
+Metaverse System,1,51,AI융합전자공학과,한종기 교수님 연구실,HCI_XR,HCI·XR·인터랙티브미디어,메타버스·몰입형 시스템,HIGH,APPROVED
+mobile cloudification,1,26,컴퓨터공학과,다오누곡 교수님 연구실,COMM_NETWORK,통신·네트워크·IoT,모바일 네트워크 클라우드화,HIGH,APPROVED
+MPEG,1,45,AI융합전자공학과,문주희 교수님 연구실,SIGNAL_MEDIA,신호·영상·미디어처리,디지털 영상 압축 표준,HIGH,APPROVED
+MRI 재구성,1,158,인공지능데이터사이언스학과,알마스니모하메드압둘라힘모하메드 교수님 연구실,BIOMED_HEALTH,바이오·의료·헬스케어,자기공명 의료영상 재구성,HIGH,APPROVED
+Multiple View Geometry,1,37,컴퓨터공학과,이수빈 교수님 연구실,SIGNAL_MEDIA,신호·영상·미디어처리,다중시점 컴퓨터 비전 기하,HIGH,APPROVED
+network softwarization,1,26,컴퓨터공학과,다오누곡 교수님 연구실,COMM_NETWORK,통신·네트워크·IoT,통신 네트워크 소프트웨어화,HIGH,APPROVED
+Neuromorphic devices,1,117,반도체시스템공학과,임유승 교수님 연구실,SEMICONDUCTOR_HW,반도체·집적회로·컴퓨팅하드웨어,뉴로모픽 반도체 소자,HIGH,APPROVED
+On-device AI,1,174,지능정보융합학과,강홍구 교수님 연구실,AI_ML,인공지능·기계학습,기기 내 인공지능 실행,HIGH,APPROVED
+Pattern Recognition Artificial Intelligence,1,13,컴퓨터공학과,문현준 교수님 연구실,SIGNAL_MEDIA,신호·영상·미디어처리,영상 패턴·얼굴 인식 AI,HIGH,APPROVED
+Power semiconductor materials & devices,1,117,반도체시스템공학과,임유승 교수님 연구실,SEMICONDUCTOR_HW,반도체·집적회로·컴퓨팅하드웨어,전력반도체 소재·소자,HIGH,APPROVED
+Predictive Analytics,1,180,콘텐츠소프트웨어학과,최준연 교수님 연구실,DATA_INFORMATION,데이터과학·정보관리,데이터 기반 예측 분석,HIGH,APPROVED
+Quantum Transfer Computing,1,116,반도체시스템공학과,김동순 교수님 연구실,QUANTUM_TECH,양자정보·양자기술,양자 컴퓨팅 기술 항목,MEDIUM,APPROVED
+RF 집적회로(RFIC),1,34,컴퓨터공학과,Rajendra Dhakal 교수님 연구실,SEMICONDUCTOR_HW,반도체·집적회로·컴퓨팅하드웨어,무선주파수 집적회로 설계,HIGH,APPROVED
+RF/마이크로파 집적 센서,1,34,컴퓨터공학과,Rajendra Dhakal 교수님 연구실,ELECTRONIC_DEVICES,전자소자·센서·나노소재,RF·마이크로파 센서 소자,HIGH,APPROVED
+"Signal Processor(Audio, Video, Sensor)",1,116,반도체시스템공학과,김동순 교수님 연구실,SEMICONDUCTOR_HW,반도체·집적회로·컴퓨팅하드웨어,오디오·영상 신호처리 하드웨어,HIGH,APPROVED
+Sim2Real,1,174,지능정보융합학과,강홍구 교수님 연구실,AI_ML,인공지능·기계학습,시뮬레이션-현실 AI 전이,MEDIUM,APPROVED
+SoC 구조 설계,1,15,컴퓨터공학과,박기호 교수님 연구실,SEMICONDUCTOR_HW,반도체·집적회로·컴퓨팅하드웨어,시스템온칩 하드웨어 구조 설계,HIGH,APPROVED
+SoC Design,1,116,반도체시스템공학과,김동순 교수님 연구실,SEMICONDUCTOR_HW,반도체·집적회로·컴퓨팅하드웨어,시스템온칩 반도체 설계,HIGH,APPROVED
+Social media,1,180,콘텐츠소프트웨어학과,최준연 교수님 연구실,DATA_INFORMATION,데이터과학·정보관리,소셜미디어 데이터 분석,HIGH,APPROVED
+SW 공학,1,35,컴퓨터공학과,권기학 교수님 연구실,SOFTWARE_COMPUTING,소프트웨어·컴퓨팅시스템,소프트웨어 개발 공학,HIGH,APPROVED
+SW 마케팅,1,35,컴퓨터공학과,권기학 교수님 연구실,POLICY_MANAGEMENT,경영·정책·법·교육,소프트웨어 사업 마케팅,HIGH,APPROVED
+SW 사업 발주 지원 체계,1,35,컴퓨터공학과,권기학 교수님 연구실,POLICY_MANAGEMENT,경영·정책·법·교육,공공 SW 조달·발주 제도,HIGH,APPROVED
+SW 요구 사항 분석,1,35,컴퓨터공학과,권기학 교수님 연구실,SOFTWARE_COMPUTING,소프트웨어·컴퓨팅시스템,소프트웨어 요구공학·분석,HIGH,APPROVED
+SW법.제도,1,35,컴퓨터공학과,권기학 교수님 연구실,POLICY_MANAGEMENT,경영·정책·법·교육,소프트웨어 법·제도·정책,HIGH,APPROVED
+Temporal Network Graph Database Graph Mining Internet of Things,1,181,콘텐츠소프트웨어학과,변재욱 교수님 연구실,DATA_INFORMATION,데이터과학·정보관리,시계열 그래프 DB·마이닝,MEDIUM,APPROVED
+Time-series LLM,1,148,인공지능데이터사이언스학과,신승협 교수님 연구실,AI_ML,인공지능·기계학습,시계열용 대규모 언어모델,HIGH,APPROVED
+UAV 통신,1,161,인공지능데이터사이언스학과,FARANAKSADAT SOLAT 교수님 연구실,COMM_NETWORK,통신·네트워크·IoT,무인항공기 무선 통신,HIGH,APPROVED
+UAV/UAM 전주기 설계·개발,1,103,AI로봇학과,손찬규 교수님 연구실,INDUSTRIAL_MOBILITY,산업·모빌리티·스마트인프라,항공 모빌리티 설계·개발,HIGH,APPROVED
+UV 광센서/포토디텍터,1,129,반도체시스템공학과,CAI ZHICHENG 교수님 연구실,PHOTONICS_OPTICS,광학·포토닉스,자외선 광센서·광검출기,HIGH,APPROVED
+"Video Coding (HEVC, VVC, post VVC)",1,51,AI융합전자공학과,한종기 교수님 연구실,SIGNAL_MEDIA,신호·영상·미디어처리,차세대 디지털 영상 부호화,HIGH,APPROVED
+VLSI 설계,1,116,반도체시스템공학과,김동순 교수님 연구실,SEMICONDUCTOR_HW,반도체·집적회로·컴퓨팅하드웨어,초고밀도 집적회로 설계,HIGH,APPROVED
+VOC/유해가스 검지,1,129,반도체시스템공학과,CAI ZHICHENG 교수님 연구실,ELECTRONIC_DEVICES,전자소자·센서·나노소재,유해가스 센서 검지 기술,HIGH,APPROVED
+VR/AR,1,184,콘텐츠소프트웨어학과,정승화 교수님 연구실,HCI_XR,HCI·XR·인터랙티브미디어,가상·증강현실 기술,HIGH,APPROVED
+Wearable healthcare sensor platform,1,117,반도체시스템공학과,임유승 교수님 연구실,BIOMED_HEALTH,바이오·의료·헬스케어,웨어러블 헬스케어 센서,HIGH,APPROVED
+XAI 기반 비전 대규모 언어 모델(VLLM),1,155,인공지능데이터사이언스학과,알안타리무가헤드알리샤우퀴 교수님 연구실,AI_ML,인공지능·기계학습,설명 가능한 비전 대규모 언어모델,HIGH,APPROVED
+XAI 등,1,148,인공지능데이터사이언스학과,신승협 교수님 연구실,AI_ML,인공지능·기계학습,설명가능 인공지능 방법론,HIGH,APPROVED

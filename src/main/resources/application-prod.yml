@@ -7,4 +7,26 @@ spring:
   jpa:
     hibernate:
       ddl-auto: validate
+  flyway:
+    enabled: true
+
+server:
+  compression:
+    enabled: true
+    mime-types: application/json
+    min-response-size: 2KB
+  forward-headers-strategy: native
+  tomcat:
+    redirect-context-root: false
+
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
+
+app:
+  auth:
+    transport:
+      require-https: true
 
